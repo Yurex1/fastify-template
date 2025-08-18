@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS "user" (
+  "id" SERIAL PRIMARY KEY,
+  "email" VARCHAR(320),
+  "phone" VARCHAR(20),
+  "name" VARCHAR(100) NOT NULL,
+  "username" VARCHAR(50) UNIQUE NOT NULL,
+  "password" VARCHAR(255) NOT NULL,
+  "birth" TIMESTAMP NOT NULL,
+  "gender" VARCHAR(10) NOT NULL,
+  "avatar" TEXT,
+  "bio" JSONB DEFAULT '{"photos": [], "text": null}',
+  "private" BOOLEAN DEFAULT FALSE,
+  "views" INTEGER DEFAULT 0,
+  "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
