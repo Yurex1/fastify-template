@@ -1,7 +1,7 @@
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';
-import { Deps } from './types';
+import { Deps, SessionProvider, SessionProviderKeys } from './types';
 
 export const server = fastify();
 
@@ -11,22 +11,25 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({ services: _, apis }: Deps): Promise<void> => {
+export const init = async ({ services, apis }: Deps): Promise<void> => {
   await registerPlugins();
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
       const { access, method, params, schema, handler } = endpoint;
       const urlParams = params?.length ? `/:${params.join(':/')}` : '';
       const path = `/${service}/${route}${urlParams}`;
-      const opts = { schema: { tags: [service], ...schema.properties } };
+      const security = access === 'none' ? [] : [{ ApiToken: [] }];
+      const opts = {
+        schema: { tags: [service], security, ...schema.properties },
+      };
 
       server[method](path, opts, async (request, reply) => {
-        const user =
-          access !== 'none'
-            ? {} // await services.auth.verify(access, request.headers.authorization)
-            : null;
+        const sessionProviders: SessionProvider = {
+          none: () => null,
+        };
+        const sessionProvider = sessionProviders[access as SessionProviderKeys];
 
-        const result = await handler(user, request);
+        const result = await handler(sessionProvider, request);
         return reply.send(result);
       });
     }

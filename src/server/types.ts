@@ -24,3 +24,7 @@ export type Plugin = {
   plugin: FastifyPluginCallback | FastifyPluginAsync;
   options: FastifyPluginOptions;
 };
+
+export type SessionProviderKeys = 'none';
+
+export type SessionProvider = Record<SessionProviderKeys, () => any>;

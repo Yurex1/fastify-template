@@ -11,4 +11,5 @@ const repos = reposInit(pool);
 const wsServer = wsServerInit(repos);
 const services = servicesInit(repos, wsServer);
 const apis = apisInit(services);
-serverInit({ services, apis });
+
+await serverInit({ services, apis });
