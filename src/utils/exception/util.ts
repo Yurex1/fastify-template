@@ -11,27 +11,27 @@ export class ApiError extends Error {
 }
 
 export const exception: Exception = {
-  isCustomException(error: unknown): boolean {
+  isCustomException(error: unknown) {
     return error instanceof ApiError;
   },
 
-  badRequest(message = 'Bad Request'): ApiError {
+  badRequest(message = 'Bad Request') {
     return new ApiError(400, message);
   },
 
-  unauthorized(message = 'Unauthorized'): ApiError {
+  unauthorized(message = 'Unauthorized') {
     return new ApiError(401, message);
   },
 
-  forbidden(message = 'Forbidden'): ApiError {
+  forbidden(message = 'Forbidden') {
     return new ApiError(403, message);
   },
 
-  notFound(message = 'Not Found'): ApiError {
+  notFound(message = 'Not Found') {
     return new ApiError(404, message);
   },
 
-  serverError(message = 'Internal server error'): ApiError {
+  serverError(message = 'Internal server error') {
     return new ApiError(500, message);
   },
 };

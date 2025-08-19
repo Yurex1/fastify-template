@@ -11,14 +11,6 @@ for (const plugin of plugins) {
   await server.register(plugin.plugin, plugin.options);
 }
 
-// server.setErrorHandler((error, _request, reply) => {
-//   console.error('Error:', error);
-//   reply.status(error.statusCode || 500).send({
-//     error: error.name || 'InternalServerError',
-//     message: error.message || 'An unexpected error occurred.',
-//   });
-// });
-
 export const init = ({ services: _, apis }: Deps): void => {
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {

@@ -1,5 +1,4 @@
-import type { Services } from '../services/types.d.ts';
-import type { Api } from './api/types.d.ts';
+import { Api } from './api/types';
 
 export interface Endpoint<
   Params,
