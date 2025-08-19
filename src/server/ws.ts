@@ -22,9 +22,7 @@ export const init = (_repos: Repos) => {
           console.log(e);
           const { message, statusCode } = exception.isCustomException(e)
             ? (e as ApiError)
-            : (exception.serverError(
-                'Web Socket Server Error.',
-              ) as unknown as ApiError);
+            : exception.serverError('Web Socket Server Error.');
           ws.send(JSON.stringify({ message, statusCode }));
           ws.close();
         }

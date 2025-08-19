@@ -5,11 +5,14 @@ import { Deps } from './types';
 
 export const server = fastify();
 
-for (const plugin of plugins) {
-  await server.register(plugin.plugin, plugin.options);
+async function registerPlugins() {
+  for (const plugin of plugins) {
+    await server.register(plugin.plugin, plugin.options);
+  }
 }
 
-export const init = ({ services: _, apis }: Deps): void => {
+export const init = async ({ services: _, apis }: Deps): Promise<void> => {
+  await registerPlugins();
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
       const { access, method, params, schema, handler } = endpoint;

@@ -9,6 +9,6 @@ export const init = async (config: PoolConfig) => {
     return pool;
   } catch (error) {
     console.log({ timestamp: Date.now(), error });
-    throw Error('Database connection failed');
+    throw new Error('Database connection failed', { cause: error });
   }
 };
