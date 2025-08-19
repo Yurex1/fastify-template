@@ -1,16 +1,29 @@
-CREATE TABLE IF NOT EXISTS "user" (
-  "id" SERIAL PRIMARY KEY,
-  "email" VARCHAR(320),
-  "phone" VARCHAR(20),
-  "name" VARCHAR(100) NOT NULL,
-  "username" VARCHAR(50) UNIQUE NOT NULL,
-  "password" VARCHAR(255) NOT NULL,
-  "birth" TIMESTAMP NOT NULL,
-  "gender" VARCHAR(10) NOT NULL,
-  "avatar" TEXT,
-  "bio" JSONB DEFAULT '{"photos": [], "text": null}',
-  "private" BOOLEAN DEFAULT FALSE,
-  "views" INTEGER DEFAULT 0,
-  "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(320) UNIQUE,
+  phone VARCHAR(20) UNIQUE,
+  name VARCHAR(100) NOT NULL,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  birth DATE NOT NULL,
+  gender VARCHAR(10) NOT NULL,
+  avatar TEXT,
+  bio JSONB DEFAULT '{"photos": [], "text": null}',
+  private BOOLEAN DEFAULT FALSE,
+  views BIGINT DEFAULT 0,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW."updatedAt" = now();
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_user_timestamp
+BEFORE UPDATE ON users
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();

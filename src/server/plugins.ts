@@ -10,7 +10,7 @@ const swaggerPlugin: Plugin = {
   plugin: swagger,
   options: {
     swagger: {
-      info: { title: 'EQuestrain API', version: '1.0.0' },
+      info: { title: 'fastify-template', version: '1.0.0' },
       host: config.server.http.url,
       schemes: ['http', 'https'],
       securityDefinitions: {

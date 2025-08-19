@@ -10,11 +10,12 @@ export const init = (_repos: Repos) => {
     connections: new Map(),
 
     _listen() {
-      this.server.on('connection', async (ws, _request) => {
+      this.server.on('connection', async (ws, request) => {
         try {
-          // const token = request.url?.split('/')[2];
-          const user = { id: 10 };
-          const uid = user.id;
+          const token = request.url?.split('/')[2];
+          //   const user = await authService.verify('common', `Bearer ${token}`);
+          const uid = 10; // const uid = user.id;
+
           this.connections.set(+uid, ws);
           ws.on('close', () => this.connections.delete(+uid));
         } catch (e) {
