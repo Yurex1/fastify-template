@@ -1,5 +1,3 @@
-/** @typedef {import('./types.js').httpInit} init */
-
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';

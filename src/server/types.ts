@@ -1,4 +1,4 @@
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 import { APIs } from '../api/types';
 import { Services } from '../services/types';
 import {
