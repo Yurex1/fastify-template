@@ -25,6 +25,6 @@ export type Plugin = {
   options: FastifyPluginOptions;
 };
 
-export type SessionProviderKeys = 'none';
+export type SessionProviderKeys = 'none' | 'common' | 'refresh';
 
 export type SessionProvider = Record<SessionProviderKeys, () => any>;

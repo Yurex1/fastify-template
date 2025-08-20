@@ -1,4 +1,6 @@
-import { Api } from './api/types';
+import { Api } from './healthCheck/types';
+
+export type AccessType = 'none' | 'common' | 'refresh';
 
 export interface Endpoint<
   Params,
@@ -17,7 +19,7 @@ export type ProtectedEndpoint<Params, Result> = Endpoint<
   Params,
   Result,
   'common' | 'refresh',
-  {}
+  { id: number }
 >;
 
 export type UnprotectedEndpoint<Params, Result> = Endpoint<
@@ -28,9 +30,14 @@ export type UnprotectedEndpoint<Params, Result> = Endpoint<
 >;
 
 export interface API {
-  [key: string]: Endpoint<any, any, any, any>;
+  [key: string]: Endpoint<any, any, AccessType, any>;
 }
+
+import { UserApi } from './user/types';
+import { AuthApi } from './auth/types';
 
 export interface APIs extends Record<string, API> {
   api: Api;
+  user: UserApi;
+  auth: AuthApi;
 }

@@ -20,4 +20,11 @@ export const config = {
     database: env.requireEnv('PG_DATABASE'),
     password: env.requireEnv('PG_PASSWORD'),
   },
+  jwt: {
+    secret: env.requireEnv('JWT_SECRET'),
+    expiration: {
+      access: env.requireEnv('JWT_ACCESS_TOKEN_EXPIRATION'),
+      refresh: env.requireEnv('JWT_REFRESH_TOKEN_EXPIRATION'),
+    },
+  },
 };

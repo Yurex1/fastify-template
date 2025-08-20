@@ -26,8 +26,13 @@ export const init = async ({ services, apis }: Deps): Promise<void> => {
       server[method](path, opts, async (request, reply) => {
         const sessionProviders: SessionProvider = {
           none: () => null,
+          common: () =>
+            services.auth.verify('common', request.headers.authorization),
+          refresh: () =>
+            services.auth.verify('refresh', request.headers.authorization),
         };
-        const sessionProvider = sessionProviders[access as SessionProviderKeys];
+        const sessionProvider =
+          await sessionProviders[access as SessionProviderKeys]();
 
         const result = await handler(sessionProvider, request);
         return reply.send(result);

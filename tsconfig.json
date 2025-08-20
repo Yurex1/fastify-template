@@ -3,7 +3,7 @@
     "allowJs": true,
     "checkJs": true,
     "strict": true,
-    "noEmit": true,
+    "outDir": "./dist",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -12,5 +12,6 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "types": ["node"]
-  }
+  },
+  "exclude": ["test/**/*"]
 }

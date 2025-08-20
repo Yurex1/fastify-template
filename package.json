@@ -10,8 +10,12 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/main.js",
+    "start": "node dist/src/main.js",
     "test": "node --test test/**/*.test.js",
+    "test:e2e": "node test/e2e.test.js",
+    "test:auth": "node --test test/auth.test.js",
+    "test:user": "node --test test/user.test.js",
+    "test:api": "node --test test/api.test.js",
     "migrate": "npx dotenv -e .env -- node-pg-migrate --migrations-dir db/migrations --tsx",
     "migrate:up": "npx dotenv -e .env -- node-pg-migrate up --migrations-dir db/migrations --tsx",
     "migrate:down": "npx dotenv -e .env -- node-pg-migrate down --migrations-dir db/migrations --tsx",
@@ -31,11 +35,13 @@
     "fastify": "^5.0.0",
     "fastify-cli": "^7.4.0",
     "fastify-plugin": "^5.0.0",
+    "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
     "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.0",
     "@types/pg": "^8.15.5",
     "@types/ws": "^8.18.1",
