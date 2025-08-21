@@ -1,10 +1,10 @@
-import type { UserRepo } from '../../data/user/types.js';
+import type { UserRepo } from '../../data/user/types';
 import type {
   User,
   CreateUser,
   UpdateUser,
   UserResult,
-} from '../../entities/user.js';
+} from '../../entities/user';
 
 export interface UserService {
   create: (user: CreateUser) => Promise<User>;

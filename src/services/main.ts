@@ -1,9 +1,9 @@
-import { Repos } from '../data/types.js';
-import { WsServer } from '../server/types.js';
-import { init as serviceInit } from './service/service.js';
-import { init as userServiceInit } from './user/service.js';
-import { init as authServiceInit } from './auth/service.js';
-import { Services } from './types.js';
+import { Repos } from '../data/types';
+import { WsServer } from '../server/types';
+import { init as serviceInit } from './service/service';
+import { init as userServiceInit } from './user/service';
+import { init as authServiceInit } from './auth/service';
+import { Services } from './types';
 
 export const init = (repos: Repos, _wsServer: WsServer): Services => {
   const service = serviceInit();

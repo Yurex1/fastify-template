@@ -1,8 +1,8 @@
 import { WebSocketServer } from 'ws';
-import { config } from '../config.js';
-import { ApiError, exception } from '../utils/exception/util.js';
-import { Repos } from '../data/types.js';
-import { WsServer } from './types.js';
+import { config } from '../config';
+import { ApiError, exception } from '../utils/exception/util';
+import { Repos } from '../data/types';
+import { WsServer } from './types';
 
 export const init = (_repos: Repos) => {
   const wsServer: WsServer = {

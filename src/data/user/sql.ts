@@ -1,4 +1,4 @@
-import type { User, CreateUser, UpdateUser } from '../../entities/user.js';
+import type { User, CreateUser, UpdateUser } from '../../entities/user';
 
 export const fields = [
   'id',
@@ -9,9 +9,6 @@ export const fields = [
   'updatedAt',
 ];
 
-/**
- * Create a single user
- */
 export const create = (definition: CreateUser) => {
   const columns = Object.keys(definition);
   const values = Object.values(definition);
@@ -27,9 +24,6 @@ export const create = (definition: CreateUser) => {
   return { query, params: values };
 };
 
-/**
- * Update a user by ID
- */
 export const update = (id: number, definition: Partial<UpdateUser>) => {
   const updateData = { ...definition, updatedAt: new Date() };
   const columns = Object.keys(updateData);
@@ -47,9 +41,6 @@ export const update = (id: number, definition: Partial<UpdateUser>) => {
   return { query, params: [...values, id] };
 };
 
-/**
- * Update user's email
- */
 export const updateUserEmail = (id: number, email: string) => {
   const query = `
     UPDATE "public"."users"
@@ -61,12 +52,6 @@ export const updateUserEmail = (id: number, email: string) => {
   return { query, params: [email, id, new Date()] };
 };
 
-/**
- *
- * @param {number} id
- * @param {string} password
- * @returns {RowSqlResult}
- */
 export const updateUserPassword = (id: number, password: string) => {
   const query = `
     UPDATE "public"."user"
@@ -80,9 +65,6 @@ export const updateUserPassword = (id: number, password: string) => {
   return { query, params };
 };
 
-/**
- * Find user by criteria
- */
 export const selectOne = (
   definition: Partial<User>,
   includePassword = false,
@@ -107,9 +89,6 @@ export const selectOne = (
   return { query, params: values };
 };
 
-/**
- * Find user by username or email
- */
 export const selectByUsernameOrEmail = (
   value: string,
   includePassword = false,
@@ -125,9 +104,6 @@ export const selectByUsernameOrEmail = (
   return { query, params: [value] };
 };
 
-/**
- * Find users by IDs
- */
 export const selectByIds = (userIds: number[]) => {
   if (userIds.length === 0) {
     return { query: 'SELECT * FROM users WHERE false;', params: [] };
@@ -143,9 +119,6 @@ export const selectByIds = (userIds: number[]) => {
   return { query, params: userIds };
 };
 
-/**
- * Delete user by ID
- */
 export const remove = (id: number) => {
   const query = `
     DELETE FROM "public"."users"
@@ -155,9 +128,6 @@ export const remove = (id: number) => {
   return { query, params: [id] };
 };
 
-/**
- * Check if user exists
- */
 export const selectExisting = (table: string, definition: Partial<User>) => {
   const columns = Object.keys(definition);
   const values = Object.values(definition);

@@ -1,5 +1,5 @@
-import * as schemas from './schemas.js';
-import type { AuthApi, Deps } from './types.js';
+import * as schemas from './schemas';
+import type { AuthApi, Deps } from './types';
 
 export const init = ({ authService }: Deps): AuthApi => ({
   'sign-in': {

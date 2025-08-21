@@ -1,5 +1,5 @@
-import * as schemas from './schemas.js';
-import type { UserApi, Deps } from './types.js';
+import * as schemas from './schemas';
+import type { UserApi, Deps } from './types';
 
 export const init = ({ userService }: Deps): UserApi => ({
   'find-one': {

@@ -1,7 +1,7 @@
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';
-import { Deps, SessionProvider, SessionProviderKeys } from './types';
+import { Deps, SessionProvider } from './types';
 
 export const server = fastify();
 
@@ -16,6 +16,7 @@ export const init = async ({ services, apis }: Deps): Promise<void> => {
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
       const { access, method, params, schema, handler } = endpoint;
+
       const urlParams = params?.length ? `/:${params.join(':/')}` : '';
       const path = `/${service}/${route}${urlParams}`;
       const security = access === 'none' ? [] : [{ ApiToken: [] }];
@@ -31,8 +32,7 @@ export const init = async ({ services, apis }: Deps): Promise<void> => {
           refresh: () =>
             services.auth.verify('refresh', request.headers.authorization),
         };
-        const sessionProvider =
-          await sessionProviders[access as SessionProviderKeys]();
+        const sessionProvider = await sessionProviders[access]();
 
         const result = await handler(sessionProvider, request);
         return reply.send(result);

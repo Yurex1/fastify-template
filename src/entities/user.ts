@@ -13,11 +13,7 @@ export interface CreateUser {
   password: string;
 }
 
-export interface UpdateUser {
-  email?: string;
-  username?: string;
-  password?: string;
-}
+export interface UpdateUser extends Partial<CreateUser> {}
 
 export type UserResult = User;
 

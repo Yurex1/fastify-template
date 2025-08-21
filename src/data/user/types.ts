@@ -4,9 +4,8 @@ import type {
   CreateUser,
   UpdateUser,
   UserResult,
-} from '../../entities/user.js';
+} from '../../entities/user';
 
-//
 export interface UserRepo {
   create: (user: CreateUser) => Promise<User>;
 

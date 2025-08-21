@@ -1,7 +1,7 @@
 import jsonwebtoken from 'jsonwebtoken';
 import type { SignOptions } from 'jsonwebtoken';
-import { config } from '../../config.js';
-import { exception } from '../exception/util.js';
+import { config } from '../../config';
+import { exception } from '../exception/util';
 
 export const jwt = {
   sign: (payload: object, expiresIn: SignOptions['expiresIn']): string => {

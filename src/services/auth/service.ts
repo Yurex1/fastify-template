@@ -1,7 +1,7 @@
-import { exception } from '../../utils/exception/util.js';
-import { passwords } from '../../utils/passwords/util.js';
-import { sessions } from '../../utils/sessions/utils.js';
-import type { AuthService, Deps } from './types.js';
+import { exception } from '../../utils/exception/util';
+import { passwords } from '../../utils/passwords/util';
+import { sessions } from '../../utils/sessions/utils';
+import type { AuthService, Deps } from './types';
 
 export const init = ({ userRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password) => {
@@ -51,14 +51,28 @@ export const init = ({ userRepo }: Deps): AuthService => ({
     return { signedOut: true };
   },
 
-  verify: async (token) => {
-    const payload = sessions.validate('access', token);
-    const user = await userRepo.findOne({ id: payload.id });
-    if (!user) {
-      throw exception.notFound('USER_NOT_FOUND');
-    }
+  verify: async (access, authHeaders) => {
+    try {
+      if (!authHeaders) throw exception.unauthorized('NO_TOKEN_PROVIDED');
+      const [bearer, accessToken, refreshToken] = authHeaders.split(' ');
 
-    return user;
+      if (bearer !== 'Bearer' || (!accessToken && !refreshToken))
+        throw exception.unauthorized('INVALID_OAUTH_HEADERS');
+
+      const type = access === 'refresh' ? 'refresh' : 'access';
+      const token = { access: accessToken, refresh: refreshToken }[type];
+
+      const payload = sessions.validate(type, token);
+      if (!payload.id) throw exception.unauthorized('INVALID_TOKEN_PAYLOAD');
+
+      const user = await userRepo.findOne({ id: payload.id });
+      if (!user) throw exception.notFound('USER_NOT_FOUND');
+
+      return user;
+    } catch (err) {
+      if (exception.isCustomException(err)) throw err;
+      throw exception.unauthorized();
+    }
   },
 
   refresh: async (userId) => {

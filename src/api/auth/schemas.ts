@@ -5,7 +5,7 @@ export const signIn = {
       type: 'object',
       properties: {
         usernameOrEmail: { type: 'string', minLength: 1 },
-        password: { type: 'string', minLength: 1 },
+        password: { type: 'string', minLength: 6, maxLength: 64 },
       },
       required: ['usernameOrEmail', 'password'],
       additionalProperties: false,
@@ -40,7 +40,6 @@ export const signOut = {
       additionalProperties: false,
     },
   },
-  required: ['body'],
 } as const;
 
 export const refresh = {
@@ -52,7 +51,6 @@ export const refresh = {
       additionalProperties: false,
     },
   },
-  required: ['body'],
 } as const;
 
 export const changePassword = {

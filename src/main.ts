@@ -1,4 +1,4 @@
-import { config } from './config.js';
+import { config } from './config';
 import { init as pgPoolInit } from './infra/pg';
 import { init as reposInit } from './data/main';
 import { init as wsServerInit } from './server/ws';

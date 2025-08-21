@@ -1,6 +1,6 @@
-import { exception } from '../../utils/exception/util.js';
-import { passwords } from '../../utils/passwords/util.js';
-import type { UserService, Deps } from './types.js';
+import { exception } from '../../utils/exception/util';
+import { passwords } from '../../utils/passwords/util';
+import type { UserService, Deps } from './types';
 
 export const init = ({ userRepo }: Deps): UserService => ({
   create: async (user) => {

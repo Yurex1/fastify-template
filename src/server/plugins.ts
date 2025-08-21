@@ -1,8 +1,8 @@
 import cors from '@fastify/cors';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { config } from '../config.js';
-import { Plugin } from './types.js';
+import { config } from '../config';
+import { Plugin } from './types';
 
 const corsPlugin: Plugin = { plugin: cors, options: {} };
 

@@ -1,8 +1,8 @@
 import * as SchemaType from 'json-schema-to-ts';
-import * as schemas from './schemas.js';
-import type { User, UserResult } from '../../entities/user.js';
-import type { UserService } from '../../services/user/types.js';
-import type { ProtectedEndpoint, UnprotectedEndpoint, API } from '../types.js';
+import * as schemas from './schemas';
+import type { User, UserResult } from '../../entities/user';
+import type { UserService } from '../../services/user/types';
+import type { ProtectedEndpoint, UnprotectedEndpoint, API } from '../types';
 
 type CreateParam = SchemaType.FromSchema<typeof schemas.create>;
 type FindOneParam = SchemaType.FromSchema<typeof schemas.findOne>;
