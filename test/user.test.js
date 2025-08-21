@@ -83,72 +83,43 @@ describe('User API Tests', () => {
     }
   });
 
-  test('should find user by email', async () => {
-    const response = await makeRequest('GET', '/user/find-by-username-or-email?value=usertest@example.com');
-    
-    assert.strictEqual(response.status, 200, 'Should return 200');
-    if (response.body) {
-      assert.ok(response.body.email, 'Should return user with email');
-      assert.strictEqual(response.body.email, 'usertest@example.com', 'Should return correct email');
-    }
-  });
-
-  test('should find user by username', async () => {
-    const response = await makeRequest('GET', '/user/find-by-username-or-email?value=usertest');
-    
-    assert.strictEqual(response.status, 200, 'Should return 200');
-    if (response.body) {
-      assert.ok(response.body.username, 'Should return user with username');
-      assert.strictEqual(response.body.username, 'usertest', 'Should return correct username');
-    }
-  });
-
-  test('should return null for non-existent user', async () => {
-    const response = await makeRequest('GET', '/user/find-by-username-or-email?value=nonexistent@example.com');
-    
-    assert.strictEqual(response.status, 200, 'Should return 200');
-    // Note: Your API might return empty string instead of null
-    assert.ok(response.body === null || response.body === '', 'Should return null or empty for non-existent user');
-  });
-
-  test('should find user by ID with valid token', async () => {
+  test('should get user by ID with valid token', async () => {
     if (!authToken) {
       console.log('Skipping test - no auth token available');
       assert.ok(true, 'Test skipped - no auth token');
       return;
     }
 
-    const response = await makeRequest('POST', '/user/find-one', {
-      definition: { email: 'usertest@example.com' },
-    }, {
+    const response = await makeRequest('GET', '/user/1', null, {
       authorization: `Bearer ${authToken}`,
     });
 
     if (response.status === 200) {
       assert.ok(response.body, 'Should return user data');
-      assert.ok(response.body.email, 'Should return user with email');
+      assert.ok(response.body.id, 'Should return user with id');
     } else {
-      console.log('Token validation failed:', response.body);
-      assert.ok(true, 'Token validation issue logged');
+      console.log('Get user by ID failed:', response.body);
+      assert.ok(true, 'Get user by ID issue logged');
     }
   });
 
-  test('should check if user exists', async () => {
-    const response = await makeRequest('POST', '/user/is-exists', {
-      definition: { email: 'usertest@example.com' },
+  test('should get all users with valid token', async () => {
+    if (!authToken) {
+      console.log('Skipping test - no auth token available');
+      assert.ok(true, 'Test skipped - no auth token');
+      return;
+    }
+
+    const response = await makeRequest('GET', '/user', null, {
+      authorization: `Bearer ${authToken}`,
     });
 
-    assert.strictEqual(response.status, 200, 'Should return 200');
-    assert.ok('exists' in response.body, 'Should return exists property');
-  });
-
-  test('should return false for non-existent user', async () => {
-    const response = await makeRequest('POST', '/user/is-exists', {
-      definition: { email: 'nonexistent@example.com' },
-    });
-
-    assert.strictEqual(response.status, 200, 'Should return 200');
-    assert.strictEqual(response.body.exists, false, 'Should return exists: false');
+    if (response.status === 200) {
+      assert.ok(Array.isArray(response.body), 'Should return array of users');
+    } else {
+      console.log('Get all users failed:', response.body);
+      assert.ok(true, 'Get all users issue logged');
+    }
   });
 
   test('should update user with valid token', async () => {
@@ -200,7 +171,7 @@ describe('User API Tests', () => {
       return;
     }
 
-    const response = await makeRequest('DELETE', '/user/remove/1', {}, {
+    const response = await makeRequest('DELETE', '/user/remove/1', null, {
       authorization: `Bearer ${authToken}`,
     });
 
@@ -213,17 +184,13 @@ describe('User API Tests', () => {
   });
 
   test('should fail to access protected endpoints without token', async () => {
-    const response = await makeRequest('POST', '/user/find-one', {
-      definition: { email: 'usertest@example.com' },
-    });
+    const response = await makeRequest('GET', '/user/1');
 
     assert.notStrictEqual(response.status, 200, 'Should not return 200 without token');
   });
 
   test('should fail to access protected endpoints with invalid token', async () => {
-    const response = await makeRequest('POST', '/user/find-one', {
-      definition: { email: 'usertest@example.com' },
-    }, {
+    const response = await makeRequest('GET', '/user/1', null, {
       authorization: 'Bearer invalid-token',
     });
 

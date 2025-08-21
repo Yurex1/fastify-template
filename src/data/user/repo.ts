@@ -16,6 +16,7 @@ import {
   remove,
   selectExisting,
   updateUserPassword,
+  selectAll,
 } from './sql';
 
 export const init = (pool: Pool): UserRepo => ({
@@ -43,8 +44,8 @@ export const init = (pool: Pool): UserRepo => ({
     return result.rows[0] as User | null;
   },
 
-  findByIds: async (userIds: number[]): Promise<User[]> => {
-    const { query, params } = selectByIds(userIds);
+  findAll: async (): Promise<User[]> => {
+    const { query, params } = selectAll();
     const result = await pool.query(query, params);
     return result.rows as User[];
   },

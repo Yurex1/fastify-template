@@ -54,13 +54,13 @@ export const updateUserEmail = (id: number, email: string) => {
 
 export const updateUserPassword = (id: number, password: string) => {
   const query = `
-    UPDATE "public"."user"
+    UPDATE "public"."users"
     SET "password" = $1, "updatedAt" = $3
     WHERE "id" = $2
     RETURNING ${fields.map((f) => `"${f}"`).join(', ')};
   `;
 
-  const params = [password, id, Date.now()];
+  const params = [password, id, new Date()];
 
   return { query, params };
 };
@@ -87,6 +87,15 @@ export const selectOne = (
   const query = select + where + ';';
 
   return { query, params: values };
+};
+
+export const selectAll = () => {
+  const query = `
+    SELECT ${fields.map((f) => `"${f}"`).join(', ')}
+    FROM "public"."users";
+  `;
+
+  return { query, params: [] };
 };
 
 export const selectByUsernameOrEmail = (

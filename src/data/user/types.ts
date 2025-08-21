@@ -17,7 +17,7 @@ export interface UserRepo {
     value: string,
     includePassword?: boolean,
   ) => Promise<User | null>;
-  findByIds: (userIds: number[]) => Promise<User[]>;
+  findAll: () => Promise<User[]>;
   isExists: (definition: Partial<User>) => Promise<boolean>;
   update: (id: number, definition: Partial<UpdateUser>) => Promise<User>;
   updateEmail: (id: number, email: string) => Promise<User>;

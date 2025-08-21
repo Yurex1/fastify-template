@@ -99,6 +99,11 @@ export const init = ({ userRepo }: Deps): AuthService => ({
       throw exception.badRequest('INCORRECT_PASSWORD');
     }
 
+    const isSamePassword = passwords.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw exception.badRequest('NEW_PASSWORD_SAME_AS_OLD');
+    }
+
     const hash = passwords.hash(newPassword);
 
     return userRepo.updatePassword(user.id, hash);

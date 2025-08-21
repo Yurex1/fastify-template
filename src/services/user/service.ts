@@ -1,5 +1,4 @@
 import { exception } from '../../utils/exception/util';
-import { passwords } from '../../utils/passwords/util';
 import type { UserService, Deps } from './types';
 
 export const init = ({ userRepo }: Deps): UserService => ({
@@ -8,15 +7,12 @@ export const init = ({ userRepo }: Deps): UserService => ({
   },
 
   findOne: async (definition, includePassword = false) => {
+    console.log('findOne', definition, includePassword);
     return userRepo.findOne(definition, includePassword);
   },
 
-  findOneByUsernameOrEmail: async (value, includePassword = false) => {
-    return userRepo.findOneByUsernameOrEmail(value, includePassword);
-  },
-
-  findByIds: async (userIds) => {
-    return userRepo.findByIds(userIds);
+  findAll: async () => {
+    return userRepo.findAll();
   },
 
   isExists: async (definition) => {
@@ -29,20 +25,6 @@ export const init = ({ userRepo }: Deps): UserService => ({
 
   updateEmail: async (id, email) => {
     return userRepo.updateEmail(id, email);
-  },
-
-  updatePassword: async (id, oldPassword, newPassword) => {
-    const user = await userRepo.findOne({ id }, true);
-    if (!user) throw exception.notFound('USER_NOT_FOUND');
-
-    if (!oldPassword) throw exception.badRequest('INCORRECT_PASSWORD');
-
-    const validPassword = passwords.compare(oldPassword, user.password);
-    if (!validPassword) throw exception.badRequest('INCORRECT_PASSWORD');
-
-    const hash = passwords.hash(newPassword);
-
-    return userRepo.updatePassword(user.id, hash);
   },
 
   remove: async (id) => {

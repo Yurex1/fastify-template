@@ -1,6 +1,6 @@
 import type { UserRepo } from '../../data/user/types';
 import type { User, UserResult } from '../../entities/user';
-import { Session } from '../../utils/sessions/types';
+import type { Session } from '../../utils/sessions/types';
 
 export interface AuthService {
   signIn: (usernameOrEmail: string, password: string) => Promise<Session>;

@@ -1,17 +1,23 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "strict": true,
-    "outDir": "./dist",
-    "target": "ESNext",
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "types": ["node"]
   },
-  "exclude": ["test/**/*"]
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "test/**/*",
+    "db/migrations/**/*",
+    "**/*.config.js"
+  ]
 }
