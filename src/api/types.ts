@@ -10,13 +10,13 @@ export interface Endpoint<
   Params,
   Result,
   Access extends AccessType,
-  SessionGeneric extends {} | null,
+  SessionGeneric extends unknown | null,
 > {
   method: 'get' | 'post' | 'put' | 'patch' | 'delete';
   access: Access;
   params?: string[];
   customType?: string;
-  schema: { properties: object; [key: string]: any };
+  schema: { properties: object; [key: string]: unknown };
   handler: (session: SessionGeneric, params: FastifyRequest & Params) => Result;
 }
 

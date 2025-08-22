@@ -6,10 +6,32 @@ import { init as servicesInit } from './services/main';
 import { init as apisInit } from './api/main';
 import { init as serverInit } from './server/http';
 
-const pool = await pgPoolInit(config.pg);
-const repos = reposInit(pool);
-const wsServer = wsServerInit(repos);
-const services = servicesInit(repos, wsServer);
-const apis = apisInit(services);
+export const start = async () => {
+  const pool = await pgPoolInit(config.pg);
+  const repos = reposInit(pool);
+  const wsServer = wsServerInit(repos);
+  const services = servicesInit(repos, wsServer);
+  const apis = apisInit(services);
 
-await serverInit({ services, apis });
+  const server = await serverInit({ services, apis });
+  
+  // Return the application instance with all layers
+  return {
+    pool,
+    repos,
+    wsServer,
+    services,
+    apis,
+    server,
+    cleanup: async () => {
+      await server.close();
+      await pool.end();
+      wsServer.server.close();
+    }
+  };
+};
+
+// Only start if this file is run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  start();
+}

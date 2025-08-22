@@ -27,4 +27,4 @@ export type Plugin = {
 
 export type SessionProviderKeys = 'none' | 'common' | 'refresh';
 
-export type SessionProvider = Record<SessionProviderKeys, () => any>;
+export type SessionProvider = Record<SessionProviderKeys, () => unknown>;

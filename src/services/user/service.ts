@@ -7,8 +7,9 @@ export const init = ({ userRepo }: Deps): UserService => ({
   },
 
   findOne: async (definition, includePassword = false) => {
-    console.log('findOne', definition, includePassword);
-    return userRepo.findOne(definition, includePassword);
+    const user = await userRepo.findOne(definition, includePassword);
+    if (!user) throw exception.notFound('USER_NOT_FOUND');
+    return user;
   },
 
   findAll: async () => {

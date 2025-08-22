@@ -12,7 +12,6 @@ import {
   updateUserEmail,
   selectOne,
   selectByUsernameOrEmail,
-  selectByIds,
   remove,
   selectExisting,
   updateUserPassword,

@@ -11,7 +11,7 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({ services, apis }: Deps): Promise<void> => {
+export const init = async ({ services, apis }: Deps): Promise<typeof server> => {
   await registerPlugins();
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
@@ -47,4 +47,6 @@ export const init = async ({ services, apis }: Deps): Promise<void> => {
     }
     console.log(`HTTP server listening on ${config.server.http.port}...`);
   });
+
+  return server;
 };

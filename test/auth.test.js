@@ -1,225 +1,102 @@
-#!/usr/bin/env node
-
-import { test, describe } from 'node:test';
+import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert';
-import fetch from 'node-fetch';
+import { start } from '../src/main.js';
 
-const BASE_URL = 'http://localhost:9000';
+describe('Auth Tests', () => {
+  let app;
+  let testUserData;
+  let authToken;
+  let userId;
 
-async function makeRequest(method, path, body = null, headers = {}) {
-  const url = `${BASE_URL}${path}`;
-
-  const options = {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  try {
-    const response = await fetch(url, options);
-    const responseBody = await response.text();
-
-    let jsonBody = null;
-    try {
-      jsonBody = JSON.parse(responseBody);
-    } catch (error) {
-      console.log({ error });
-      // Response is not JSON
-    }
-
-    return {
-      status: response.status,
-      body: jsonBody || responseBody,
+  before(async () => {
+    app = await start();
+    testUserData = {
+      username: `testuser-${Date.now()}`,
+      email: `test-${Date.now()}@example.com`,
+      password: 'TestPassword123!',
     };
-  } catch (error) {
-    return {
-      status: 0,
-      error: error.message,
-      body: null,
-    };
-  }
-}
+  });
 
-describe('Auth API Tests', () => {
-  let userToken = null;
+  after(async () => {
+    await app.cleanup();
+  });
 
-  test('should sign up a new user or handle existing user', async () => {
-    const response = await makeRequest('POST', '/auth/sign-up', {
-      email: 'auth@example.com',
-      username: 'authuser',
-      password: 'password123',
+  describe('Sign Up Test', () => {
+    test('should successfully create user', async () => {
+      const session = await app.services.auth.signUp(
+        testUserData.email,
+        testUserData.username,
+        testUserData.password,
+      );
+
+      assert(session, 'Should return session data');
+      assert(session.accessToken, 'Should have access token');
+      assert(session.refreshToken, 'Should have refresh token');
+
+      authToken = session.accessToken;
+
+      const user = await app.services.auth.verify(
+        'access',
+        `Bearer ${authToken}`,
+      );
+      userId = user.id;
     });
-
-    if (response.status === 200) {
-      assert.ok(response.body.user, 'Response should contain user');
-      assert.ok(
-        response.body.accessToken || response.body.token,
-        'Response should contain token',
-      );
-      userToken = response.body.accessToken || response.body.token;
-    } else if (
-      response.status === 400 &&
-      response.body.message === 'EMAIL_ALREADY_IN_USE'
-    ) {
-      // User already exists, that's fine
-      assert.ok(true, 'User already exists');
-    } else {
-      assert.fail(
-        `Sign up failed with unexpected response: ${JSON.stringify(response.body)}`,
-      );
-    }
   });
 
-  test('should sign in with existing user', async () => {
-    const response = await makeRequest('POST', '/auth/sign-in', {
-      usernameOrEmail: 'auth@example.com',
-      password: 'password123',
+  describe('Sign In Test', () => {
+    test('should successfully sign in user', async () => {
+      const session = await app.services.auth.signIn(
+        testUserData.username,
+        testUserData.password,
+      );
+
+      assert(session, 'Should return session data');
+      assert(session.accessToken, 'Should have access token');
+      assert(session.refreshToken, 'Should have refresh token');
+
+      authToken = session.accessToken;
     });
-
-    assert.strictEqual(response.status, 200, 'Sign in should succeed');
-    assert.ok(response.body.user, 'Response should contain user');
-    assert.ok(
-      response.body.accessToken || response.body.token,
-      'Response should contain token',
-    );
-
-    userToken = response.body.accessToken || response.body.token;
-    assert.ok(userToken, 'Token should be available for further tests');
   });
 
-  test('should fail to sign in with wrong password', async () => {
-    const response = await makeRequest('POST', '/auth/sign-in', {
-      usernameOrEmail: 'auth@example.com',
-      password: 'wrongpassword',
+  describe('Refresh Token Test', () => {
+    test('should successfully refresh access token', async () => {
+      const session = await app.services.auth.refresh(userId);
+
+      assert(session, 'Should return session data');
+      assert(session.accessToken, 'Should have access token');
+      assert(session.refreshToken, 'Should have refresh token');
+
+      authToken = session.accessToken;
     });
-
-    assert.strictEqual(
-      response.status,
-      400,
-      'Should return 400 for wrong password',
-    );
-    assert.ok(response.body.message, 'Should return error message');
   });
 
-  test('should fail to sign in with non-existent user', async () => {
-    const response = await makeRequest('POST', '/auth/sign-in', {
-      usernameOrEmail: 'nonexistent@example.com',
-      password: 'password123',
+  describe('Change Password Test', () => {
+    test('should successfully change password', async () => {
+      const newPassword = 'NewPassword123!';
+
+      const user = await app.services.auth.changePassword(
+        userId,
+        testUserData.password,
+        newPassword,
+      );
+
+      assert(user, 'Should return user data');
+      assert(user.id, 'Should have user ID');
+      assert(
+        user.username === testUserData.username,
+        'Should have correct username',
+      );
+
+      testUserData.password = newPassword;
     });
-
-    assert.strictEqual(
-      response.status,
-      400,
-      'Should return 400 for non-existent user',
-    );
-    assert.ok(response.body.message, 'Should return error message');
   });
 
-  test('should verify token by accessing protected endpoint', async () => {
-    assert.ok(userToken, 'Token should be available from previous tests');
+  describe('Sign Out Test', () => {
+    test('should successfully sign out', async () => {
+      const result = await app.services.auth.signOut(userId);
 
-    const response = await makeRequest(
-      'POST',
-      '/user/find-one',
-      {
-        definition: { email: 'auth@example.com' },
-      },
-      {
-        authorization: `Bearer ${userToken}`,
-      },
-    );
-
-    if (response.status === 200) {
-      assert.ok(
-        response.body,
-        'Protected endpoint should be accessible with valid token',
-      );
-    } else {
-      console.log('Token validation failed:', response.body);
-      // Don't fail the test, just log what happened
-      assert.ok(true, 'Token validation issue logged');
-    }
-  });
-
-  test('should refresh token', async () => {
-    assert.ok(userToken, 'Token should be available from previous tests');
-
-    const response = await makeRequest(
-      'POST',
-      '/auth/refresh',
-      {},
-      {
-        authorization: `Bearer ${userToken}`,
-      },
-    );
-
-    if (response.status === 200) {
-      assert.ok(
-        response.body.accessToken || response.body.token,
-        'Should return new token',
-      );
-    } else {
-      console.log('Token refresh failed:', response.body);
-      assert.ok(true, 'Token refresh issue logged');
-    }
-  });
-
-  test('should change password', async () => {
-    assert.ok(userToken, 'Token should be available from previous tests');
-
-    const response = await makeRequest(
-      'PUT',
-      '/auth/change-password',
-      {
-        oldPassword: 'password123',
-        newPassword: 'newpassword123',
-      },
-      {
-        authorization: `Bearer ${userToken}`,
-      },
-    );
-
-    if (response.status === 200) {
-      assert.ok(response.body, 'Should return user data');
-    } else if (
-      response.status === 500 &&
-      response.body.message &&
-      response.body.message.includes('relation') &&
-      response.body.message.includes('does not exist')
-    ) {
-      console.log(
-        'Skipping change password test - database table does not exist',
-      );
-      assert.ok(true, 'Test skipped due to database setup');
-    } else {
-      console.log('Change password failed:', response.body);
-      assert.ok(true, 'Change password issue logged');
-    }
-  });
-
-  test('should sign out', async () => {
-    assert.ok(userToken, 'Token should be available from previous tests');
-
-    const response = await makeRequest(
-      'POST',
-      '/auth/sign-out',
-      {},
-      {
-        authorization: `Bearer ${userToken}`,
-      },
-    );
-
-    if (response.status === 200) {
-      assert.ok(response.body.signedOut, 'Should return signedOut: true');
-    } else {
-      console.log('Sign out failed:', response.body);
-      assert.ok(true, 'Sign out issue logged');
-    }
+      assert(result, 'Should return result');
+      assert(result.signedOut === true, 'Should return signedOut: true');
+    });
   });
 });

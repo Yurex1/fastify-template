@@ -23,7 +23,6 @@ export const init = ({ userRepo }: Deps): AuthService => ({
   },
 
   signUp: async (email, username, password) => {
-    // Check if user already exists
     const existingUser = await userRepo.isExists({ email });
     if (existingUser) {
       throw exception.badRequest('EMAIL_ALREADY_IN_USE');
@@ -34,10 +33,8 @@ export const init = ({ userRepo }: Deps): AuthService => ({
       throw exception.badRequest('USERNAME_UNAVAILABLE');
     }
 
-    // Hash password
     const hashedPassword = passwords.hash(password);
 
-    // Create user with hashed password
     const user = await userRepo.create({
       email,
       username,
@@ -48,7 +45,7 @@ export const init = ({ userRepo }: Deps): AuthService => ({
   },
 
   signOut: async (userId) => {
-    return { signedOut: true };
+    return { signedOut: true }; //TODO: implement signOut
   },
 
   verify: async (access, authHeaders) => {
