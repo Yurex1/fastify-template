@@ -14,8 +14,7 @@ export const start = async () => {
   const apis = apisInit(services);
 
   const server = await serverInit({ services, apis });
-  
-  // Return the application instance with all layers
+
   return {
     pool,
     repos,
@@ -26,12 +25,13 @@ export const start = async () => {
     cleanup: async () => {
       await server.close();
       await pool.end();
-      wsServer.server.close();
-    }
+      if (wsServer.server) {
+        wsServer.server.close();
+      }
+    },
   };
 };
 
-// Only start if this file is run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   start();
 }

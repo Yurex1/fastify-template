@@ -2,6 +2,7 @@ import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';
 import { Deps, SessionProvider } from './types';
+import { configDotenv } from 'dotenv';
 
 export const server = fastify();
 
@@ -11,7 +12,10 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({ services, apis }: Deps): Promise<typeof server> => {
+export const init = async ({
+  services,
+  apis,
+}: Deps): Promise<typeof server> => {
   await registerPlugins();
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
@@ -39,14 +43,14 @@ export const init = async ({ services, apis }: Deps): Promise<typeof server> => 
       });
     }
   }
-
-  server.listen(config.server.http, (err) => {
-    if (err) {
-      console.error('Failed to start server:', err);
-      process.exit(1);
-    }
-    console.log(`HTTP server listening on ${config.server.http.port}...`);
-  });
+  if (config.node_env !== 'test')
+    server.listen(config.server.http, (err) => {
+      if (err) {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+      }
+      console.log(`HTTP server listening on ${config.server.http.port}...`);
+    });
 
   return server;
 };

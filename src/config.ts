@@ -27,4 +27,5 @@ export const config = {
       refresh: env.requireEnv('JWT_REFRESH_TOKEN_EXPIRATION'),
     },
   },
+  node_env: process.env.NODE_ENV || 'development',
 };

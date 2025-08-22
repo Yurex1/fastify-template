@@ -11,8 +11,8 @@ describe('Auth Tests', () => {
   before(async () => {
     app = await start();
     testUserData = {
-      username: `testuser-${Date.now()}`,
-      email: `test-${Date.now()}@example.com`,
+      username: `testuser-${Math.floor(Math.random() * 10000)}`,
+      email: `test-${Math.floor(Math.random() * 10000)}@example.com`,
       password: 'TestPassword123!',
     };
   });
