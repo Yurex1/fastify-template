@@ -2,7 +2,6 @@ import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';
 import { Deps, SessionProvider } from './types';
-import { configDotenv } from 'dotenv';
 
 export const server = fastify();
 
@@ -12,10 +11,7 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({
-  services,
-  apis,
-}: Deps): Promise<typeof server> => {
+export const init = async ({ services, apis }: Deps): Promise<typeof server> => {
   await registerPlugins();
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
@@ -31,10 +27,8 @@ export const init = async ({
       server[method](path, opts, async (request, reply) => {
         const sessionProviders: SessionProvider = {
           none: () => null,
-          common: () =>
-            services.auth.verify('common', request.headers.authorization),
-          refresh: () =>
-            services.auth.verify('refresh', request.headers.authorization),
+          common: () => services.auth.verify('common', request.headers.authorization),
+          refresh: () => services.auth.verify('refresh', request.headers.authorization),
         };
         const sessionProvider = await sessionProviders[access]();
 

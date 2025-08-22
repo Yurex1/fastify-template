@@ -7,7 +7,7 @@ export const init = ({ userRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password) => {
     const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
     if (!user) {
-      throw exception.badRequest('BAD_CREDENTIAL');
+      throw exception.badRequest('USER_NOT_FOUND');
     }
 
     if (!user.password) {
@@ -16,7 +16,7 @@ export const init = ({ userRepo }: Deps): AuthService => ({
 
     const validPassword = passwords.compare(password, user.password);
     if (!validPassword) {
-      throw exception.badRequest('BAD_CREDENTIAL');
+      throw exception.badRequest('PASSWORDS_IDENTICAL');
     }
 
     return sessions.generate(user);

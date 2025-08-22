@@ -16,12 +16,8 @@ export const start = async () => {
   const server = await serverInit({ services, apis });
 
   return {
-    pool,
     repos,
-    wsServer,
     services,
-    apis,
-    server,
     cleanup: async () => {
       await server.close();
       await pool.end();
