@@ -111,15 +111,11 @@ describe('User Tests', () => {
       testUserData.email = newEmail;
     });
 
-    test('should return undefined for non-existent user email update', async () => {
+    test('should return null for non-existent user email update', async () => {
       const newEmail = `test-${Date.now()}@example.com`;
 
       const result = await app.services.user.updateEmail(99999, newEmail);
-      assert.strictEqual(
-        result,
-        undefined,
-        'Should return undefined for non-existent user',
-      );
+      assert.strictEqual(result, null, 'Should return null for non-existent user');
     });
   });
 
@@ -167,15 +163,11 @@ describe('User Tests', () => {
       testUserData.username = newUsername;
     });
 
-    test('should return undefined for non-existent user update', async () => {
+    test('should return null for non-existent user update', async () => {
       const updateData = { username: 'test' };
 
       const result = await app.services.user.update(99999, updateData);
-      assert.strictEqual(
-        result,
-        undefined,
-        'Should return undefined for non-existent user',
-      );
+      assert.strictEqual(result, null, 'Should return null for non-existent user');
     });
   });
 

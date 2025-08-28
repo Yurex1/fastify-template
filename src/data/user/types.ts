@@ -1,4 +1,4 @@
-import type { Pool } from 'pg';
+import type { TypedPool } from '../../infra/pg';
 import type {
   User,
   CreateUser,
@@ -25,4 +25,4 @@ export interface UserRepo {
   remove: (id: number) => Promise<{ removed: boolean }>;
 }
 
-export type init = (pg: Pool) => UserRepo;
+export type init = (pg: TypedPool) => UserRepo;
