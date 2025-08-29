@@ -17,7 +17,7 @@ export const init = ({ userRepo }: Deps): UserService => ({
   },
 
   isExists: async (definition) => {
-    return userRepo.isExists(definition);
+    return userRepo.exists(definition);
   },
 
   update: async (id, definition) => {

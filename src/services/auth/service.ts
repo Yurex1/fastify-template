@@ -23,12 +23,12 @@ export const init = ({ userRepo }: Deps): AuthService => ({
   },
 
   signUp: async (email, username, password) => {
-    const existingUser = await userRepo.isExists({ email });
+    const existingUser = await userRepo.exists({ email });
     if (existingUser) {
       throw exception.badRequest('EMAIL_ALREADY_IN_USE');
     }
 
-    const existingUsername = await userRepo.isExists({ username });
+    const existingUsername = await userRepo.exists({ username });
     if (existingUsername) {
       throw exception.badRequest('USERNAME_UNAVAILABLE');
     }

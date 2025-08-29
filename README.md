@@ -55,6 +55,84 @@ const result = await pool.query<User>('SELECT * FROM users WHERE active = $1', [
 console.log(`Found ${result.rows.length} active users`);
 ```
 
+## 🏗️ EntityRepo - Generic CRUD Repository
+
+This template includes a generic `EntityRepo` class that provides automatic CRUD operations for any entity. Simply extend this class and get all basic database operations for free!
+
+### Features:
+
+- **Automatic CRUD operations**: `create`, `findOne`, `findById`, `findAll`, `update`, `remove`, `exists`
+- **Type-safe**: Full TypeScript support with proper typing
+- **Extensible**: Add custom methods while keeping all basic operations
+- **Consistent interface**: Same pattern for all entities
+
+### How to Use:
+
+1. **Define your entity** (must extend `BaseEntity`):
+```typescript
+import type { BaseEntity } from '../data/EntityRepo';
+
+interface Product extends BaseEntity {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  inStock: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+2. **Create your repository class**:
+```typescript
+import { EntityRepo } from '../data/EntityRepo';
+
+class ProductRepository extends EntityRepo<Product> {
+  constructor(pool: TypedPool) {
+    super(pool, 'products', ['id', 'name', 'price', 'category', 'inStock', 'createdAt', 'updatedAt']);
+  }
+
+  // Add custom methods
+  async findByCategory(category: string): Promise<Product[]> {
+    const { query, params } = this.buildSelectByCategoryQuery(category);
+    return await this.pool.queryAll<Product>(query, params);
+  }
+}
+```
+
+3. **Use the repository**:
+```typescript
+// Automatic CRUD operations
+const product = await productRepo.create({
+  name: 'Laptop',
+  price: 999.99,
+  category: 'Electronics',
+  inStock: true,
+});
+
+const allProducts = await productRepo.findAll();
+const laptop = await productRepo.findById(1);
+const updated = await productRepo.update(1, { price: 899.99 });
+const removed = await productRepo.remove(1);
+
+// Custom methods
+const electronics = await productRepo.findByCategory('Electronics');
+```
+
+### Available Methods:
+
+**Basic CRUD (inherited from EntityRepo):**
+- `create(data)` - Create a new entity
+- `findOne(definition)` - Find one entity by criteria
+- `findById(id)` - Find entity by ID
+- `findAll()` - Get all entities
+- `update(id, data)` - Update an entity
+- `remove(id)` - Delete an entity
+- `exists(definition)` - Check if entity exists
+- `existsById(id)` - Check if entity exists by ID
+
+See `src/data/EntityRepo.example.ts` for a complete example.
+
 ## 📋 Prerequisites
 
 - **Node.js** 20.11.0 or higher

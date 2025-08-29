@@ -1,4 +1,6 @@
-export interface User {
+import type { BaseEntity } from '../data/EntityRepo';
+
+export interface User extends BaseEntity {
   id: number;
   email: string;
   username: string;
