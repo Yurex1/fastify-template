@@ -1,0 +1,6 @@
+
+echo "🧪 Running tests before commit..."
+
+pnpm test
+
+echo "✅ Tests passed! Commit allowed."

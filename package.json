@@ -21,7 +21,8 @@
     "migrate:up": "npx dotenv -e .env -- node-pg-migrate up --migrations-dir db/migrations --tsx",
     "migrate:down": "npx dotenv -e .env -- node-pg-migrate down --migrations-dir db/migrations --tsx",
     "migrate:create": "npx dotenv -e .env -- node-pg-migrate create --migrations-dir db/migrations --tsx",
-    "migrate:redo": "npx dotenv -e .env -- node-pg-migrate redo --migrations-dir db/migrations --tsx"
+    "migrate:redo": "npx dotenv -e .env -- node-pg-migrate redo --migrations-dir db/migrations --tsx",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -49,6 +50,7 @@
     "dotenv-cli": "^10.0.0",
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "jiti": "^2.5.1",
     "json-schema-to-ts": "^3.1.1",
     "node-pg-migrate": "^8.0.3",
