@@ -507,6 +507,74 @@ This project is licensed under the ISC License.
 - Review the [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for database issues
 - Open an issue in the repository
 
+## 🔔 Firebase Push Notifications
+
+This template includes Firebase push notifications support. The health check endpoint automatically sends a notification when called.
+
+### Setup Firebase:
+
+1. **Create a Firebase project** at [Firebase Console](https://console.firebase.google.com/)
+
+2. **Generate a service account key**:
+   - Go to Project Settings → Service Accounts
+   - Click "Generate new private key"
+   - Download the JSON file
+
+3. **Add Firebase environment variables** to your `.env`:
+```bash
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+```
+
+### Usage:
+
+**Health Check Notification:**
+- Every time `/api/health-check` is called, a notification is sent to the `health-check` topic
+- Notification title: "App Status"
+- Notification body: "APP is running"
+
+**Manual Notifications:**
+```typescript
+// Send to specific device
+await notification.sendNotification(
+  'device-token',
+  'Title',
+  'Message body',
+  { key: 'value' }
+);
+
+// Send to topic
+await notification.sendNotificationToTopic(
+  'topic-name',
+  'Title',
+  'Message body',
+  { key: 'value' }
+);
+
+// Subscribe devices to topic
+await notification.subscribeToTopic(['token1', 'token2'], 'topic-name');
+```
+
+### Client Setup:
+
+To receive notifications, clients need to:
+1. Initialize Firebase in their app
+2. Get FCM token
+3. Subscribe to topics (optional)
+
+**Example (React Native):**
+```javascript
+import messaging from '@react-native-firebase/messaging';
+
+// Get FCM token
+const token = await messaging().getToken();
+
+// Subscribe to health-check topic
+await messaging().subscribeToTopic('health-check');
+```
+
 ## 🔗 Useful Links
 
 - [Fastify Documentation](https://fastify.dev/docs/latest/)

@@ -27,5 +27,10 @@ export const config = {
       refresh: env.requireEnv('JWT_REFRESH_TOKEN_EXPIRATION'),
     },
   },
+  firebase: {
+    projectId: env.requireEnv('FIREBASE_PROJECT_ID'),
+    privateKey: env.requireEnv('FIREBASE_PRIVATE_KEY'),
+    clientEmail: env.requireEnv('FIREBASE_CLIENT_EMAIL'),
+  },
   node_env: process.env.NODE_ENV || 'development',
 };

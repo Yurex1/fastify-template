@@ -5,7 +5,7 @@ import { init as authApiInit } from './auth/api';
 import { APIs } from './types';
 
 export const init = (services: Services): APIs => {
-  const api = apiInit({ service: services.service });
+  const api = apiInit({ service: services.service, notification: services.notification });
   const user = userApiInit({ userService: services.user });
   const auth = authApiInit({ authService: services.auth });
 
