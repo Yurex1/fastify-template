@@ -7,27 +7,15 @@ class FirebaseNotificationService {
   private messaging: admin.messaging.Messaging | null;
 
   constructor() {
-    if (!admin.apps.length && config.firebase.projectId && config.firebase.privateKey && config.firebase.clientEmail) {
-      try {
-        console.log('🚀 Initializing Firebase Admin SDK...');
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: config.firebase.projectId,
-            privateKey: config.firebase.privateKey.replace(/\\n/g, '\n'),
-            clientEmail: config.firebase.clientEmail,
-          }),
-        });
-        this.messaging = admin.messaging();
-        console.log('✅ Firebase Admin SDK initialized successfully');
-      } catch (error) {
-        console.error('❌ Failed to initialize Firebase:', error);
-        this.messaging = null;
-      }
-    } else if (!admin.apps.length) {
-      this.messaging = null;
-    } else {
-      console.log('✅ Using existing Firebase app');
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(config.firebase),
+      });
       this.messaging = admin.messaging();
+      console.log('Firebase Admin SDK initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Firebase:', error);
+      this.messaging = null;
     }
   }
 
@@ -74,20 +62,6 @@ class FirebaseNotificationService {
           body,
         },
         data,
-        android: {
-          notification: {
-            sound: 'default',
-            priority: 'high',
-          },
-        },
-        apns: {
-          payload: {
-            aps: {
-              sound: 'default',
-              badge: 1,
-            },
-          },
-        },
       };
 
       const response = await this.messaging.send(message);
