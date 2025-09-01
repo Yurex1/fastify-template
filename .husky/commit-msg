@@ -1,0 +1,28 @@
+commit_msg=$(cat "$1")
+
+
+commit_regex='^\[(TASK-\d+|TEMPLATE)\]: ?(?:([^|]+) \|)? (.+) \((feat|fix|docs|style|refactor|perf|test|build|ci)\)(?: pt-\d+)?$'
+
+if ! echo "$commit_msg" | grep -qE "$commit_regex"; then
+    echo "❌ Invalid commit message format."
+    echo "✅ Expected format:"
+    echo "  [TASK-1234]: Customer | Fix login bug (fix)"
+    echo "  [TEMPLATE]: Add new feature (feat)"
+    echo "🔖 Format breakdown:"
+    echo "  [TASK-1234]        ← task ID"
+    echo "  [TEMPLATE]         ← template identifier"
+    echo "  Customer           ← (optional) app or scope"
+    echo "  Fix login bug      ← short subject"
+    echo "  (fix)              ← type (feat, fix, etc.)"
+    echo "  pt-2               ← (optional) part number"
+    echo ""
+    echo "📝 Examples:"
+    echo "  [TASK-1234]: Customer | Fix login bug (fix)"
+    echo "  [TASK-5678]: API | Add user authentication (feat)"
+    echo "  [TEMPLATE]: Add EntityRepo class (feat)"
+    echo "  [TEMPLATE]: Backend | Update documentation (docs)"
+    echo "  [TASK-3456]: Backend | Optimize database queries (perf) pt-2"
+    exit 1
+fi
+
+echo "✅ Commit message format is valid!"

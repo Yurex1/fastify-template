@@ -1,0 +1,7 @@
+{
+  "dir": "db/migrations",
+  "schema": "public",
+  "migrationFileLanguage": "ts",
+  "checkOrder": true,
+  "createSchema": true
+}
