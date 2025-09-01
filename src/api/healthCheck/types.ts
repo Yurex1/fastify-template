@@ -1,7 +1,7 @@
 import * as SchemaType from 'json-schema-to-ts';
 import * as schemas from './schemas';
 import { Service } from '../../services/service/types';
-import { NotificationService } from '../../services/notification/service';
+import { NotificationService } from '../../firebase/notification/service';
 import { API, UnprotectedEndpoint } from '../types';
 
 type HealthCheckParam = SchemaType.FromSchema<typeof schemas.healthCheck>;

@@ -36,6 +36,7 @@ class FirebaseNotificationService {
       };
 
       const response = await this.messaging.send(message);
+
       console.log('Successfully sent notification:', response);
     } catch (error) {
       console.error('Error sending notification:', error);

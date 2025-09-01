@@ -23,12 +23,14 @@ A modern, production-ready Fastify.js template with TypeScript, PostgreSQL, JWT 
 This template includes a typed database client that automatically infers return types from your queries, eliminating the need for manual type casting with `as User`.
 
 ### Before (with manual casting):
+
 ```typescript
 const result = await pool.query(query, params);
 return result.rows[0] as User;
 ```
 
 ### After (with typed client):
+
 ```typescript
 const result = await pool.queryOne<User>(query, params);
 return result!;
@@ -69,6 +71,7 @@ This template includes a generic `EntityRepo` class that provides automatic CRUD
 ### How to Use:
 
 1. **Define your entity** (must extend `BaseEntity`):
+
 ```typescript
 import type { BaseEntity } from '../data/EntityRepo';
 
@@ -84,6 +87,7 @@ interface Product extends BaseEntity {
 ```
 
 2. **Create your repository class**:
+
 ```typescript
 import { EntityRepo } from '../data/EntityRepo';
 
@@ -101,6 +105,7 @@ class ProductRepository extends EntityRepo<Product> {
 ```
 
 3. **Use the repository**:
+
 ```typescript
 // Automatic CRUD operations
 const product = await productRepo.create({
@@ -122,6 +127,7 @@ const electronics = await productRepo.findByCategory('Electronics');
 ### Available Methods:
 
 **Basic CRUD (inherited from EntityRepo):**
+
 - `create(data)` - Create a new entity
 - `findOne(definition)` - Find one entity by criteria
 - `findById(id)` - Find entity by ID
@@ -142,27 +148,31 @@ See `src/data/EntityRepo.example.ts` for a complete example.
 ## 🛠️ Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone <repository-url>
    cd fastify-template
    ```
 
 2. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 3. **Set up environment variables:**
+
    ```bash
    # Create .env file with required variables
    touch .env
    ```
 
 4. **Set up the database:**
+
    ```bash
    # Create your database
    createdb fastify-template-db
-   
+
    # Run migrations
    pnpm migrate:up
    ```
@@ -334,6 +344,7 @@ The template includes a complete JWT authentication system:
 ### Adding New Routes
 
 1. **Create a new route file** in `src/api/`:
+
    ```typescript
    import { FastifyInstance } from 'fastify';
    import { Services } from '../services/types';
@@ -354,13 +365,14 @@ The template includes a complete JWT authentication system:
    ```
 
 2. **Register the route** in `src/api/main.ts`:
+
    ```typescript
    import { init as userRoutesInit } from './userRoutes';
-   
+
    export const init = (services: Services): APIs => {
      // ... existing code ...
      const userRoutes = userRoutesInit(services);
-     
+
      return {
        // ... existing APIs ...
        userRoutes,
@@ -411,6 +423,7 @@ Once the server is running, you can access:
 - **OpenAPI JSON**: http://localhost:8080/documentation/json
 
 The documentation is automatically generated from your route schemas and includes:
+
 - Request/response schemas
 - Authentication requirements
 - Example requests and responses
@@ -481,22 +494,26 @@ This project is licensed under the ISC License.
 ### Common Issues
 
 **Database Connection Issues:**
+
 - Ensure PostgreSQL is running
 - Check your environment variables in `.env`
 - Verify database exists: `createdb fastify-template-db`
 - Check connection with: `psql -h localhost -U your_username -d fastify-template-db`
 
 **Migration Issues:**
+
 - See [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) for detailed troubleshooting
 - Use `pnpm migrate:up --dry-run` to preview changes
 - Check migration files in `db/migrations/`
 
 **TypeScript Errors:**
+
 - Run `pnpm build` to check for type errors
 - Ensure all dependencies are installed: `pnpm install`
 - Check `tsconfig.json` configuration
 
 **JWT Issues:**
+
 - Ensure `JWT_SECRET` is set in your `.env` file
 - Check token expiration settings
 - Verify token format in requests
@@ -521,6 +538,7 @@ This template includes Firebase push notifications support. The health check end
    - Download the JSON file
 
 3. **Add Firebase environment variables** to your `.env`:
+
 ```bash
 # Firebase Configuration
 FIREBASE_PROJECT_ID=your-project-id
@@ -531,48 +549,22 @@ FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.c
 ### Usage:
 
 **Health Check Notification:**
+
 - Every time `/api/health-check` is called, a notification is sent to the `health-check` topic
 - Notification title: "App Status"
 - Notification body: "APP is running"
 
 **Manual Notifications:**
+
 ```typescript
 // Send to specific device
-await notification.sendNotification(
-  'device-token',
-  'Title',
-  'Message body',
-  { key: 'value' }
-);
+await notification.sendNotification('device-token', 'Title', 'Message body', { key: 'value' });
 
 // Send to topic
-await notification.sendNotificationToTopic(
-  'topic-name',
-  'Title',
-  'Message body',
-  { key: 'value' }
-);
+await notification.sendNotificationToTopic('topic-name', 'Title', 'Message body', { key: 'value' });
 
 // Subscribe devices to topic
 await notification.subscribeToTopic(['token1', 'token2'], 'topic-name');
-```
-
-### Client Setup:
-
-To receive notifications, clients need to:
-1. Initialize Firebase in their app
-2. Get FCM token
-3. Subscribe to topics (optional)
-
-**Example (React Native):**
-```javascript
-import messaging from '@react-native-firebase/messaging';
-
-// Get FCM token
-const token = await messaging().getToken();
-
-// Subscribe to health-check topic
-await messaging().subscribeToTopic('health-check');
 ```
 
 ## 🔗 Useful Links
