@@ -1,8 +1,14 @@
 export interface S3Service {
-  uploadPhoto: (file: Buffer, fileName: string, contentType: string) => Promise<string>;
   deletePhoto: (fileName: string) => Promise<void>;
-  getSignedUrl: (fileName: string, expiresIn?: number) => Promise<string>;
+  getSignedUrl: (path: string, expiresIn?: number) => Promise<string>;
   getPhotoUrl: (fileName: string) => string;
+  generateUploadUrl: (mediaType: string, expiresIn?: number) => Promise<{
+    uploadUrl: string;
+    finalUrl: string;
+    fileName: string;
+    expiresIn: number;
+    mediaType: string;
+  }>;
 }
 
 export interface UploadResult {

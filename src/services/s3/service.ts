@@ -1,10 +1,4 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommandInput,
-} from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { config } from '../../config';
 import { S3Service } from './types';
@@ -27,33 +21,6 @@ class AWSS3Service implements S3Service {
     });
   }
 
-  async uploadPhoto(file: Buffer, fileName: string, contentType: string): Promise<string> {
-    try {
-      const timestamp = Date.now();
-      const fileExtension = fileName.split('.').pop();
-      const uniqueFileName = `photos/${timestamp}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
-
-      const uploadParams: PutObjectCommandInput = {
-        Bucket: this.bucketName,
-        Key: uniqueFileName,
-        Body: file,
-        ContentType: contentType,
-        Metadata: {
-          originalName: fileName,
-          uploadedAt: new Date().toISOString(),
-          fileSize: file.length.toString(),
-        },
-      };
-
-      const command = new PutObjectCommand(uploadParams);
-      await this.s3Client.send(command);
-
-      return uniqueFileName;
-    } catch (error) {
-      throw new Error(`Failed to upload photo: ${error}`);
-    }
-  }
-
   async deletePhoto(fileName: string): Promise<void> {
     try {
       const deleteParams = {
@@ -68,11 +35,11 @@ class AWSS3Service implements S3Service {
     }
   }
 
-  async getSignedUrl(fileName: string, expiresIn: number = 3600): Promise<string> {
+  async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string> {
     try {
-      const command = new GetObjectCommand({
+      const command = new PutObjectCommand({
         Bucket: this.bucketName,
-        Key: fileName,
+        Key: path,
       });
 
       const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
@@ -85,6 +52,37 @@ class AWSS3Service implements S3Service {
 
   getPhotoUrl(fileName: string): string {
     return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${fileName}`;
+  }
+
+  async generateUploadUrl(
+    mediaType: string,
+    expiresIn: number = 3600,
+  ): Promise<{
+    uploadUrl: string;
+    finalUrl: string;
+    fileName: string;
+    expiresIn: number;
+    mediaType: string;
+  }> {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(mediaType)) {
+      throw new Error('Invalid media type. Only JPEG, PNG, GIF, and WebP are allowed');
+    }
+
+    const timestamp = Date.now();
+    const fileExtension = mediaType.split('/')[1];
+    const uniqueFileName = `photos/${timestamp}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
+
+    const uploadUrl = await this.getSignedUrl(uniqueFileName, expiresIn);
+    const finalUrl = this.getPhotoUrl(uniqueFileName);
+
+    return {
+      uploadUrl,
+      finalUrl,
+      fileName: uniqueFileName,
+      expiresIn,
+      mediaType,
+    };
   }
 }
 

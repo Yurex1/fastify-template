@@ -3,27 +3,19 @@ import type { ProtectedEndpoint, API } from '../types';
 import * as schemas from './schemas';
 import * as SchemaType from 'json-schema-to-ts';
 
-type UploadPhotoParams = SchemaType.FromSchema<typeof schemas.uploadPhoto>;
 type DeletePhotoParams = SchemaType.FromSchema<typeof schemas.deletePhoto>;
-type GetPhotoUrlParams = SchemaType.FromSchema<typeof schemas.getPhotoUrl>;
+type GetUploadUrlParams = SchemaType.FromSchema<typeof schemas.getUploadUrl>;
 
-type UploadPhotoResponse = {
-  success: boolean;
-  fileName: string;
-  url: string;
-  size: number;
-  contentType: string;
-  uploadedAt: string;
-};
 type DeletePhotoResponse = {
-  success: boolean;
   message: string;
 };
 
 type GetPhotoUrlResponse = {
-  success: boolean;
-  url: string;
+  uploadUrl: string;
+  finalUrl: string;
   fileName: string;
+  expiresIn: number;
+  mediaType: string;
 };
 
 export interface Deps {
@@ -31,7 +23,6 @@ export interface Deps {
 }
 
 export interface PhotoApi extends API {
-  upload: ProtectedEndpoint<UploadPhotoParams, Promise<UploadPhotoResponse>>;
+  'get-upload-url': ProtectedEndpoint<GetUploadUrlParams, Promise<GetPhotoUrlResponse>>;
   delete: ProtectedEndpoint<DeletePhotoParams, Promise<DeletePhotoResponse>>;
-  url: ProtectedEndpoint<GetPhotoUrlParams, Promise<GetPhotoUrlResponse>>;
 }
