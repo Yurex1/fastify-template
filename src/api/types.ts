@@ -1,5 +1,6 @@
 import { UserApi } from './user/types';
 import { AuthApi } from './auth/types';
+import { PhotoApi } from './photo/types';
 import { FastifyRequest } from 'fastify';
 import { Api } from './healthCheck/types';
 import { UserResult } from '../entities/user';
@@ -42,4 +43,5 @@ export interface APIs extends Record<string, API> {
   api: Api;
   user: UserApi;
   auth: AuthApi;
+  photo: PhotoApi;
 }
