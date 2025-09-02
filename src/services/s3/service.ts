@@ -32,7 +32,7 @@ class AWSS3Service implements S3Service {
       const timestamp = Date.now();
       const fileExtension = fileName.split('.').pop();
       const uniqueFileName = `photos/${timestamp}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
-      
+
       const uploadParams: PutObjectCommandInput = {
         Bucket: this.bucketName,
         Key: uniqueFileName,
@@ -86,11 +86,8 @@ class AWSS3Service implements S3Service {
   getPhotoUrl(fileName: string): string {
     return `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${fileName}`;
   }
-
-  
 }
 
 export const init = (): S3Service => {
   return new AWSS3Service();
 };
-

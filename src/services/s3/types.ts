@@ -15,7 +15,6 @@ export interface UploadResult {
 
 export interface PhotoMetadata {
   originalName: string;
-  uploadedAt: string;
-  fileSize: string;
+  uploadedAt: Date;
+  fileSize: number;
 }
-
