@@ -4,6 +4,7 @@ import { init as serviceInit } from './service/service';
 import { init as userServiceInit } from './user/service';
 import { init as authServiceInit } from './auth/service';
 import { init as notificationServiceInit } from '../firebase/notification/service';
+import { init as s3ServiceInit } from './s3/service';
 import { Services } from './types';
 
 export const init = (repos: Repos, _wsServer: WsServer): Services => {
@@ -11,11 +12,13 @@ export const init = (repos: Repos, _wsServer: WsServer): Services => {
   const user = userServiceInit({ userRepo: repos.user });
   const auth = authServiceInit({ userRepo: repos.user });
   const notification = notificationServiceInit();
+  const s3 = s3ServiceInit();
 
   return {
     service,
     user,
     auth,
     notification,
+    s3,
   };
 };

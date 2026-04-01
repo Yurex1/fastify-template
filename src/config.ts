@@ -32,5 +32,11 @@ export const config = {
     privateKey: env.requireEnv('FIREBASE_PRIVATE_KEY'),
     clientEmail: env.requireEnv('FIREBASE_CLIENT_EMAIL'),
   },
+  aws: {
+    region: env.requireEnv('AWS_REGION'),
+    bucketName: env.requireEnv('AWS_S3_BUCKET_NAME'),
+    accessKeyId: env.requireEnv('AWS_ACCESS_KEY_ID'),
+    secretAccessKey: env.requireEnv('AWS_SECRET_ACCESS_KEY'),
+  },
   node_env: process.env.NODE_ENV || 'development',
 };
