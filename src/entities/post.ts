@@ -1,14 +1,11 @@
 import type { BaseEntity } from '../data/EntityRepo';
 
 export interface Post extends BaseEntity {
-  id: number;
   title: string;
   body: string;
   category: string;
   userId: number;
   photo: string;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface CreatePost {

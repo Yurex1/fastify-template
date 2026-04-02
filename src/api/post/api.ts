@@ -52,9 +52,8 @@ export const init = ({ postService }: Deps): PostApi => ({
     method: 'get',
     access: 'common',
     schema: schemas.getByUser,
-    handler: async (_user, request) => {
-      const { userId } = request.query;
-      return postService.findByUserId(userId);
+    handler: async (user, _request) => {
+      return postService.findByUserId(user.id);
     },
   },
 
@@ -65,8 +64,8 @@ export const init = ({ postService }: Deps): PostApi => ({
     schema: schemas.update,
     handler: async (_user, request) => {
       const { id } = request.params;
-      const updateData = request.body;
-      return postService.update(id, updateData);
+      const { title, body, category, photo } = request.body;
+      return postService.update(id, { title, body, category, photo });
     },
   },
 

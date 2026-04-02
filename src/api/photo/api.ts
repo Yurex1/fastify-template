@@ -1,4 +1,3 @@
-import { config } from '../../config';
 import * as schemas from './schemas';
 import { PhotoApi, Deps } from './types';
 
