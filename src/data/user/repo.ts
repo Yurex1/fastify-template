@@ -36,6 +36,9 @@ class UserRepository extends EntityRepo<User> {
     const result = await this.pool.queryOne<User>(query, params);
     return result!;
   }
+  async clearRefreshToken(userId: number): Promise<void> {
+    await this.pool.query('UPDATE users SET "refreshToken" = NULL WHERE id = $1', [userId]);
+  }
 
   private buildSelectOneWithPasswordQuery(definition: Partial<User>) {
     const columns = Object.keys(definition);
@@ -66,7 +69,7 @@ export const init = (pool: TypedPool): UserRepo => {
     remove: (id: number) => userRepo.remove(id),
     exists: (definition: Partial<User>) => userRepo.exists(definition),
     existsById: (id: number) => userRepo.existsById(id),
-
+    clearRefreshToken: (id: number) => userRepo.clearRefreshToken(id),
     findOneByUsernameOrEmail: (value: string, includePassword = false) =>
       userRepo.findOneByUsernameOrEmail(value, includePassword),
     updateEmail: (id: number, email: string) => userRepo.updateEmail(id, email),

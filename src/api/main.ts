@@ -3,6 +3,7 @@ import { init as apiInit } from './healthCheck/api';
 import { init as userApiInit } from './user/api';
 import { init as authApiInit } from './auth/api';
 import { init as photoApiInit } from './photo/api';
+import { init as postApiInit } from './post/api';
 import { APIs } from './types';
 
 export const init = (services: Services): APIs => {
@@ -10,11 +11,13 @@ export const init = (services: Services): APIs => {
   const user = userApiInit({ userService: services.user });
   const auth = authApiInit({ authService: services.auth });
   const photo = photoApiInit({ s3: services.s3 });
+  const post = postApiInit({ postService: services.post });
 
   return {
     api,
     user,
     auth,
     photo,
+    post,
   };
 };

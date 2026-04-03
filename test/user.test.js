@@ -11,22 +11,15 @@ describe('User Tests', () => {
   before(async () => {
     app = await start();
     testUserData = {
-      username: `testuser-${Date.now()}`,
-      email: `test-${Date.now()}@example.com`,
+      username: `testuser-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      email: `test-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`,
       password: 'TestPassword123!',
     };
 
-    const session = await app.services.auth.signUp(
-      testUserData.email,
-      testUserData.username,
-      testUserData.password,
-    );
+    const session = await app.services.auth.signUp(testUserData.email, testUserData.username, testUserData.password);
 
     authToken = session.accessToken;
-    const user = await app.services.auth.verify(
-      'access',
-      `Bearer ${authToken}`,
-    );
+    const user = await app.services.auth.verify('access', `Bearer ${authToken}`);
     userId = user.id;
   });
 
@@ -43,14 +36,8 @@ describe('User Tests', () => {
 
       const foundUser = users.find((u) => u.id === userId);
       assert(foundUser, 'Should find our created user in the list');
-      assert(
-        foundUser.username === testUserData.username,
-        'Should have correct username',
-      );
-      assert(
-        foundUser.email === testUserData.email,
-        'Should have correct email',
-      );
+      assert(foundUser.username === testUserData.username, 'Should have correct username');
+      assert(foundUser.email === testUserData.email, 'Should have correct email');
     });
   });
 
@@ -60,10 +47,7 @@ describe('User Tests', () => {
 
       assert(user, 'Should find the user');
       assert(user.id === userId, 'Should have correct user ID');
-      assert(
-        user.username === testUserData.username,
-        'Should have correct username',
-      );
+      assert(user.username === testUserData.username, 'Should have correct username');
       assert(user.email === testUserData.email, 'Should have correct email');
     });
 
@@ -74,10 +58,7 @@ describe('User Tests', () => {
 
       assert(user, 'Should find the user');
       assert(user.id === userId, 'Should have correct user ID');
-      assert(
-        user.username === testUserData.username,
-        'Should have correct username',
-      );
+      assert(user.username === testUserData.username, 'Should have correct username');
       assert(user.email === testUserData.email, 'Should have correct email');
     });
 
@@ -103,10 +84,7 @@ describe('User Tests', () => {
       assert(updatedUser, 'Should return updated user');
       assert(updatedUser.id === userId, 'Should have correct user ID');
       assert(updatedUser.email === newEmail, 'Should have updated email');
-      assert(
-        updatedUser.username === testUserData.username,
-        'Should keep same username',
-      );
+      assert(updatedUser.username === testUserData.username, 'Should keep same username');
 
       testUserData.email = newEmail;
     });
@@ -130,14 +108,8 @@ describe('User Tests', () => {
 
       assert(updatedUser, 'Should return updated user');
       assert(updatedUser.id === userId, 'Should have correct user ID');
-      assert(
-        updatedUser.username === updateData.username,
-        'Should have updated username',
-      );
-      assert(
-        updatedUser.email === updateData.email,
-        'Should have updated email',
-      );
+      assert(updatedUser.username === updateData.username, 'Should have updated username');
+      assert(updatedUser.email === updateData.email, 'Should have updated email');
 
       testUserData.username = updateData.username;
       testUserData.email = updateData.email;
@@ -151,14 +123,8 @@ describe('User Tests', () => {
 
       assert(updatedUser, 'Should return updated user');
       assert(updatedUser.id === userId, 'Should have correct user ID');
-      assert(
-        updatedUser.username === newUsername,
-        'Should have updated username',
-      );
-      assert(
-        updatedUser.email === testUserData.email,
-        'Should keep same email',
-      );
+      assert(updatedUser.username === newUsername, 'Should have updated username');
+      assert(updatedUser.email === testUserData.email, 'Should keep same email');
 
       testUserData.username = newUsername;
     });
@@ -216,14 +182,8 @@ describe('User Tests', () => {
 
       assert(createdRepoUser, 'Should return created user');
       assert(createdRepoUser.id, 'Should have ID');
-      assert(
-        createdRepoUser.username === repoUserData.username,
-        'Should have correct username',
-      );
-      assert(
-        createdRepoUser.email === repoUserData.email,
-        'Should have correct email',
-      );
+      assert(createdRepoUser.username === repoUserData.username, 'Should have correct username');
+      assert(createdRepoUser.email === repoUserData.email, 'Should have correct email');
 
       const allUsers = await app.repos.user.findAll();
       assert(Array.isArray(allUsers), 'Should return array of users');

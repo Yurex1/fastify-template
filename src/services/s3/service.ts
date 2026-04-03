@@ -35,11 +35,12 @@ class AWSS3Service implements S3Service {
     }
   }
 
-  async getSignedUrl(path: string, expiresIn: number = 3600): Promise<string> {
+  async getSignedUrl(path: string, mediaType: string, expiresIn: number = 3600): Promise<string> {
     try {
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
         Key: path,
+        ContentType: mediaType,
       });
 
       const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
@@ -73,7 +74,7 @@ class AWSS3Service implements S3Service {
     const fileExtension = mediaType.split('/')[1];
     const uniqueFileName = `photos/${timestamp}_${Math.random().toString(36).substring(2)}.${fileExtension}`;
 
-    const uploadUrl = await this.getSignedUrl(uniqueFileName, expiresIn);
+    const uploadUrl = await this.getSignedUrl(uniqueFileName, mediaType, expiresIn);
     const finalUrl = this.getPhotoUrl(uniqueFileName);
 
     return {
