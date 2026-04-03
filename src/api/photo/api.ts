@@ -7,7 +7,7 @@ export const init = ({ s3 }: Deps): PhotoApi => ({
     access: 'common',
     schema: schemas.getUploadUrl,
     handler: async (_, request) => {
-      const { mediaType, expiresIn = 3600 } = request.body as { mediaType: string; expiresIn?: number };
+      const { mediaType, expiresIn = 3600 } = request.body;
 
       return await s3.generateUploadUrl(mediaType, expiresIn);
     },

@@ -11,6 +11,7 @@ export const create = {
         category: { type: 'string', minLength: 1, maxLength: 100 },
         photo: { type: 'string', minLength: 1 },
       },
+      additionalProperties: false,
       required: ['title', 'body', 'category', 'photo'],
     },
     headers: authHeaders,
@@ -90,6 +91,7 @@ export const update = {
         photo: { type: 'string', minLength: 1 },
       },
     },
+
     headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],

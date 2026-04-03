@@ -3,8 +3,13 @@ import { plugins } from './plugins';
 import { config } from '../config';
 import { Deps, SessionProvider } from './types';
 
-export const server = fastify();
-
+export const server = fastify({
+  ajv: {
+    customOptions: {
+      removeAdditional: true,
+    },
+  },
+});
 async function registerPlugins() {
   for (const plugin of plugins) {
     await server.register(plugin.plugin, plugin.options);

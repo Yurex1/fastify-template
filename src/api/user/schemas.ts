@@ -60,6 +60,7 @@ export const update = {
         username: { type: 'string' },
       },
     },
+
     headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
