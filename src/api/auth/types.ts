@@ -3,7 +3,7 @@ import * as schemas from './schemas';
 import type { User } from '../../entities/user';
 import type { AuthService } from '../../services/auth/types';
 import type { ProtectedEndpoint, UnprotectedEndpoint, API } from '../types';
-import { Session } from '../../utils/sessions/types';
+import type { Session } from '../../utils/sessions/types';
 
 type SignInParam = SchemaType.FromSchema<typeof schemas.signIn>;
 type SignUpParam = SchemaType.FromSchema<typeof schemas.signUp>;

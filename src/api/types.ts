@@ -2,6 +2,7 @@ import { UserApi } from './user/types';
 import { AuthApi } from './auth/types';
 import { PhotoApi } from './photo/types';
 import { PostApi } from './post/types';
+import { ChatApi } from './chats/types';
 import { FastifyRequest } from 'fastify';
 import { Api } from './healthCheck/types';
 import { UserResult } from '../entities/user';
@@ -46,4 +47,5 @@ export interface APIs extends Record<string, API> {
   auth: AuthApi;
   photo: PhotoApi;
   post: PostApi;
+  chats: ChatApi;
 }

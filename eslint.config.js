@@ -22,12 +22,12 @@ export default defineConfig([
       'no-undef': 'warn',
     },
   },
-  
+
   // TypeScript files (excluding migrations)
   ...tseslint.configs.recommended,
   {
     files: ['**/*.ts', '**/*.tsx'],
-    ignores: ['db/migrations/**/*.ts'],
+    ignores: ['db/migrations/**/*.ts', 'db/migrate.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -40,10 +40,13 @@ export default defineConfig([
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
@@ -51,7 +54,7 @@ export default defineConfig([
       '@typescript-eslint/no-empty-object-type': 'warn',
     },
   },
-  
+
   // Migration files (JavaScript rules only)
   {
     files: ['db/migrations/**/*.ts'],
@@ -66,15 +69,9 @@ export default defineConfig([
       'no-undef': 'warn',
     },
   },
-  
+
   // Global ignores
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      '*.min.js',
-      'coverage/**',
-      '.git/**',
-    ],
+    ignores: ['dist/**', 'node_modules/**', '*.min.js', 'coverage/**', '.git/**'],
   },
 ]);

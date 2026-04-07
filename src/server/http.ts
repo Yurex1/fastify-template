@@ -7,6 +7,7 @@ export const server = fastify({
   ajv: {
     customOptions: {
       removeAdditional: true,
+      coerceTypes: true,
     },
   },
 });

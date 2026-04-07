@@ -13,11 +13,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "test/**/*",
-    "db/migrations/**/*",
-    "**/*.config.js"
-  ]
+  "exclude": ["dist", "node_modules", "test/**/*", "db/migrations/**", "db/migrate.ts", "**/*.config.js"]
 }

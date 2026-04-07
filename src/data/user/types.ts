@@ -14,6 +14,7 @@ export interface UserRepo {
   findOneByUsernameOrEmail: (value: string, includePassword?: boolean) => Promise<User | null>;
   updateEmail: (id: number, email: string) => Promise<User>;
   updatePassword: (id: number, password: string) => Promise<User>;
+  clearRefreshToken: (userId: number) => Promise<void>;
 }
 
 export type init = (pg: TypedPool) => UserRepo;
