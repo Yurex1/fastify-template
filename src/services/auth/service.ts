@@ -16,7 +16,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
 
     const validPassword = passwords.compare(password, user.password);
     if (!validPassword) {
-      throw exception.badRequest('PASSWORDS_IDENTICAL');
+      throw exception.badRequest('INCORRECT_PASSWORD');
     }
 
     const session = sessions.generate(user);
@@ -93,13 +93,16 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
 
   refresh: async (userId, deviceId, currentToken) => {
     const user = await userRepo.findOne({ id: userId });
-    if (!user) {
-      throw exception.notFound('USER_NOT_FOUND');
-    }
+    if (!user) throw exception.notFound('USER_NOT_FOUND');
 
     const sessionData = await sessionRepo.findOne({ userId, deviceId });
     if (!sessionData) {
       throw exception.unauthorized('SESSION_NOT_FOUND');
+    }
+
+    if (new Date() > sessionData.expiresAt) {
+      await sessionRepo.removeByUserId(userId, deviceId);
+      throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
     }
 
     const isValid = passwords.compare(currentToken, sessionData.refreshToken);
@@ -121,6 +124,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
 
     return session;
   },
+
   changePassword: async (userId, oldPassword, newPassword) => {
     const user = await userRepo.findOne({ id: userId }, true);
     if (!user) {
