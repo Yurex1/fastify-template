@@ -39,10 +39,12 @@ export const up = (pgm) => {
     },
   });
 
+  pgm.addConstraint('sessions', 'sessions_user_device_unique', {
+    unique: ['userId', 'deviceId'],
+  });
+
   // Create indexes for better performance
-  pgm.createIndex('sessions', 'userId');
   pgm.createIndex('sessions', 'refreshToken');
-  pgm.createIndex('sessions', 'deviceId');
 
   // Create trigger for updating timestamp
   pgm.createTrigger('sessions', 'update_session_timestamp', {

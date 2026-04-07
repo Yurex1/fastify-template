@@ -39,12 +39,12 @@ export const init = ({ authService }: Deps): AuthApi => ({
     method: 'post',
     access: 'refresh',
     schema: schemas.refresh,
+    handler: async (user, request) => {
+      const deviceId = request.headers['user-agent'] || 'unknown';
 
-    handler: async (user, _request) => {
-      const deviceId = _request.headers['user-agent'] || 'unknown';
-
-      const cookies = _request.cookies as Record<string, string | undefined>;
-      const currentToken = cookies?.refreshToken || (_request.headers['x-refresh-token'] as string);
+      const authHeader = request.headers.authorization;
+      const tokens = authHeader?.split(' ') || [];
+      const currentToken = tokens[2] || (request.headers['x-refresh-token'] as string);
 
       if (!currentToken) {
         throw exception.unauthorized('REFRESH_TOKEN_MISSING');

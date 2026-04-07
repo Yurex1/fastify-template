@@ -39,7 +39,7 @@ describe('Auth Tests', () => {
       accessToken = session.accessToken;
       refreshToken = session.refreshToken;
 
-      const user = await app.services.auth.verify('access', `Bearer ${accessToken}`);
+      const user = await app.services.auth.verify('common', `Bearer ${accessToken}`);
       userId = user.id;
     });
   });

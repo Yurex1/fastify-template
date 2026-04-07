@@ -22,12 +22,11 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const session = sessions.generate(user);
     const hashedToken = passwords.hash(session.refreshToken);
 
-    await sessionRepo.removeByUserId(user.id, deviceId);
-    await sessionRepo.create({
+    await sessionRepo.upsert({
       userId: user.id,
       deviceId,
       refreshToken: hashedToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: session.expiresAt,
     });
     return session;
   },
@@ -54,11 +53,11 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const session = sessions.generate(user);
     const hashedToken = passwords.hash(session.refreshToken);
 
-    await sessionRepo.create({
+    await sessionRepo.upsert({
       userId: user.id,
       deviceId,
       refreshToken: hashedToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: session.expiresAt,
     });
     return session;
   },
@@ -94,17 +93,18 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   refresh: async (userId, deviceId, currentToken) => {
     const user = await userRepo.findOne({ id: userId });
     if (!user) throw exception.notFound('USER_NOT_FOUND');
+    if (!currentToken) throw exception.unauthorized('REFRESH_TOKEN_REQUIRED');
+    const payload = sessions.validate('refresh', currentToken);
+    const sessionData = await sessionRepo.findOne({ userId: payload.id, deviceId });
 
-    const sessionData = await sessionRepo.findOne({ userId, deviceId });
     if (!sessionData) {
-      throw exception.unauthorized('SESSION_NOT_FOUND');
+      throw exception.unauthorized('SESSION_EXPIRED_OR_INVALID');
     }
 
     if (new Date() > sessionData.expiresAt) {
       await sessionRepo.removeByUserId(userId, deviceId);
       throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
     }
-
     const isValid = passwords.compare(currentToken, sessionData.refreshToken);
     if (!isValid) {
       await sessionRepo.removeByUserId(userId, deviceId);
@@ -114,12 +114,11 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const session = sessions.generate(user);
     const hashedToken = passwords.hash(session.refreshToken);
 
-    await sessionRepo.removeByUserId(user.id, deviceId);
-    await sessionRepo.create({
+    await sessionRepo.upsert({
       userId: user.id,
       deviceId,
       refreshToken: hashedToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: session.expiresAt,
     });
 
     return session;

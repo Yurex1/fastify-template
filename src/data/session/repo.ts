@@ -2,7 +2,7 @@ import { CreateSession, UserSession } from '../../entities/session';
 import { TypedPool } from '../../infra/pg';
 
 import { EntityRepo } from '../EntityRepo';
-import { selectByToken, selectByUserId } from './sql';
+import { buildUpsertQuery, removeByUserIdAndDeviceId, selectByUserId } from './sql';
 import { SessionRepo } from './types';
 
 class SessionRepository extends EntityRepo<UserSession> {
@@ -18,12 +18,14 @@ class SessionRepository extends EntityRepo<UserSession> {
     return await this.pool.queryOne<UserSession>(query, params);
   }
 
-  async removeByUserId(userId: number, deviceId: string): Promise<void> {
-    await this.pool.query('DELETE FROM sessions WHERE "userId" = $1 AND "deviceId" = $2', [userId, deviceId]);
+  async removeByUserId(userId: number, deviceId: string): Promise<UserSession | null> {
+    const { query, params } = removeByUserIdAndDeviceId(userId, deviceId);
+    return await this.pool.queryOne<UserSession>(query, params);
   }
 
-  async removeByToken(token: string, deviceId: string): Promise<void> {
-    await this.pool.query('DELETE FROM sessions WHERE "refreshToken" = $1 AND "deviceId" = $2', [token, deviceId]);
+  async upsert(session: CreateSession): Promise<UserSession | null> {
+    const { query, params } = buildUpsertQuery(session);
+    return await this.pool.queryOne<UserSession>(query, params);
   }
 }
 
@@ -35,6 +37,6 @@ export const init = (pool: TypedPool): SessionRepo => {
     findOne: (definition: Partial<UserSession>) => sessionRepo.findOne(definition),
     findByUserId: (userId: number) => sessionRepo.findByUserId(userId),
     removeByUserId: (userId: number, deviceId: string) => sessionRepo.removeByUserId(userId, deviceId),
-    removeByToken: (token: string, deviceId: string) => sessionRepo.removeByToken(token, deviceId),
+    upsert: (session: CreateSession) => sessionRepo.upsert(session),
   };
 };

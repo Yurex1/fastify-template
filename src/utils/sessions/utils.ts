@@ -1,4 +1,5 @@
 import { SignOptions } from 'jsonwebtoken';
+import jsonwebtoken from 'jsonwebtoken';
 import { config } from '../../config';
 import { UserResult } from '../../entities/user';
 import { exception } from '../exception/util';
@@ -11,8 +12,14 @@ export const sessions = {
     const accessToken = jwt.sign({ id, type: 'access' }, config.jwt.expiration.access as SignOptions['expiresIn']);
 
     const refreshToken = jwt.sign({ id, type: 'refresh' }, config.jwt.expiration.refresh as SignOptions['expiresIn']);
-
-    return { user, accessToken, refreshToken };
+    const decoded = jsonwebtoken.decode(refreshToken) as { exp: number };
+    const expiresAt = new Date(decoded.exp * 1000);
+    return {
+      user,
+      accessToken,
+      refreshToken,
+      expiresAt,
+    };
   },
 
   validate: (type: 'access' | 'refresh', token: string) => {

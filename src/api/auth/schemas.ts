@@ -45,12 +45,15 @@ export const signOut = {
 export const refresh = {
   type: 'object',
   properties: {
-    body: {
+    headers: {
       type: 'object',
-      properties: {},
-      additionalProperties: false,
+      properties: {
+        'x-refresh-token': { type: 'string', minLength: 32 },
+      },
+      required: ['x-refresh-token'],
     },
   },
+  required: ['headers'],
 } as const;
 
 export const changePassword = {
