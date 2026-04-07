@@ -3,8 +3,8 @@ import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
 
-export const init = ({ userRepo }: Deps): AuthService => ({
-  signIn: async (usernameOrEmail, password) => {
+export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
+  signIn: async (usernameOrEmail, password, deviceId) => {
     const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
     if (!user) {
       throw exception.badRequest('USER_NOT_FOUND');
@@ -19,10 +19,20 @@ export const init = ({ userRepo }: Deps): AuthService => ({
       throw exception.badRequest('PASSWORDS_IDENTICAL');
     }
 
-    return sessions.generate(user);
+    const session = sessions.generate(user);
+    const hashedToken = passwords.hash(session.refreshToken);
+
+    await sessionRepo.removeByUserId(user.id, deviceId);
+    await sessionRepo.create({
+      userId: user.id,
+      deviceId,
+      refreshToken: hashedToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    return session;
   },
 
-  signUp: async (email, username, password) => {
+  signUp: async (email, username, password, deviceId) => {
     const existingUser = await userRepo.exists({ email });
     if (existingUser) {
       throw exception.badRequest('EMAIL_ALREADY_IN_USE');
@@ -41,11 +51,21 @@ export const init = ({ userRepo }: Deps): AuthService => ({
       password: hashedPassword,
     });
 
-    return sessions.generate(user);
+    const session = sessions.generate(user);
+    const hashedToken = passwords.hash(session.refreshToken);
+
+    await sessionRepo.create({
+      userId: user.id,
+      deviceId,
+      refreshToken: hashedToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    return session;
   },
 
-  signOut: async (userId) => {
-    return { signedOut: true }; //TODO: implement signOut
+  signOut: async (userId, deviceId) => {
+    await sessionRepo.removeByUserId(userId, deviceId);
+    return { signedOut: true };
   },
 
   verify: async (access, authHeaders) => {
@@ -71,15 +91,36 @@ export const init = ({ userRepo }: Deps): AuthService => ({
     }
   },
 
-  refresh: async (userId) => {
+  refresh: async (userId, deviceId, currentToken) => {
     const user = await userRepo.findOne({ id: userId });
     if (!user) {
       throw exception.notFound('USER_NOT_FOUND');
     }
 
-    return sessions.generate(user);
-  },
+    const sessionData = await sessionRepo.findOne({ userId, deviceId });
+    if (!sessionData) {
+      throw exception.unauthorized('SESSION_NOT_FOUND');
+    }
 
+    const isValid = passwords.compare(currentToken, sessionData.refreshToken);
+    if (!isValid) {
+      await sessionRepo.removeByUserId(userId, deviceId);
+      throw exception.unauthorized('INVALID_REFRESH_TOKEN');
+    }
+
+    const session = sessions.generate(user);
+    const hashedToken = passwords.hash(session.refreshToken);
+
+    await sessionRepo.removeByUserId(user.id, deviceId);
+    await sessionRepo.create({
+      userId: user.id,
+      deviceId,
+      refreshToken: hashedToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    return session;
+  },
   changePassword: async (userId, oldPassword, newPassword) => {
     const user = await userRepo.findOne({ id: userId }, true);
     if (!user) {
