@@ -9,7 +9,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signIn,
     handler: async (_user, request) => {
       const { usernameOrEmail, password } = request.body;
-      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
       return authService.signIn(usernameOrEmail, password, deviceId);
     },
   },
@@ -20,7 +20,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signUp,
     handler: async (_user, request) => {
       const { email, username, password } = request.body;
-      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
       return await authService.signUp(email, username, password, deviceId);
     },
   },
@@ -30,7 +30,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'common',
     schema: schemas.signOut,
     handler: async (user, request) => {
-      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
       return authService.signOut(user.id, deviceId);
     },
   },
@@ -40,13 +40,13 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'refresh',
     schema: schemas.refresh,
     handler: async (user, request) => {
-      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
       const authHeader = request.headers.authorization;
 
       if (!authHeader) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');
       }
-      console.debug(authHeader);
+
       return authService.refresh(user.id, deviceId, authHeader.split(' ')[2]);
     },
   },

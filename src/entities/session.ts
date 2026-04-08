@@ -1,4 +1,4 @@
-import { BaseEntity, CreateEntity } from '../data/EntityRepo';
+import type { BaseEntity, CreateEntity } from '../data/EntityRepo';
 
 export interface UserSession extends BaseEntity {
   userId: number;

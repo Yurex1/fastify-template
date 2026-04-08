@@ -71,8 +71,6 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     try {
       if (!authHeaders) throw exception.unauthorized('NO_TOKEN_PROVIDED');
       const [bearer, accessToken, refreshToken] = authHeaders.split(' ');
-      console.debug(bearer, accessToken, refreshToken);
-
       if (bearer !== 'Bearer' || (!accessToken && !refreshToken)) throw exception.unauthorized('INVALID_OAUTH_HEADERS');
 
       const type = access === 'refresh' ? 'refresh' : 'access';
