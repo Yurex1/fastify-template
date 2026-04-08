@@ -1,5 +1,5 @@
 import type { TypedPool } from '../../infra/pg';
-import { CreateSession, UserSession } from '../../entities/session';
+import type { CreateSession, UserSession } from '../../entities/session';
 
 export interface SessionRepo {
   create: (session: CreateSession) => Promise<UserSession>;

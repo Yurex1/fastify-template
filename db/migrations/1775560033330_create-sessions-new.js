@@ -43,9 +43,6 @@ export const up = (pgm) => {
     unique: ['userId', 'deviceId'],
   });
 
-  // Create indexes for better performance
-  pgm.createIndex('sessions', 'refreshToken');
-
   // Create trigger for updating timestamp
   pgm.createTrigger('sessions', 'update_session_timestamp', {
     when: 'BEFORE',
@@ -57,8 +54,5 @@ export const up = (pgm) => {
 
 export const down = (pgm) => {
   pgm.dropTrigger('sessions', 'update_session_timestamp');
-  pgm.dropIndex('sessions', 'refreshToken');
-  pgm.dropIndex('sessions', 'userId');
-  pgm.dropIndex('sessions', 'deviceId');
   pgm.dropTable('sessions');
 };

@@ -8,7 +8,7 @@ export interface AuthService {
   signUp: (email: string, username: string, password: string, deviceId: string) => Promise<Session>;
   signOut: (userId: number, deviceId: string) => Promise<{ signedOut: boolean }>;
   verify: (access: 'common' | 'refresh', authHeaders?: string) => Promise<UserResult>;
-  refresh: (userId: number, deviceId: string, currentToken: string) => Promise<Session>;
+  refresh: (userId: number, deviceId: string, refreshToken: string) => Promise<Session>;
   changePassword: (userId: number, oldPassword: string, newPassword: string) => Promise<User>;
 }
 

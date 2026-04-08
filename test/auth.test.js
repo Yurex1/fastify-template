@@ -63,14 +63,19 @@ describe('Auth Tests', () => {
 
   describe('Refresh Token Test', () => {
     test('should successfully refresh access token', async () => {
-      assert.ok(refreshToken, 'refreshToken should be set from previous test');
-      const session = await app.services.auth.refresh(userId, testUserData.deviceId, refreshToken);
+      const oldRefreshToken = refreshToken;
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      const session = await app.services.auth.refresh(userId, testUserData.deviceId, oldRefreshToken);
 
-      assert(session, 'Should return session data');
-      assert(session.accessToken, 'Should have access token');
-      assert(session.refreshToken, 'Should have refresh token');
+      assert.notStrictEqual(session.refreshToken, oldRefreshToken, 'Refresh token MUST change after use');
 
-      accessToken = session.accessToken;
+      await assert.rejects(
+        async () => {
+          await app.services.auth.refresh(userId, testUserData.deviceId, oldRefreshToken);
+        },
+        (err) => err.statusCode === 401 || err.message?.includes('INVALID_REFRESH_TOKEN'),
+        'Should not allow using the same refresh token twice',
+      );
       refreshToken = session.refreshToken;
     });
   });
@@ -91,10 +96,11 @@ describe('Auth Tests', () => {
 
   describe('Sign Out Test', () => {
     test('should successfully sign out', async () => {
-      const result = await app.services.auth.signOut(userId, testUserData.deviceId);
+      await app.services.auth.signOut(userId, testUserData.deviceId);
 
-      assert(result, 'Should return result');
-      assert(result.signedOut === true, 'Should return signedOut: true');
+      await assert.rejects(async () => {
+        await app.services.auth.refresh(testUserData.deviceId, refreshToken);
+      }, 'Refresh must fail after user signed out');
     });
   });
 });

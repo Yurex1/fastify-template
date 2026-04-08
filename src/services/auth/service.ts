@@ -71,6 +71,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     try {
       if (!authHeaders) throw exception.unauthorized('NO_TOKEN_PROVIDED');
       const [bearer, accessToken, refreshToken] = authHeaders.split(' ');
+      console.debug(bearer, accessToken, refreshToken);
 
       if (bearer !== 'Bearer' || (!accessToken && !refreshToken)) throw exception.unauthorized('INVALID_OAUTH_HEADERS');
 
@@ -90,37 +91,39 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     }
   },
 
-  refresh: async (userId, deviceId, currentToken) => {
+  refresh: async (userId, deviceId, refreshToken) => {
+    const payload = sessions.validate('refresh', refreshToken);
     const user = await userRepo.findOne({ id: userId });
-    if (!user) throw exception.notFound('USER_NOT_FOUND');
-    if (!currentToken) throw exception.unauthorized('REFRESH_TOKEN_REQUIRED');
-    const payload = sessions.validate('refresh', currentToken);
-    const sessionData = await sessionRepo.findOne({ userId: payload.id, deviceId });
+    const sessionData = await sessionRepo.findOne({ userId, deviceId });
 
     if (!sessionData) {
       throw exception.unauthorized('SESSION_EXPIRED_OR_INVALID');
+    }
+
+    if (!user) {
+      throw exception.notFound('USER_NOT_FOUND');
     }
 
     if (new Date() > sessionData.expiresAt) {
       await sessionRepo.removeByUserId(userId, deviceId);
       throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
     }
-    const isValid = passwords.compare(currentToken, sessionData.refreshToken);
+    const isValid = passwords.compare(refreshToken, sessionData.refreshToken);
     if (!isValid) {
-      await sessionRepo.removeByUserId(userId, deviceId);
+      await sessionRepo.removeByUserId(payload.id, deviceId);
       throw exception.unauthorized('INVALID_REFRESH_TOKEN');
     }
 
     const session = sessions.generate(user);
-    const hashedToken = passwords.hash(session.refreshToken);
 
+    const hashedToken = passwords.hash(session.refreshToken);
+    await sessionRepo.removeByUserId(userId, deviceId);
     await sessionRepo.upsert({
       userId: user.id,
       deviceId,
       refreshToken: hashedToken,
       expiresAt: session.expiresAt,
     });
-
     return session;
   },
 

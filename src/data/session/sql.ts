@@ -12,14 +12,15 @@ export const selectByUserId = (userId: number): RowSqlResult => ({
       "updatedAt"
     FROM "public"."sessions"
     WHERE "userId" = $1
-    ORDER BY "expiresAt" DESC;
+    ORDER BY "expiresAt" DESC
+    LIMIT 1;
   `,
   params: [userId],
 });
 
 export const buildUpsertQuery = (session: CreateSession): RowSqlResult => ({
   query: `
-      INSERT INTO sessions ("userId", "deviceId", "refreshToken", "expiresAt")
+     INSERT INTO "public"."sessions" ("userId", "deviceId", "refreshToken", "expiresAt")
       VALUES ($1, $2, $3, $4)
       ON CONFLICT ("userId", "deviceId")
       DO UPDATE SET 
@@ -33,7 +34,9 @@ export const buildUpsertQuery = (session: CreateSession): RowSqlResult => ({
 
 export const removeByUserIdAndDeviceId = (userId: number, deviceId: string): RowSqlResult => ({
   query: `
-  DELETE FROM sessions WHERE "userId" = $1 AND "deviceId" = $2
+  DELETE FROM "public"."sessions" 
+  WHERE "userId" = $1 AND "deviceId" = $2
+  RETURNING *;
   `,
   params: [userId, deviceId],
 });

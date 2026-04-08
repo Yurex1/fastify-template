@@ -1,5 +1,5 @@
 import { CreateSession, UserSession } from '../../entities/session';
-import { TypedPool } from '../../infra/pg';
+import type { TypedPool } from '../../infra/pg';
 
 import { EntityRepo } from '../EntityRepo';
 import { buildUpsertQuery, removeByUserIdAndDeviceId, selectByUserId } from './sql';

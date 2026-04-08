@@ -1,4 +1,4 @@
-import { SignOptions } from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
 import jsonwebtoken from 'jsonwebtoken';
 import { config } from '../../config';
 import { UserResult } from '../../entities/user';
@@ -13,6 +13,10 @@ export const sessions = {
 
     const refreshToken = jwt.sign({ id, type: 'refresh' }, config.jwt.expiration.refresh as SignOptions['expiresIn']);
     const decoded = jsonwebtoken.decode(refreshToken) as { exp: number };
+    if (!decoded || typeof decoded === 'string' || !decoded.exp) {
+      throw exception.serverError('FAILED_TO_DECODE_TOKEN_EXPIRATION');
+    }
+
     const expiresAt = new Date(decoded.exp * 1000);
     return {
       user,

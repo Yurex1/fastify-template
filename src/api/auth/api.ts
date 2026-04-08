@@ -9,7 +9,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signIn,
     handler: async (_user, request) => {
       const { usernameOrEmail, password } = request.body;
-      const deviceId = request.headers['user-agent'] || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
       return authService.signIn(usernameOrEmail, password, deviceId);
     },
   },
@@ -20,7 +20,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signUp,
     handler: async (_user, request) => {
       const { email, username, password } = request.body;
-      const deviceId = request.headers['user-agent'] || 'unknown';
+      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
       return await authService.signUp(email, username, password, deviceId);
     },
   },
@@ -29,8 +29,8 @@ export const init = ({ authService }: Deps): AuthApi => ({
     method: 'post',
     access: 'common',
     schema: schemas.signOut,
-    handler: async (user, _request) => {
-      const deviceId = _request.headers['user-agent'] || 'unknown';
+    handler: async (user, request) => {
+      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
       return authService.signOut(user.id, deviceId);
     },
   },
@@ -40,17 +40,14 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'refresh',
     schema: schemas.refresh,
     handler: async (user, request) => {
-      const deviceId = request.headers['user-agent'] || 'unknown';
-
+      const deviceId = (request.headers['x-device-id'] as string) || 'unknown';
       const authHeader = request.headers.authorization;
-      const tokens = authHeader?.split(' ') || [];
-      const currentToken = tokens[2] || (request.headers['x-refresh-token'] as string);
 
-      if (!currentToken) {
-        throw exception.unauthorized('REFRESH_TOKEN_MISSING');
+      if (!authHeader) {
+        throw exception.unauthorized('NO_TOKEN_PROVIDED');
       }
-
-      return authService.refresh(user.id, deviceId, currentToken);
+      console.debug(authHeader);
+      return authService.refresh(user.id, deviceId, authHeader.split(' ')[2]);
     },
   },
 
