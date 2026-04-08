@@ -1,1 +1,1 @@
-const DEFAULT_DEVICE_ID = 'unknown';
+export const DEFAULT_DEVICE_ID = 'unknown';

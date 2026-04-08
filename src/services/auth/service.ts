@@ -67,16 +67,11 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return { signedOut: true };
   },
 
-  verify: async (access, authHeaders) => {
+  verify: async (access, token) => {
     try {
-      if (!authHeaders) throw exception.unauthorized('NO_TOKEN_PROVIDED');
-      const [bearer, accessToken, refreshToken] = authHeaders.split(' ');
-      if (bearer !== 'Bearer' || (!accessToken && !refreshToken)) throw exception.unauthorized('INVALID_OAUTH_HEADERS');
+      if (!token) throw exception.unauthorized('NO_TOKEN_PROVIDED');
 
-      const type = access === 'refresh' ? 'refresh' : 'access';
-      const token = { access: accessToken, refresh: refreshToken }[type];
-
-      const payload = sessions.validate(type, token);
+      const payload = sessions.validate(access, token);
       if (!payload.id) throw exception.unauthorized('INVALID_TOKEN_PAYLOAD');
 
       const user = await userRepo.findOne({ id: payload.id });
@@ -115,7 +110,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const session = sessions.generate(user);
 
     const hashedToken = passwords.hash(session.refreshToken);
-    await sessionRepo.removeByUserId(userId, deviceId);
+
     await sessionRepo.upsert({
       userId: user.id,
       deviceId,

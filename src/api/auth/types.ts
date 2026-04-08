@@ -1,6 +1,6 @@
 import * as SchemaType from 'json-schema-to-ts';
 import * as schemas from './schemas';
-import type { User } from '../../entities/user';
+import type { User, UserResult } from '../../entities/user';
 import type { AuthService } from '../../services/auth/types';
 import type { ProtectedEndpoint, UnprotectedEndpoint, API } from '../types';
 import { Session } from '../../utils/sessions/types';
@@ -12,11 +12,11 @@ type RefreshParam = SchemaType.FromSchema<typeof schemas.refresh>;
 type ChangePasswordParam = SchemaType.FromSchema<typeof schemas.changePassword>;
 
 export interface AuthApi extends API {
-  'sign-in': UnprotectedEndpoint<SignInParam, Promise<Session>>;
-  'sign-up': UnprotectedEndpoint<SignUpParam, Promise<Session>>;
-  'sign-out': ProtectedEndpoint<SignOutParam, Promise<{ signedOut: boolean }>>;
-  refresh: ProtectedEndpoint<RefreshParam, Promise<Session>>;
-  'change-password': ProtectedEndpoint<ChangePasswordParam, Promise<User>>;
+  'sign-in': UnprotectedEndpoint<SignInParam, Session>;
+  'sign-up': UnprotectedEndpoint<SignUpParam, Session>;
+  'sign-out': ProtectedEndpoint<SignOutParam, { signedOut: boolean }>;
+  refresh: ProtectedEndpoint<RefreshParam, { accessToken: string; user: UserResult }>;
+  'change-password': ProtectedEndpoint<ChangePasswordParam, User>;
 }
 
 export interface Deps {

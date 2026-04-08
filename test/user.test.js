@@ -25,7 +25,7 @@ describe('User Tests', () => {
     );
 
     authToken = session.accessToken;
-    const user = await app.services.auth.verify('access', `Bearer ${authToken}`);
+    const user = await app.services.auth.verify('access', authToken);
     userId = user.id;
   });
 

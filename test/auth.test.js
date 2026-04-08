@@ -39,7 +39,7 @@ describe('Auth Tests', () => {
       accessToken = session.accessToken;
       refreshToken = session.refreshToken;
 
-      const user = await app.services.auth.verify('common', `Bearer ${accessToken}`);
+      const user = await app.services.auth.verify('access', accessToken);
       userId = user.id;
     });
   });
@@ -99,7 +99,7 @@ describe('Auth Tests', () => {
       await app.services.auth.signOut(userId, testUserData.deviceId);
 
       await assert.rejects(async () => {
-        await app.services.auth.refresh(testUserData.deviceId, refreshToken);
+        await app.services.auth.refresh(userId, testUserData.deviceId, refreshToken);
       }, 'Refresh must fail after user signed out');
     });
   });
