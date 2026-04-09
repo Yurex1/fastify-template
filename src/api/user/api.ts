@@ -4,7 +4,7 @@ import type { UserApi, Deps } from './types';
 export const init = ({ userService }: Deps): UserApi => ({
   id: {
     method: 'get',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.getById,
     handler: async (_user, request) => {
@@ -15,9 +15,9 @@ export const init = ({ userService }: Deps): UserApi => ({
 
   'get-all': {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.getAll,
-    handler: async (_user, params) => {
+    handler: async (_user) => {
       const users = await userService.findAll();
       return users;
     },
@@ -25,7 +25,7 @@ export const init = ({ userService }: Deps): UserApi => ({
 
   'update-email': {
     method: 'put',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.updateEmail,
     handler: async (_user, request) => {
@@ -37,7 +37,7 @@ export const init = ({ userService }: Deps): UserApi => ({
 
   update: {
     method: 'put',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.update,
     handler: async (_user, request) => {
@@ -49,7 +49,7 @@ export const init = ({ userService }: Deps): UserApi => ({
 
   remove: {
     method: 'delete',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.remove,
     handler: async (_user, request) => {

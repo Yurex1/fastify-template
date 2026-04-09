@@ -3,6 +3,7 @@ import { DEFAULT_DEVICE_ID } from '../../data/session/constants';
 import { exception } from '../../utils/exception/util';
 import * as schemas from './schemas';
 import type { AuthApi, Deps } from './types';
+import { sessions } from '../../utils/sessions/utils';
 
 export const init = ({ authService }: Deps): AuthApi => ({
   'sign-in': {
@@ -15,7 +16,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
 
       const user = await authService.signIn(usernameOrEmail, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
-      return user;
+      return sessions.toSessionResponse(user);
     },
   },
 
@@ -28,7 +29,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
       const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
       const user = await authService.signUp(email, username, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
-      return user;
+      return sessions.toSessionResponse(user);
     },
   },
 

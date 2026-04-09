@@ -23,4 +23,4 @@ export type Plugin = {
 
 export type SessionProviderKeys = 'none' | 'access' | 'refresh';
 
-export type SessionProvider = Record<SessionProviderKeys, () => unknown>;
+export type SessionProvider = Record<SessionProviderKeys, () => Promise<unknown> | unknown>;

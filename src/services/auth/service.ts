@@ -63,7 +63,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   },
 
   signOut: async (userId, deviceId) => {
-    await sessionRepo.removeByUserId(userId, deviceId);
+    await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
     return { signedOut: true };
   },
 
@@ -87,6 +87,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   refresh: async (userId, deviceId, refreshToken) => {
     const payload = sessions.validate('refresh', refreshToken);
     const user = await userRepo.findOne({ id: userId });
+    if (payload.id !== user.id) throw exception.unauthorized('TOKEN_USER_MISMATCH');
     const sessionData = await sessionRepo.findOne({ userId, deviceId });
 
     if (!sessionData) {
@@ -98,12 +99,12 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     }
 
     if (new Date() > sessionData.expiresAt) {
-      await sessionRepo.removeByUserId(userId, deviceId);
+      await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
       throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
     }
     const isValid = passwords.compare(refreshToken, sessionData.refreshToken);
     if (!isValid) {
-      await sessionRepo.removeByUserId(payload.id, deviceId);
+      await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
       throw exception.unauthorized('INVALID_REFRESH_TOKEN');
     }
 

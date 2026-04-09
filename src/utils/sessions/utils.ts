@@ -1,10 +1,10 @@
 import type { SignOptions } from 'jsonwebtoken';
 import jsonwebtoken from 'jsonwebtoken';
 import { config } from '../../config';
-import { UserResult } from '../../entities/user';
+import type { UserResult } from '../../entities/user';
 import { exception } from '../exception/util';
 import { jwt } from './jwt';
-import { Session } from './types';
+import type { Session, SessionResponse } from './types';
 
 export const sessions = {
   generate: (user: UserResult): Session => {
@@ -35,5 +35,9 @@ export const sessions = {
     if (!isValid) throw exception.unauthorized('INVALID_TOKEN_PAYLOAD');
 
     return { id: payload.id };
+  },
+  toSessionResponse: (session: Session): SessionResponse => {
+    const { refreshToken, ...response } = session;
+    return response;
   },
 };

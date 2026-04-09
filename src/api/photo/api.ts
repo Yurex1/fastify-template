@@ -1,10 +1,10 @@
 import * as schemas from './schemas';
-import { PhotoApi, Deps } from './types';
+import type { PhotoApi, Deps } from './types';
 
 export const init = ({ s3 }: Deps): PhotoApi => ({
   'get-upload-url': {
     method: 'post',
-    access: 'common',
+    access: 'access',
     schema: schemas.getUploadUrl,
     handler: async (_, request) => {
       const { mediaType, expiresIn = 3600 } = request.body;
@@ -15,7 +15,7 @@ export const init = ({ s3 }: Deps): PhotoApi => ({
 
   delete: {
     method: 'delete',
-    access: 'common',
+    access: 'access',
     schema: schemas.deletePhoto,
     handler: async (_, request) => {
       const { fileName } = request.query;

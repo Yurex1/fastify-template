@@ -69,6 +69,13 @@ export const refresh = {
         'x-device-id': { type: 'string' },
       },
     },
+    cookies: {
+      type: 'object',
+      properties: {
+        refreshToken: { type: 'string' },
+      },
+      required: ['refreshToken'],
+    },
   },
   required: ['headers'],
 } as const;

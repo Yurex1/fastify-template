@@ -1,12 +1,12 @@
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
 import { config } from '../config';
-import { Deps, SessionProvider } from './types';
+import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
 
 export const server = fastify({
   logger: true,
-  trustProxy: true,
+  trustProxy: config.node_env === 'production',
   ajv: {
     customOptions: {
       removeAdditional: true,
@@ -28,9 +28,18 @@ export const init = async ({ services, apis }: Deps): Promise<typeof server> => 
 
       const urlParams = params?.length ? `/:${params.join(':/')}` : '';
       const path = `/${service}/${route}${urlParams}`;
-      const security = access === 'none' ? [] : [{ ApiToken: [] }];
+      const security: Array<Record<string, string[]>> = [];
+      if (access === 'access') {
+        security.push({ ApiToken: [] });
+      } else if (access === 'refresh') {
+        security.push({ CookieAuth: [] });
+      }
       const opts = {
-        schema: { tags: [service], security, ...schema.properties },
+        schema: {
+          tags: [service],
+          security,
+          ...schema.properties,
+        },
       };
 
       server[method](path, opts, async (request, reply) => {
@@ -46,7 +55,7 @@ export const init = async ({ services, apis }: Deps): Promise<typeof server> => 
 
             return services.auth.verify('access', token);
           },
-          refresh: () => {
+          refresh: async () => {
             const token = request.cookies.refreshToken;
             if (!token) throw exception.unauthorized('NO_REFRESH_TOKEN');
             return services.auth.verify('refresh', token);
