@@ -1,10 +1,24 @@
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from '../config';
-import { Plugin } from './types';
+import type { Plugin } from './types';
 
-const corsPlugin: Plugin = { plugin: cors, options: {} };
+const corsPlugin: Plugin = {
+  plugin: cors,
+  options: {
+    origin: config.cors.allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id'],
+  },
+};
+
+const cookiePlugin: Plugin = {
+  plugin: cookie,
+  options: {},
+};
 
 const swaggerPlugin: Plugin = {
   plugin: swagger,
@@ -15,11 +29,16 @@ const swaggerPlugin: Plugin = {
       schemes: ['http', 'https'],
       securityDefinitions: {
         ApiToken: {
-          description:
-            'Authorization header token, sample: {Bearer ACCESS_TOKEN REFRESH_TOKEN}',
+          description: 'Bearer [ACCESS_TOKEN]',
           type: 'apiKey',
           name: 'Authorization',
           in: 'header',
+        },
+        CookieAuth: {
+          description: 'Refresh token stored in httpOnly cookie',
+          type: 'apiKey',
+          name: 'refreshToken',
+          in: 'cookie',
         },
       },
       consumes: ['application/json'],
@@ -47,4 +66,4 @@ const swaggerUiPlugin: Plugin = {
   options: { routePrefix: '/docs' },
 };
 
-export const plugins = [corsPlugin, swaggerPlugin, swaggerUiPlugin];
+export const plugins = [corsPlugin, cookiePlugin, swaggerPlugin, swaggerUiPlugin];

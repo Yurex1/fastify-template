@@ -1,6 +1,12 @@
 export const signIn = {
   type: 'object',
   properties: {
+    headers: {
+      type: 'object',
+      properties: {
+        'x-device-id': { type: 'string' },
+      },
+    },
     body: {
       type: 'object',
       properties: {
@@ -17,6 +23,12 @@ export const signIn = {
 export const signUp = {
   type: 'object',
   properties: {
+    headers: {
+      type: 'object',
+      properties: {
+        'x-device-id': { type: 'string' },
+      },
+    },
     body: {
       type: 'object',
       properties: {
@@ -34,6 +46,12 @@ export const signUp = {
 export const signOut = {
   type: 'object',
   properties: {
+    headers: {
+      type: 'object',
+      properties: {
+        'x-device-id': { type: 'string' },
+      },
+    },
     body: {
       type: 'object',
       properties: {},
@@ -45,12 +63,21 @@ export const signOut = {
 export const refresh = {
   type: 'object',
   properties: {
-    body: {
+    headers: {
       type: 'object',
-      properties: {},
-      additionalProperties: false,
+      properties: {
+        'x-device-id': { type: 'string' },
+      },
+    },
+    cookies: {
+      type: 'object',
+      properties: {
+        refreshToken: { type: 'string' },
+      },
+      required: ['refreshToken'],
     },
   },
+  required: ['headers'],
 } as const;
 
 export const changePassword = {

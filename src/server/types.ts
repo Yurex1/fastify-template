@@ -1,11 +1,7 @@
 import { WebSocket, WebSocketServer } from 'ws';
 import { APIs } from '../api/types';
 import { Services } from '../services/types';
-import {
-  FastifyPluginAsync,
-  FastifyPluginCallback,
-  FastifyPluginOptions,
-} from 'fastify/types/plugin';
+import { FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions } from 'fastify/types/plugin';
 
 export interface WsServer {
   server: WebSocketServer;
@@ -25,6 +21,6 @@ export type Plugin = {
   options: FastifyPluginOptions;
 };
 
-export type SessionProviderKeys = 'none' | 'common' | 'refresh';
+export type SessionProviderKeys = 'none' | 'access' | 'refresh';
 
-export type SessionProvider = Record<SessionProviderKeys, () => unknown>;
+export type SessionProvider = Record<SessionProviderKeys, () => Promise<unknown> | unknown>;

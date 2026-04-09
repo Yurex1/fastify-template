@@ -23,6 +23,6 @@ export interface Deps {
 }
 
 export interface PhotoApi extends API {
-  'get-upload-url': ProtectedEndpoint<GetUploadUrlParams, Promise<GetPhotoUrlResponse>>;
-  delete: ProtectedEndpoint<DeletePhotoParams, Promise<DeletePhotoResponse>>;
+  'get-upload-url': ProtectedEndpoint<GetUploadUrlParams, GetPhotoUrlResponse>;
+  delete: ProtectedEndpoint<DeletePhotoParams, DeletePhotoResponse>;
 }
