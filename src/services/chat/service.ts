@@ -1,3 +1,4 @@
+import { ChatMemberStatus } from '../../data/chatMember/types';
 import { exception } from '../../utils/exception/util';
 import type { ChatService, Deps } from './types';
 
@@ -11,15 +12,15 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo }: Deps):
       throw exception.notFound('USER_NOT_FOUND');
     }
 
-    const existing = await chatMemberRepo.findApprovedDirectChat(userId, memberId);
+    const existing = await chatMemberRepo.findDirectChat(userId, memberId);
     if (existing) {
       return existing;
     }
 
-    const chat = await chatRepo.create({ title: 'iio' });
+    const chat = await chatRepo.create({});
     await chatMemberRepo.addMembers(chat.id, [
-      { userId, status: 'approved' },
-      { userId: memberId, status: 'pending' },
+      { userId, status: ChatMemberStatus.APPROVED },
+      { userId: memberId, status: ChatMemberStatus.PENDING },
     ]);
     return chat;
   },

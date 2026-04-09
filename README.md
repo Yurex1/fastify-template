@@ -196,6 +196,7 @@ PG_PORT=5432
 PG_USER=your_username
 PG_DATABASE=fastify-template-db
 PG_PASSWORD=your_password
+DATABASE_URL=your_database_url
 
 # JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key-here
@@ -204,6 +205,9 @@ JWT_REFRESH_TOKEN_EXPIRATION=7d
 
 # Environment
 NODE_ENV=development
+
+#CORS
+CORS_ALLOWED_ORIGINS=your_cors_allowed_origins
 ```
 
 ### Database Setup
@@ -274,21 +278,35 @@ For detailed migration documentation, see [MIGRATION_GUIDE.md](./MIGRATION_GUIDE
 ```
 fastify-template/
 ├── src/
-│   ├── api/                 # API routes and handlers
+│   ├── api/                # API routes and handlers
 │   │   ├── auth/           # Authentication endpoints
+│   │   ├── chats/          # Chats endpoints
 │   │   ├── healthCheck/    # Health check endpoints
+│   │   ├── photo/          # Photo management endpoints
+│   │   ├── post/           # Post management endpoints
 │   │   ├── user/           # User management endpoints
-│   │   ├── api.ts          # API-specific code
 │   │   ├── main.ts         # API server entry point
 │   │   ├── schemas.ts      # Shared schemas
 │   │   └── types.ts        # API types
 │   ├── config.ts           # Application configuration
 │   ├── data/               # Data access layer
+│   │   ├── chat/           # Chat data operations
+│   │   ├── chatMember/     # Chat member data operations
+│   │   ├── message/        # Message data operations
+│   │   ├── post/           # Post data operations
 │   │   ├── user/           # User data operations
+│   │   ├── session/        # Session data operations
+│   │   ├── EntityRepo.ts   # Base abstract repository and SQL builder for automated CRUD operations
 │   │   ├── main.ts         # Data layer initialization
 │   │   └── types.ts        # Data layer types
 │   ├── entities/           # Database entity definitions
+│   │   ├── chat.ts         # Chat entity
+│   │   ├── message.ts      # Message entity
+│   │   ├── post.ts         # Post entity
+│   │   ├── session.ts      # Session entity
 │   │   └── user.ts         # User entity
+│   ├── firebase/           # Firebase infrastructure and services
+│   │   └── notification/   # Push notification service using Firebase Admin SDK
 │   ├── infra/              # Infrastructure (database, etc.)
 │   │   └── pg.ts           # PostgreSQL connection
 │   ├── main.ts             # Main application entry point
@@ -299,10 +317,15 @@ fastify-template/
 │   │   └── ws.ts           # WebSocket server
 │   ├── services/           # Business logic services
 │   │   ├── auth/           # Authentication service
+│   │   ├── chat/           # Chat service
+│   │   ├── post/           # Post service
+│   │   ├── s3/             # S3 service
+│   │   ├── service/        # Service for monitoring API availability and status
 │   │   ├── user/           # User service
 │   │   ├── main.ts         # Service initialization
 │   │   └── types.ts        # Service types
 │   └── utils/              # Utility functions
+│       ├── cookies/        # Cookies utilities
 │       ├── env/            # Environment utilities
 │       ├── exception/      # Exception handling
 │       ├── passwords/      # Password utilities

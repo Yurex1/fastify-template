@@ -12,7 +12,7 @@ import { Services } from './types';
 export const init = (repos: Repos, _wsServer: WsServer): Services => {
   const service = serviceInit();
   const user = userServiceInit({ userRepo: repos.user });
-  const auth = authServiceInit({ userRepo: repos.user });
+  const auth = authServiceInit({ userRepo: repos.user, sessionRepo: repos.sessions });
   const post = postServiceInit({ postRepo: repos.post });
   const chat = chatServiceInit({
     chatRepo: repos.chat,

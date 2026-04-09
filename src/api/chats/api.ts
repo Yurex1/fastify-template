@@ -1,33 +1,33 @@
 import { ChatApi, Deps } from './types';
 import * as schemas from './schemas';
+import { ChatMemberStatus } from '../../data/chatMember/types';
 
 export const init = ({ chatService }: Deps): ChatApi => ({
   create: {
     method: 'post',
-    access: 'common',
+    access: 'access',
     schema: schemas.create,
     params: ['memberId'],
     handler: (user, request) => {
       const { memberId } = request.params;
-
       return chatService.create(user.id, memberId);
     },
   },
 
   list: {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.list,
     handler: (user, request) => {
       const { status, page, limit } = request.query;
 
-      return chatService.list(user.id, status ?? 'approved', page, limit);
+      return chatService.list(user.id, status as ChatMemberStatus, page, limit);
     },
   },
 
   sendMessage: {
     method: 'post',
-    access: 'common',
+    access: 'access',
     schema: schemas.sendMessage,
     params: ['chatId'],
     handler: (user, request) => {
@@ -40,7 +40,7 @@ export const init = ({ chatService }: Deps): ChatApi => ({
 
   getMessagesByChatId: {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.getMessagesByChatId,
     params: ['chatId'],
     handler: (user, request) => {
@@ -51,7 +51,7 @@ export const init = ({ chatService }: Deps): ChatApi => ({
 
   updateMessage: {
     method: 'put',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.updateMessage,
     handler: async (user, request) => {
@@ -63,7 +63,7 @@ export const init = ({ chatService }: Deps): ChatApi => ({
 
   removeChat: {
     method: 'delete',
-    access: 'common',
+    access: 'access',
     schema: schemas.removeChat,
     params: ['chatId'],
     handler: (user, request) => {

@@ -17,10 +17,7 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     for (const m of members) {
       params.push(m.userId, m.status);
     }
-    await pool.query(
-      `INSERT INTO "public"."chatMember" ("chatId", "userId", status) VALUES ${placeholders}`,
-      params,
-    );
+    await pool.query(`INSERT INTO "public"."chatMember" ("chatId", "userId", status) VALUES ${placeholders}`, params);
   },
 
   async listChatsForUser(userId, status, page, limit) {
@@ -46,21 +43,19 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     return !!row;
   },
 
-  async findApprovedDirectChat(userId, otherUserId) {
+  async findDirectChat(userId: number, otherUserId: number) {
     return pool.queryOne<Chat>(
       `
-      SELECT c.id, c."createdAt", c."updatedAt"
-      FROM "public"."chats" c
-      INNER JOIN "public"."chatMember" m1
-        ON m1."chatId" = c.id AND m1."userId" = $1 AND m1.status = 'approved'
-      INNER JOIN "public"."chatMember" m2
-        ON m2."chatId" = c.id AND m2."userId" = $2 AND m2.status = 'approved'
-      WHERE NOT EXISTS (
-        SELECT 1 FROM "public"."chatMember" mx
-        WHERE mx."chatId" = c.id AND mx."userId" NOT IN ($1, $2)
-      )
-      LIMIT 1
-      `,
+    SELECT c.id, c."createdAt", c."updatedAt"
+    FROM "public"."chats" c
+    INNER JOIN "public"."chatMember" m1 ON m1."chatId" = c.id AND m1."userId" = $1
+    INNER JOIN "public"."chatMember" m2 ON m2."chatId" = c.id AND m2."userId" = $2
+    WHERE NOT EXISTS (
+      SELECT 1 FROM "public"."chatMember" mx
+      WHERE mx."chatId" = c.id AND mx."userId" NOT IN ($1, $2)
+    )
+    LIMIT 1
+    `,
       [userId, otherUserId],
     );
   },

@@ -1,5 +1,3 @@
-import { authHeaders } from '../schemaParts';
-
 export const create = {
   type: 'object',
   properties: {
@@ -10,7 +8,6 @@ export const create = {
       },
       required: ['memberId'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;
@@ -27,7 +24,6 @@ export const list = {
       },
       required: ['page', 'limit'],
     },
-    headers: authHeaders,
   },
   required: ['query', 'headers'],
 } as const;
@@ -49,7 +45,6 @@ export const sendMessage = {
       },
       required: ['text'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
 } as const;
@@ -64,7 +59,6 @@ export const getMessagesByChatId = {
       },
       required: ['chatId'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;
@@ -85,11 +79,10 @@ export const updateMessage = {
         text: { type: 'string', minLength: 1, maxLength: 255 },
       },
     },
-
-    headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
 } as const;
+
 export const removeChat = {
   type: 'object',
   properties: {
@@ -100,7 +93,6 @@ export const removeChat = {
       },
       required: ['chatId'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;

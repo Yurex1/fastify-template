@@ -14,13 +14,13 @@ type UpdateParam = FromSchema<typeof schemas.update>;
 type RemoveParam = FromSchema<typeof schemas.remove>;
 
 export interface PostApi extends API {
-  create: ProtectedEndpoint<CreateParam, Promise<Post>>;
-  'get-by-id': ProtectedEndpoint<GetByIdParam, Promise<PostResult>>;
-  'get-all': ProtectedEndpoint<GetAllParam, Promise<Post[]>>;
-  'get-by-category': ProtectedEndpoint<GetByCategoryParam, Promise<Post[]>>;
-  'get-by-user': ProtectedEndpoint<GetByUserParam, Promise<Post[]>>;
-  update: ProtectedEndpoint<UpdateParam, Promise<Post>>;
-  remove: ProtectedEndpoint<RemoveParam, Promise<{ removed: boolean }>>;
+  create: ProtectedEndpoint<CreateParam, Post>;
+  'get-by-id': ProtectedEndpoint<GetByIdParam, PostResult>;
+  'get-all': ProtectedEndpoint<GetAllParam, Post[]>;
+  'get-by-category': ProtectedEndpoint<GetByCategoryParam, Post[]>;
+  'get-by-user': ProtectedEndpoint<GetByUserParam, Post[]>;
+  update: ProtectedEndpoint<UpdateParam, Post>;
+  remove: ProtectedEndpoint<RemoveParam, { removed: boolean }>;
 }
 
 export interface Deps {

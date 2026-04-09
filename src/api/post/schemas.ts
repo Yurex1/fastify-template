@@ -1,5 +1,3 @@
-import { authHeaders } from '../schemaParts';
-
 export const create = {
   type: 'object',
   properties: {
@@ -14,7 +12,6 @@ export const create = {
       additionalProperties: false,
       required: ['title', 'body', 'category', 'photo'],
     },
-    headers: authHeaders,
   },
   required: ['body', 'headers'],
 } as const;
@@ -29,16 +26,13 @@ export const getById = {
       },
       required: ['id'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;
 
 export const getAll = {
   type: 'object',
-  properties: {
-    headers: authHeaders,
-  },
+  properties: {},
   required: ['headers'],
 } as const;
 
@@ -52,7 +46,6 @@ export const getByCategory = {
       },
       required: ['category'],
     },
-    headers: authHeaders,
   },
   required: ['query', 'headers'],
 } as const;
@@ -67,7 +60,6 @@ export const getByUser = {
       },
       required: ['userId'],
     },
-    headers: authHeaders,
   },
   required: ['query', 'headers'],
 } as const;
@@ -91,8 +83,6 @@ export const update = {
         photo: { type: 'string', minLength: 1 },
       },
     },
-
-    headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
 } as const;
@@ -107,7 +97,6 @@ export const remove = {
       },
       required: ['id'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;

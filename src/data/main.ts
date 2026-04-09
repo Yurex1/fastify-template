@@ -2,6 +2,7 @@ import { init as postRepoInit } from './post/repo';
 import { init as chatRepoInit } from './chat/repo';
 import { init as chatMemberRepoInit } from './chatMember/repo';
 import { init as userRepoInit } from './user/repo';
+import { init as sessionRepoInit } from './session/repo';
 import { init as messageRepoInit } from './message/repo';
 import { Repos } from './types';
 import type { TypedPool } from '../infra/pg';
@@ -12,6 +13,7 @@ export const init = (pool: TypedPool): Repos => {
   const chat = chatRepoInit(pool);
   const chatMember = chatMemberRepoInit(pool);
   const message = messageRepoInit(pool);
+  const sessions = sessionRepoInit(pool);
 
   return {
     user,
@@ -19,5 +21,6 @@ export const init = (pool: TypedPool): Repos => {
     chat,
     chatMember,
     message,
+    sessions,
   };
 };

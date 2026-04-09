@@ -9,9 +9,9 @@ type ListParam = SchemaType.FromSchema<typeof schemas.list>;
 type RemoveChatParam = SchemaType.FromSchema<typeof schemas.removeChat>;
 
 export interface ChatApi extends API {
-  create: ProtectedEndpoint<CreateParam, Promise<Chat>>;
-  list: ProtectedEndpoint<ListParam, Promise<Chat[]>>;
-  removeChat: ProtectedEndpoint<RemoveChatParam, Promise<{ removed: boolean }>>;
+  create: ProtectedEndpoint<CreateParam, Chat>;
+  list: ProtectedEndpoint<ListParam, Chat[]>;
+  removeChat: ProtectedEndpoint<RemoveChatParam, { removed: boolean }>;
 }
 
 export interface Deps {

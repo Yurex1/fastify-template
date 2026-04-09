@@ -1,5 +1,5 @@
 import type { TypedPool } from '../../infra/pg';
-import type { Post, CreatePost, UpdatePost, PostResult } from '../../entities/post';
+import type { Post, CreatePost, UpdatePost } from '../../entities/post';
 import type { PostRepo } from './types';
 import { EntityRepo } from '../EntityRepo';
 import { selectByCategory, selectByUserId } from './sql';

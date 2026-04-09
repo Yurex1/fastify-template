@@ -1,5 +1,3 @@
-import { authHeaders } from '../schemaParts';
-
 export const getById = {
   type: 'object',
   properties: {
@@ -10,7 +8,6 @@ export const getById = {
       },
       required: ['id'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;
@@ -38,7 +35,6 @@ export const updateEmail = {
       },
       required: ['email'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
 } as const;
@@ -60,8 +56,6 @@ export const update = {
         username: { type: 'string' },
       },
     },
-
-    headers: authHeaders,
   },
   required: ['params', 'body', 'headers'],
 } as const;
@@ -76,7 +70,6 @@ export const remove = {
       },
       required: ['id'],
     },
-    headers: authHeaders,
   },
   required: ['params', 'headers'],
 } as const;

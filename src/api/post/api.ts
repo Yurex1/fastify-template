@@ -4,7 +4,7 @@ import type { PostApi, Deps } from './types';
 export const init = ({ postService }: Deps): PostApi => ({
   create: {
     method: 'post',
-    access: 'common',
+    access: 'access',
     schema: schemas.create,
     handler: async (user, request) => {
       const createData = request.body;
@@ -17,7 +17,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   'get-by-id': {
     method: 'get',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.getById,
     handler: async (_user, request) => {
@@ -28,7 +28,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   'get-all': {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.getAll,
     handler: async (_user, _params) => {
       return postService.findAll();
@@ -37,7 +37,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   'get-by-category': {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.getByCategory,
     handler: async (_user, request) => {
       const { category } = request.query;
@@ -47,7 +47,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   'get-by-user': {
     method: 'get',
-    access: 'common',
+    access: 'access',
     schema: schemas.getByUser,
     handler: async (user, _request) => {
       return postService.findByUserId(user.id);
@@ -56,7 +56,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   update: {
     method: 'put',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.update,
     handler: async (_user, request) => {
@@ -68,7 +68,7 @@ export const init = ({ postService }: Deps): PostApi => ({
 
   remove: {
     method: 'delete',
-    access: 'common',
+    access: 'access',
     params: ['id'],
     schema: schemas.remove,
     handler: async (_user, request) => {

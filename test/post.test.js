@@ -15,11 +15,17 @@ describe('Post Integration Tests', () => {
       username: `testuser--${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       email: `test-${Date.now()}-${Math.floor(Math.random() * 10000)}@example.com`,
       password: 'TestPassword123!',
+      deviceId: `test-device-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
     };
 
-    const session = await app.services.auth.signUp(testUserData.email, testUserData.username, testUserData.password);
+    const session = await app.services.auth.signUp(
+      testUserData.email,
+      testUserData.username,
+      testUserData.password,
+      testUserData.deviceId,
+    );
     authToken = session.accessToken;
-    const user = await app.services.auth.verify('access', `Bearer ${authToken}`);
+    const user = await app.services.auth.verify('access', authToken);
     userId = user.id;
   });
 

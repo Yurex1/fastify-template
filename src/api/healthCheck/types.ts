@@ -7,7 +7,7 @@ import { API, UnprotectedEndpoint } from '../types';
 type HealthCheckParam = SchemaType.FromSchema<typeof schemas.healthCheck>;
 
 export interface Api extends API {
-  'health-check': UnprotectedEndpoint<HealthCheckParam, Promise<{ message: string }>>;
+  'health-check': UnprotectedEndpoint<HealthCheckParam, { message: string }>;
 }
 
 export interface Deps {

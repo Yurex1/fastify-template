@@ -1,14 +1,22 @@
+import { setAuthCookie } from '../../utils/cookies/util';
+import { DEFAULT_DEVICE_ID } from '../../data/session/constants';
+import { exception } from '../../utils/exception/util';
 import * as schemas from './schemas';
 import type { AuthApi, Deps } from './types';
+import { sessions } from '../../utils/sessions/utils';
 
 export const init = ({ authService }: Deps): AuthApi => ({
   'sign-in': {
     method: 'post',
     access: 'none',
     schema: schemas.signIn,
-    handler: async (_user, request) => {
+    handler: async (_user, request, reply) => {
       const { usernameOrEmail, password } = request.body;
-      return authService.signIn(usernameOrEmail, password);
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+
+      const user = await authService.signIn(usernameOrEmail, password, deviceId);
+      setAuthCookie('refreshToken', reply, user.refreshToken);
+      return sessions.toSessionResponse(user);
     },
   },
 
@@ -16,33 +24,50 @@ export const init = ({ authService }: Deps): AuthApi => ({
     method: 'post',
     access: 'none',
     schema: schemas.signUp,
-    handler: async (_user, request) => {
+    handler: async (_user, request, reply) => {
       const { email, username, password } = request.body;
-      return await authService.signUp(email, username, password);
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      const user = await authService.signUp(email, username, password, deviceId);
+      setAuthCookie('refreshToken', reply, user.refreshToken);
+      return sessions.toSessionResponse(user);
     },
   },
 
   'sign-out': {
     method: 'post',
-    access: 'common',
+    access: 'access',
     schema: schemas.signOut,
-    handler: async (user, _request) => {
-      return authService.signOut(user.id);
+    handler: async (user, request, reply) => {
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      reply.clearCookie('refreshToken', { path: '/' });
+      return authService.signOut(user.id, deviceId);
     },
   },
 
   refresh: {
     method: 'post',
-    access: 'common',
+    access: 'refresh',
     schema: schemas.refresh,
-    handler: async (user, _request) => {
-      return authService.refresh(user.id);
+    handler: async (user, request, reply) => {
+      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      const currentToken = request.cookies.refreshToken;
+
+      if (!currentToken) {
+        throw exception.unauthorized('REFRESH_TOKEN_MISSING');
+      }
+      const session = await authService.refresh(user.id, deviceId, currentToken);
+      setAuthCookie('refreshToken', reply, session.refreshToken);
+
+      return {
+        accessToken: session.accessToken,
+        user: session.user,
+      };
     },
   },
 
   'change-password': {
     method: 'put',
-    access: 'common',
+    access: 'access',
     schema: schemas.changePassword,
     handler: async (user, request) => {
       const { oldPassword, newPassword } = request.body;
