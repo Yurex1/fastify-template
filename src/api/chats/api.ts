@@ -25,6 +25,42 @@ export const init = ({ chatService }: Deps): ChatApi => ({
     },
   },
 
+  sendMessage: {
+    method: 'post',
+    access: 'common',
+    schema: schemas.sendMessage,
+    params: ['chatId'],
+    handler: (user, request) => {
+      const { chatId } = request.params;
+      const { text } = request.body;
+
+      return chatService.sendMessage(user.id, chatId, text);
+    },
+  },
+
+  getMessagesByChatId: {
+    method: 'get',
+    access: 'common',
+    schema: schemas.getMessagesByChatId,
+    params: ['chatId'],
+    handler: (user, request) => {
+      const { chatId } = request.params;
+      return chatService.getMessagesByChatId(user.id, chatId);
+    },
+  },
+
+  updateMessage: {
+    method: 'put',
+    access: 'common',
+    params: ['id'],
+    schema: schemas.updateMessage,
+    handler: async (user, request) => {
+      const { id } = request.params;
+      const updateData = request.body;
+      return chatService.updateMessage(id, user.id, updateData);
+    },
+  },
+
   removeChat: {
     method: 'delete',
     access: 'common',

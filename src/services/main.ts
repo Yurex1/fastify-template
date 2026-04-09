@@ -18,6 +18,7 @@ export const init = (repos: Repos, _wsServer: WsServer): Services => {
     chatRepo: repos.chat,
     chatMemberRepo: repos.chatMember,
     userRepo: repos.user,
+    messageRepo: repos.message,
   });
 
   const notification = notificationServiceInit();
