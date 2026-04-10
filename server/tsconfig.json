@@ -5,7 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "src",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
@@ -13,5 +13,12 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules", "test/**/*", "db/migrations/**", "db/migrate.ts", "**/*.config.js"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "server/test/**/*",
+    "server/db/migrations/**",
+    "server/db/migrate.ts",
+    "**/*.config.js"
+  ]
 }
