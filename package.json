@@ -1,13 +1,25 @@
 {
-  "name": "fastify-template-monorepo",
+  "name": "fastify-template",
+  "type": "module",
   "private": true,
-  "version": "1.0.0",
+  "packageManager": "pnpm@10.4.1",
   "scripts": {
-    "dev": "pnpm --parallel dev",
-    "test": "pnpm --filter @app/server test",
-    "build": "pnpm --recursive build"
+    "dev": "concurrently \"pnpm --filter @fastify-template/client dev\" \"pnpm --filter @fastify-template/server dev\"",
+    "dev:client": "pnpm --filter @fastify-template/client dev",
+    "dev:server": "pnpm --filter @fastify-template/server dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "lint:client": "pnpm --filter @fastify-template/client lint",
+    "lint:server": "pnpm --filter @fastify-template/server lint",
+    "clean": "rm -rf node_modules apps/*/node_modules"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "concurrently": "^9.1.0",
+    "eslint": "^9.39.4",
+    "@eslint/js": "^9.39.4",
+    "typescript-eslint": "^8.58.0",
+    "globals": "^15.15.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19"
   }
 }

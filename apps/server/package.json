@@ -1,0 +1,50 @@
+{
+  "name": "@fastify-template/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/src/main.js",
+    "test": "NODE_ENV=test tsx --test --test-concurrency=1 test/**/*.test.js --timeout 5000",
+    "test:auth": "NODE_ENV=test tsx --test test/auth.test.js",
+    "test:user": "NODE_ENV=test tsx --test test/user.test.js",
+    "test:chat": "NODE_ENV=test tsx --test test/chat.test.js",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "lint:check": "eslint . --max-warnings 0",
+    "migrate:up": "tsx db/migrate.ts up",
+    "migrate:down": "tsx db/migrate.ts down",
+    "migrate:status": "tsx db/migrate.ts status",
+    "migrate:create": "tsx db/migrate.ts create",
+    "migrate:redo": "tsx db/migrate.ts redo",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
+    "@fastify/autoload": "^6.0.0",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/sensible": "^6.0.0",
+    "@fastify/swagger": "^9.5.1",
+    "@fastify/swagger-ui": "^5.2.3",
+    "dotenv": "^17.2.1",
+    "fastify": "^5.0.0",
+    "firebase-admin": "^13.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.3.0",
+    "@types/pg": "^8.15.5",
+    "@types/ws": "^8.18.1",
+    "dotenv-cli": "^10.0.0",
+    "husky": "^9.1.7",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  }
+}
