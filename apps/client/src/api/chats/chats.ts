@@ -1,4 +1,4 @@
-import api from "../api";
+import api from '../api';
 
 const chatsApi = {
   createChat: async (memberId: number) => {
@@ -6,26 +6,16 @@ const chatsApi = {
     return response;
   },
   getChatList: async () => {
-    const response = await api
-      .get(`/chats/list?status=approved&page=1&limit=5`)
-      .json();
+    const response = await api.get(`/chats/list?status=approved&page=1&limit=30`).json();
+    return response;
+  },
+  getPendingChatList: async () => {
+    const response = await api.get(`/chats/list?status=pending&page=1&limit=30`).json();
     return response;
   },
 
-  // getMessageByChatId: async (chatId: number) => {
-  //   const response = await api
-  //     .get(`/chats/getMessagesByChatId/${chatId}?page=1&limit=100`)
-  //     .json();
-  //   return response;
-  // },
-  getMessageByChatId: async (
-    chatId: number,
-    page: number = 1,
-    limit: number = 30,
-  ) => {
-    const response = await api
-      .get(`/chats/getMessagesByChatId/${chatId}?page=${page}&limit=${limit}`)
-      .json();
+  getMessageByChatId: async (chatId: number, page: number = 1, limit: number = 30) => {
+    const response = await api.get(`/chats/getMessagesByChatId/${chatId}?page=${page}&limit=${limit}`).json();
     return response;
   },
 

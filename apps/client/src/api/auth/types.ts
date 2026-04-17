@@ -33,6 +33,17 @@ export interface Chat {
   id: number;
   createdAt: string;
   updatedAt: string;
+
+  member: {
+    id: number;
+    username: string;
+  };
+
+  lastMessage?: {
+    id: number;
+    text: string;
+    createdAt: string;
+  };
 }
 
 export interface Message {
@@ -44,4 +55,4 @@ export interface Message {
   updatedAt: string;
 }
 
-export type FormMode = "create" | "edit";
+export type FormMode = 'create' | 'edit';
