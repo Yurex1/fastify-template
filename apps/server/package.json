@@ -29,9 +29,11 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/sensible": "^6.0.0",
     "@fastify/swagger": "^9.5.1",
-    "@fastify/swagger-ui": "^5.2.3",
+    "@fastify/swagger-ui": "^5.2.5",
     "dotenv": "^17.2.1",
     "fastify": "^5.0.0",
+    "fastify-cli": "^7.4.0",
+    "fastify-plugin": "^5.0.0",
     "firebase-admin": "^13.5.0",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",
@@ -44,7 +46,10 @@
     "@types/ws": "^8.18.1",
     "dotenv-cli": "^10.0.0",
     "husky": "^9.1.7",
-    "tsx": "^4.20.4",
-    "typescript": "^5.9.2"
+    "jiti": "^2.5.1",
+    "json-schema-to-ts": "^3.1.1",
+    "node-pg-migrate": "^8.0.3",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.20.4"
   }
 }

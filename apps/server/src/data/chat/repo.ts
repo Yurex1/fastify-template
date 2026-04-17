@@ -9,7 +9,7 @@ class ChatRepository extends EntityRepo<Chat> {
     super(pool, 'chats', ['id', 'createdAt', 'updatedAt']);
   }
 
-  override async create(_data: CreateEntity<Chat> = { title: 'cdcdc' }): Promise<Chat> {
+  override async create(_data: CreateEntity<Chat>): Promise<Chat> {
     const returning = this.fields.map((f) => `"${String(f)}"`).join(', ');
     const query = `
       INSERT INTO "public"."${this.tableName}" DEFAULT VALUES

@@ -26,17 +26,6 @@ export const init = ({ chatService }: Deps): ChatApi => {
       },
     },
 
-    // sendMessage: {
-    //   method: 'post',
-    //   access: 'access',
-    //   schema: schemas.sendMessage,
-    //   params: ['chatId'],
-    //   handler: (user, request) => {
-    //     const { chatId } = request.params;
-    //     const { text } = request.body;
-    //     return chatService.sendMessage(user.id, chatId, text);
-    //   },
-    // },
     getMessagesByChatId: {
       method: 'get',
       access: 'access',
@@ -48,18 +37,6 @@ export const init = ({ chatService }: Deps): ChatApi => {
         return chatService.getMessagesByChatId(user.id, chatId, page, limit);
       },
     },
-
-    // updateMessage: {
-    //   method: 'put',
-    //   access: 'access',
-    //   params: ['id'],
-    //   schema: schemas.updateMessage,
-    //   handler: async (user, request) => {
-    //     const { id } = request.params;
-    //     const updateData = request.body;
-    //     return chatService.updateMessage(id, user.id, updateData);
-    //   },
-    // },
 
     removeChat: {
       method: 'delete',

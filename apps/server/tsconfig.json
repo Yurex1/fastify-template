@@ -18,7 +18,7 @@
     "node_modules",
     "server/test/**/*",
     "server/db/migrations/**",
-    // "server/db/migrate.ts",
+    "server/db/migrate.ts",
     "**/*.config.js"
   ]
 }

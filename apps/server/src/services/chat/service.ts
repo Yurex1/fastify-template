@@ -8,22 +8,36 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       if (memberId === userId) {
         throw exception.badRequest('Cannot create chat with yourself');
       }
+
       const memberExists = await userRepo.existsById(memberId);
       if (!memberExists) {
         throw exception.notFound('USER_NOT_FOUND');
       }
 
       const existing = await chatMemberRepo.findDirectChat(userId, memberId);
-      if (existing) return existing;
+      if (existing) {
+        throw exception.badRequest('CHAT_ALREADY_EXIST');
+      }
 
       const chat = await chatRepo.create({});
+
       await chatMemberRepo.addMembers(chat.id, [
         { userId, status: ChatMemberStatus.APPROVED },
         { userId: memberId, status: ChatMemberStatus.APPROVED },
       ]);
-      return chat;
-    },
 
+      const member = await userRepo.findOne({ id: memberId });
+
+      return {
+        id: chat.id,
+        createdAt: chat.createdAt,
+        updatedAt: chat.updatedAt,
+        member: {
+          id: member!.id,
+          username: member!.username,
+        },
+      };
+    },
     list: async (userId, status, page, limit) => {
       return chatMemberRepo.listChatsForUser(userId, status, page, limit);
     },

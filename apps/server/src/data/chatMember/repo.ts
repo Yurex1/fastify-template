@@ -32,17 +32,40 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
 
   async listChatsForUser(userId, status, page, limit) {
     const offset = (page - 1) * limit;
-    return pool.queryAll<Chat>(
+
+    const rows = await pool.queryAll(
       `
-      SELECT c.id, c."createdAt", c."updatedAt"
-      FROM "public"."chats" c
-      INNER JOIN "public"."chatMember" m ON m."chatId" = c.id
-      WHERE m."userId" = $1 AND m.status = $2::chat_member_status
-      ORDER BY c."updatedAt" DESC
-      LIMIT $3 OFFSET $4
-      `,
+    SELECT 
+      c.id,
+      c."createdAt",
+      c."updatedAt",
+      u.id as "memberId",
+      u.username
+    FROM "public"."chats" c
+    INNER JOIN "public"."chatMember" m 
+      ON m."chatId" = c.id
+      AND m."userId" = $1
+      AND m.status = $2::chat_member_status
+    INNER JOIN "public"."chatMember" m2 
+      ON m2."chatId" = c.id
+      AND m2."userId" != $1
+    INNER JOIN "public"."users" u 
+      ON u.id = m2."userId"
+    ORDER BY c."updatedAt" DESC
+    LIMIT $3 OFFSET $4
+    `,
       [userId, status, limit, offset],
     );
+
+    return rows.map((row) => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      member: {
+        id: row.memberId,
+        username: row.username,
+      },
+    }));
   },
 
   async isMember(userId, chatId) {

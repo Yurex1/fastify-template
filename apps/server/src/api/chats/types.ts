@@ -1,7 +1,7 @@
 import * as SchemaType from 'json-schema-to-ts';
 import * as schemas from './schemas';
 import { API, ProtectedEndpoint } from '../types';
-import { Chat } from '../../entities/chat';
+import { Chat, ChatPreview } from '../../entities/chat';
 import type { ChatService } from '../../services/chat/types';
 
 type CreateParam = SchemaType.FromSchema<typeof schemas.create>;
@@ -10,7 +10,7 @@ type RemoveChatParam = SchemaType.FromSchema<typeof schemas.removeChat>;
 
 export interface ChatApi extends API {
   create: ProtectedEndpoint<CreateParam, Chat>;
-  list: ProtectedEndpoint<ListParam, Chat[]>;
+  list: ProtectedEndpoint<ListParam, ChatPreview[]>;
   removeChat: ProtectedEndpoint<RemoveChatParam, { removed: boolean }>;
 }
 
