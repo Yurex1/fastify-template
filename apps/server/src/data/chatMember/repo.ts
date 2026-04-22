@@ -20,14 +20,18 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     await pool.query(`INSERT INTO "public"."chatMember" ("chatId", "userId", status) VALUES ${placeholders}`, params);
   },
 
-  async getAllMembersByChatId(chatId: number): Promise<number[]> {
-    const result = await pool.query<{ userId: number }>(
-      `SELECT "userId" FROM "public"."chatMember" 
-     WHERE "chatId" = $1`,
+  async getAllMembersByChatId(chatId: number): Promise<{ userId: number; username: string }[]> {
+    const result = await pool.query<{ userId: number; username: string }>(
+      `SELECT 
+     cm."userId", 
+     u."username" 
+   FROM "public"."chatMember" cm
+   JOIN "public"."users" u ON cm."userId" = u.id
+   WHERE cm."chatId" = $1`,
       [chatId],
     );
 
-    return result.rows.map((row) => row.userId);
+    return result.rows.map((row) => row);
   },
 
   async listChatsForUser(userId, status, page, limit) {
@@ -61,10 +65,12 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
       id: row.id,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
-      member: {
-        id: row.memberId,
-        username: row.username,
-      },
+      members: [
+        {
+          userId: row.memberId,
+          username: row.username,
+        },
+      ],
     }));
   },
 

@@ -6,10 +6,7 @@ export interface ChatPreview {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  member: {
-    id: number;
-    username: string;
-  };
+  members: { userId: number; username: string }[];
 }
 
 export interface CreateChat {}

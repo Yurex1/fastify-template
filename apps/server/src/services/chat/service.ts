@@ -26,16 +26,13 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
         { userId: memberId, status: ChatMemberStatus.APPROVED },
       ]);
 
-      const member = await userRepo.findOne({ id: memberId });
+      const members = await chatMemberRepo.getAllMembersByChatId(chat.id);
 
       return {
         id: chat.id,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
-        member: {
-          id: member!.id,
-          username: member!.username,
-        },
+        members,
       };
     },
     list: async (userId, status, page, limit) => {
@@ -49,9 +46,9 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       const message = await messageRepo.create({ userId, chatId, text });
       const memberIds = await chatMemberRepo.getAllMembersByChatId(Number(chatId));
 
-      memberIds.forEach((id) => {
-        if (wsServer.hasConnection(id)) {
-          wsServer.send(id, {
+      memberIds.forEach((member) => {
+        if (wsServer.hasConnection(member.userId)) {
+          wsServer.send(member.userId, {
             type: 'NEW_MESSAGE',
             payload: {
               ...message,
@@ -68,8 +65,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
-      const messages = await messageRepo.findByChatId(chatId, page, limit);
-      return messages.reverse();
+      return await messageRepo.findByChatId(chatId, page, limit);
     },
 
     updateMessage: async (id, definition) => {
@@ -113,8 +109,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
         const updatedMessage = await service.updateMessage(messageId, { text });
 
         const memberIds = await chatMemberRepo.getAllMembersByChatId(updatedMessage.chatId);
-        memberIds.forEach((memberId) => {
-          wsServer.send(memberId, {
+        memberIds.forEach((member) => {
+          wsServer.send(member.userId, {
             type: 'MESSAGE_UPDATED',
             payload: updatedMessage,
           });
@@ -133,8 +129,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
         await messageRepo.remove(messageId);
 
         const memberIds = await chatMemberRepo.getAllMembersByChatId(msg.chatId);
-        memberIds.forEach((memberId) => {
-          wsServer.send(memberId, {
+        memberIds.forEach((member) => {
+          wsServer.send(member.userId, {
             type: 'MESSAGE_DELETED',
             payload: { messageId, chatId: msg.chatId },
           });
