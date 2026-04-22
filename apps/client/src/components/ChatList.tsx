@@ -1,77 +1,74 @@
-import { useEffect, useState } from 'react';
-import chatsApi from '../api/chats/chats';
-import type { Chat } from '../api/auth/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchChats, deleteChat } from '../services/chats';
+import { useAuthStore } from '../stores/auth';
 import { setLastChatId } from '../utils/lastOpenChatId';
 import { CreateChat } from './CreateChat';
-import { X, Menu } from 'lucide-react';
+import ChatMenu from './ContextMenu';
+import { cn } from '../lib/utils';
+import { ContextMenuTrigger, ContextMenu } from './ui/context-menu';
+import { useState } from 'react';
+import type { Chat } from '../api/types';
 
-const ChatList = ({
-  currentChatId,
-  collapsed,
-  setCollapsed,
-  setCurrentChatId,
-}: {
+interface ChatListProps {
   currentChatId: number | null;
-  collapsed: boolean;
-  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   setCurrentChatId: (id: number) => void;
-}) => {
-  const [chats, setChats] = useState<Chat[]>([]);
+}
 
-  // async function handlePendingChats() {
-  //   try {
-  //     setChats([]);
-  //     const res = (await chatsApi.getPendingChatList()) as Chat[];
-  //     setChats(res);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
+const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
 
-  async function fetchChats() {
-    try {
-      const response = (await chatsApi.getChatList()) as Chat[];
-      setChats(response);
-    } catch (error) {
-      console.error('Failed to fetch chats', error);
-      setChats([]);
+  const { data: chats = [], isLoading } = useQuery({
+    queryKey: ['chats'],
+    queryFn: fetchChats,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (chatId: number) => deleteChat(chatId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chats'] });
+    },
+  });
+
+  const handleDelete = () => {
+    if (menuForChat) {
+      deleteMutation.mutate(menuForChat.id);
     }
-  }
+  };
 
-  useEffect(() => {
-    fetchChats();
-  }, []);
+  const handleChangeChatId = (chatId: number) => {
+    setCurrentChatId(chatId);
+    setLastChatId(chatId);
+  };
+
+  if (isLoading) return <p>Chats loading...</p>;
 
   return (
     <>
-      <button
-        className={`absolute top-2 p-2 transition-all duration-350 ease-in-out ${collapsed ? 'left-0' : 'left-[16.5em]'}`}
-        onClick={() => setCollapsed((prev) => !prev)}
-      >
-        {collapsed ? <Menu size={25} /> : <X size={25} />}
-      </button>
-      <div
-        className={`w-1/4 border-r border-gray-800 bg-black h-screen
-        transition-all duration-350 ease-in-out ${collapsed ? 'max-w-0' : 'max-w-[19em]'}`}
-      >
-        <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">Чати</h2>
-        {/* <button onClick={handlePendingChats}>show pending chats</button> */}
-        <CreateChat setChats={setChats} />
+      <div className="w-full h-full h-screen overflow-hidden">
+        <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">Chats</h2>
 
-        <div
-          className={`h-full w-full overflow-y-auto p-2 pb-30 transition-all duration-350 ease-in-out ${collapsed ? 'opacity-0 -translate-x-[200%]' : 'opacity-100 translate-x-0'}`}
-        >
+        <CreateChat />
+
+        <div className={cn('h-full w-full overflow-y-auto p-2  transition-all duration-500')}>
           {chats.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => {
-                setCurrentChatId(chat.id);
-                setLastChatId(chat.id);
-              }}
-              className={`p-4 cursor-pointer ${currentChatId === chat.id ? 'bg-gray-700' : ''}`}
-            >
-              <p className="text-gray-300">{chat.member.username}</p>
-            </div>
+            <ContextMenu key={chat.id}>
+              <ContextMenuTrigger onContextMenu={() => setMenuForChat(chat)}>
+                <div
+                  onClick={() => handleChangeChatId(chat.id)}
+                  className={cn(
+                    'p-4 cursor-pointer rounded-xl',
+                    currentChatId === chat.id ? 'bg-gray-600  text-white' : 'text-gray-400 hover:bg-gray-900',
+                  )}
+                >
+                  <p className="font-medium">
+                    {chat.members.find((m) => m.id !== user?.id)?.username || 'Unknown Chat'}
+                  </p>
+                </div>
+              </ContextMenuTrigger>
+              <ChatMenu onDelete={handleDelete} />
+            </ContextMenu>
           ))}
         </div>
       </div>

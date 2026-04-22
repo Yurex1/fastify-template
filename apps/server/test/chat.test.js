@@ -43,10 +43,14 @@ describe('Chat & Message Tests', () => {
       assert(chat.id, 'Chat should have an ID');
     });
 
-    test('should return existing chat if already created (no duplicates)', async () => {
-      const secondAttempt = await app.services.chat.create(user1.id, user2.id);
-
-      assert.strictEqual(secondAttempt.id, chat.id, 'Should return the same chat ID');
+    test('should fail if direct chat already exists (return 400)', async () => {
+      await assert.rejects(
+        async () => await app.services.chat.create(user1.id, user2.id),
+        (err) => {
+          return err.statusCode === 400;
+        },
+        'Should throw 400 error for existing chat',
+      );
     });
 
     test('should fail when creating chat with yourself', async () => {

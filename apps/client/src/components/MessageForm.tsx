@@ -1,35 +1,42 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import type { FormMode, Message } from '../api/auth/types';
-import { sendMessage, updateMessage } from '../services/chatSocket';
+import type { FormMode, Message } from '../api/types';
 import { SendHorizonal, Check } from 'lucide-react';
+import { FORM_MODE } from '../utils/consts/formModes';
+
+interface MessageForm {
+  currentChatId: number | null;
+
+  text: string;
+  setText: (text: string) => void;
+  formMode: 'create' | 'edit';
+  setFormMode: (text: FormMode) => void;
+  messageToEdit: Message;
+  setMessageToEdit: (text: Message) => void;
+  updateMessage: (id: number, text: string) => void;
+  sendMessage: (ChatId: number, text: string) => void;
+}
 const MessageForm = ({
   currentChatId,
-  ws,
+
   text,
   setText,
   formMode,
   setFormMode,
   messageToEdit,
   setMessageToEdit,
-}: {
-  currentChatId: number | null;
-  ws: WebSocket;
-  text: string;
-  setText: (text: string) => void;
-  formMode: string;
-  setFormMode: (text: FormMode) => void;
-  messageToEdit: Message;
-  setMessageToEdit: (text: Message) => void;
-}) => {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  updateMessage,
+  sendMessage,
+}: MessageForm) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleSend = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (text.trim().length <= 0) return;
-    if (formMode === 'create') {
-      sendMessage(ws, currentChatId, text);
+    if (formMode === FORM_MODE.CREATE) {
+      sendMessage(currentChatId, text);
     } else {
-      updateMessage(ws, messageToEdit.id, text);
+      updateMessage(messageToEdit.id, text);
       setMessageToEdit(null);
       setFormMode('create');
     }
@@ -37,20 +44,20 @@ const MessageForm = ({
   };
 
   useEffect(() => {
-    ref.current.focus();
+    textareaRef.current.focus();
   }, [handleSend]);
 
   return (
     <form onSubmit={handleSend} className="p-4 bg-gray-950 border-t border-gray-800 flex gap-2 items-end">
       <TextareaAutosize
-        ref={ref}
+        ref={textareaRef}
         cacheMeasurements
         value={text}
         onChange={(e) => setText(e.target.value)}
         minRows={1}
         maxRows={10}
         className="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:outline-none resize-none"
-        placeholder="Напишіть повідомлення..."
+        placeholder="Message..."
       />
       <button className="bg-blue-600 px-3 py-2 h-[43px] rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
         {formMode === 'create' ? <SendHorizonal /> : <Check />}

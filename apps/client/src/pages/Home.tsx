@@ -1,23 +1,27 @@
 import { useState } from 'react';
-import MessageWindow from '../components/MessageWindow';
-import { getLastChatId } from '../utils/lastOpenChatId';
 import ChatList from '../components/ChatList';
+import MessageWindow from '../components/MessageWindow';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
+import { getLastChatId } from '../utils/lastOpenChatId';
 
 export default function HomePage() {
   const lastChatId = getLastChatId();
-  const [collapsed, setCollapsed] = useState(false);
+
   const [currentChatId, setCurrentChatId] = useState<number | null>(lastChatId);
+
   return (
-    <div className="flex w-full min-h-screen bg-white dark:bg-[#1f1f1f] transition-colors duration-300 overflow-hidden">
-      <ChatList
-        currentChatId={currentChatId}
-        setCurrentChatId={setCurrentChatId}
-        collapsed={collapsed}
-        setCollapsed={setCollapsed}
-      />
-      <main className="flex-1 h-[100dvh] overflow-x-hidden text-black dark:text-white">
-        <MessageWindow currentChatId={currentChatId} />
-      </main>
-    </div>
+    <ResizablePanelGroup orientation="horizontal" className="max-w-full rounded-lg border md:min-w-[450px]">
+      <ResizablePanel defaultSize="25%" maxSize="25%">
+        <div className="flex h-full items-center justify-center">
+          <ChatList currentChatId={currentChatId} setCurrentChatId={setCurrentChatId} />
+        </div>
+      </ResizablePanel>
+      <ResizableHandle withHandle />
+      <ResizablePanel defaultSize="75%">
+        <div className="flex h-full items-center justify-center">
+          <MessageWindow currentChatId={currentChatId} />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }

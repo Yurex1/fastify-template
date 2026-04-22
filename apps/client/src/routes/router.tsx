@@ -1,23 +1,27 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { useAuthStore } from "../stores/auth";
-import type { JSX } from "react";
-import Login from "../pages/Login";
-import Register from "../pages/Register";
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { useAuthStore } from '../stores/auth';
+import type { JSX } from 'react';
+import Login from '../pages/Login';
+import Register from '../pages/Register';
 // import Dashboard from "@/pages/Dashboard";
-import Home from "../pages/Home";
+import Home from '../pages/Home';
+import { ROUTES } from '../utils/consts/routes';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+interface ProtectedRoute {
+  children: JSX.Element;
+}
+const ProtectedRoute = ({ children }: ProtectedRoute) => {
   const { isAuthenticated } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
   return children;
 };
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: (
       <ProtectedRoute>
         <Home />
@@ -25,11 +29,11 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/login",
+    path: ROUTES.LOGIN,
     element: <Login />,
   },
   {
-    path: "/register",
+    path: ROUTES.REGISTER,
     element: <Register />,
   },
   // {
@@ -41,8 +45,8 @@ export const router = createBrowserRouter([
   //   ),
   // },
 
-  // {
-  //   path: "*",
-  //   element: <Navigate to="/login" replace />,
-  // },
+  {
+    path: '*',
+    element: <Navigate to={ROUTES.LOGIN} replace />,
+  },
 ]);

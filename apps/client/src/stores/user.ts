@@ -1,17 +1,42 @@
-import { create } from "zustand";
+import { create } from 'zustand';
+import type { User } from '../api/types';
 
 interface UserState {
-  currentUser: any;
-  setCurrentUser: (user: any) => void;
+  currentUser: User;
+  accessToken: string | null;
+  setCurrentUser: (user: User) => void;
+  setAccessToken: (token: string | null) => void;
+  clearAccessToken: () => void;
   clear: () => void;
 }
 
-const useUserStore = create<UserState>((set) => ({
-  currentUser: null,
+// const useUserStore = create<UserState>((set) => ({
+//   currentUser: null,
+//   accessToken: null,
 
-  setCurrentUser: (user) => set({ currentUser: user }),
+//   setCurrentUser: (user) => set({ currentUser: user }),
+//   setAccessToken: (token) => set({ accessToken: token }),
+//   clearAccessToken: () => set({ accessToken: null }),
 
-  clear: () => set({ currentUser: null }),
-}));
+//   clear: () => set({ currentUser: null }),
+// }));
+
+import { persist } from 'zustand/middleware';
+
+const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      currentUser: null,
+      accessToken: null,
+
+      setCurrentUser: (user) => set({ currentUser: user }),
+      setAccessToken: (token) => set({ accessToken: token }),
+      clearAccessToken: () => set({ accessToken: null }),
+
+      clear: () => set({ currentUser: null }),
+    }),
+    { name: 'user-storage' },
+  ),
+);
 
 export default useUserStore;

@@ -34,10 +34,10 @@ export interface Chat {
   createdAt: string;
   updatedAt: string;
 
-  member: {
+  members: {
     id: number;
     username: string;
-  };
+  }[];
 
   lastMessage?: {
     id: number;
@@ -56,3 +56,10 @@ export interface Message {
 }
 
 export type FormMode = 'create' | 'edit';
+
+export type WSEvent =
+  | { type: 'add'; payload: Message }
+  | { type: 'update'; payload: Message }
+  | { type: 'delete'; payload: { messageId: number; chatId: number } };
+
+export type Action = WSEvent['type'];
