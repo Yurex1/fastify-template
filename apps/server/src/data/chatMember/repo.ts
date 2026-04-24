@@ -34,6 +34,22 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     return result.rows.map((row) => row);
   },
 
+  async getAllMembers(userId: number): Promise<{ userId: number; username: string }[]> {
+    const result = await pool.query<{ userId: number; username: string }>(
+      `SELECT DISTINCT
+            u.id AS "userId",
+            u.username
+        FROM "public"."chatMember" cm1
+        JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
+        JOIN "public"."users" u ON cm2."userId" = u.id
+        WHERE cm1."userId" = $1 AND cm2."userId" != $1
+  `,
+      [userId],
+    );
+
+    return result.rows.map((row) => row);
+  },
+
   async listChatsForUser(userId, status, page, limit) {
     const offset = (page - 1) * limit;
 

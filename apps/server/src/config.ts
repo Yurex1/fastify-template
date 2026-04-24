@@ -39,10 +39,7 @@ export const config = {
     secretAccessKey: env.requireEnv('AWS_SECRET_ACCESS_KEY'),
   },
   cors: {
-    allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS || '')
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS?.split(',') || []).map((origin) => origin.trim()).filter(Boolean),
   },
   node_env: process.env.NODE_ENV || 'development',
 };

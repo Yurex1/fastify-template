@@ -45,6 +45,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
 
       const message = await messageRepo.create({ userId, chatId, text });
       const memberIds = await chatMemberRepo.getAllMembersByChatId(Number(chatId));
+      await chatRepo.update(chatId, { updatedAt: new Date() });
 
       memberIds.forEach((member) => {
         if (wsServer.hasConnection(member.userId)) {
@@ -133,6 +134,25 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
           wsServer.send(member.userId, {
             type: 'MESSAGE_DELETED',
             payload: { messageId, chatId: msg.chatId },
+          });
+        });
+      } catch (err: any) {
+        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      }
+    }
+
+    if (data.type === 'USER_STATUS') {
+      console.debug('klikoi');
+
+      const { userId, isActive } = data.payload;
+
+      try {
+        const memberIds = await chatMemberRepo.getAllMembers(userId);
+
+        memberIds.forEach((member) => {
+          wsServer.send(member.userId, {
+            type: 'STATUS',
+            payload: { userId, isActive },
           });
         });
       } catch (err: any) {

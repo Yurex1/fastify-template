@@ -7,6 +7,7 @@ export interface User extends BaseEntity {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  lastseen: Date;
 }
 
 export interface CreateUser {

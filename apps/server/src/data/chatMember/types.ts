@@ -10,6 +10,7 @@ export interface ChatMemberRepo {
   addMembers(chatId: number, members: { userId: number; status: ChatMemberStatus }[]): Promise<void>;
   listChatsForUser: (userId: number, status: ChatMemberStatus, page: number, limit: number) => Promise<ChatPreview[]>;
   getAllMembersByChatId: (chatId: number) => Promise<{ userId: number; username: string }[]>;
+  getAllMembers: (userId: number) => Promise<{ userId: number; username: string }[]>;
   isMember: (userId: number, chatId: number) => Promise<boolean>;
   findDirectChat: (userId: number, otherUserId: number) => Promise<Chat | null>;
 }

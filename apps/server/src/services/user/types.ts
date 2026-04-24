@@ -1,17 +1,9 @@
 import type { UserRepo } from '../../data/user/types';
-import type {
-  User,
-  CreateUser,
-  UpdateUser,
-  UserResult,
-} from '../../entities/user';
+import type { User, CreateUser, UpdateUser, UserResult } from '../../entities/user';
 
 export interface UserService {
   create: (user: CreateUser) => Promise<User>;
-  findOne: (
-    definition: Partial<User>,
-    includePassword?: boolean,
-  ) => Promise<UserResult>;
+  findOne: (definition: Partial<User>, includePassword?: boolean) => Promise<UserResult>;
   findAll: () => Promise<User[]>;
   isExists: (definition: Partial<User>) => Promise<boolean>;
   update: (id: number, definition: Partial<UpdateUser>) => Promise<User>;

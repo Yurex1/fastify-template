@@ -1,6 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { config } from '../config';
-import { ApiError, exception } from '../utils/exception/util';
+import { exception } from '../utils/exception/util';
 import { Repos } from '../data/types';
 import { WsServer } from './types';
 import { init as authServiceInit } from '../services/auth/service';
@@ -32,6 +32,7 @@ function buildWsServer(repos: Repos): WsServer {
           }
 
           const user = await authService.verify('access', token);
+          repos.user.updateLastSeen(user.id);
           const uid = Number(user.id);
 
           this.connections.set(uid, ws);
@@ -48,6 +49,7 @@ function buildWsServer(repos: Repos): WsServer {
 
           ws.on('close', () => {
             this.connections.delete(uid);
+            repos.user.updateLastSeen(user.id);
           });
         } catch (e: any) {
           ws.send(
