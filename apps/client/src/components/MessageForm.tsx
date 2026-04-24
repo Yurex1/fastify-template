@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import type { FormMode, Message } from '../api/types';
-import { SendHorizonal, Check } from 'lucide-react';
+import { SendHorizonal, Check, Search } from 'lucide-react';
 import { FORM_MODE } from '../utils/consts/formModes';
 
 interface MessageForm {
@@ -9,12 +9,14 @@ interface MessageForm {
 
   text: string;
   setText: (text: string) => void;
-  formMode: 'create' | 'edit';
+  formMode: FormMode;
   setFormMode: (text: FormMode) => void;
   messageToEdit: Message;
   setMessageToEdit: (text: Message) => void;
   updateMessage: (id: number, text: string) => void;
   sendMessage: (ChatId: number, text: string) => void;
+
+  handleSearch: () => void;
 }
 const MessageForm = ({
   currentChatId,
@@ -27,6 +29,8 @@ const MessageForm = ({
   setMessageToEdit,
   updateMessage,
   sendMessage,
+
+  handleSearch,
 }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,11 +39,16 @@ const MessageForm = ({
     if (text.trim().length <= 0) return;
     if (formMode === FORM_MODE.CREATE) {
       sendMessage(currentChatId, text);
-    } else {
+    }
+    if (formMode === FORM_MODE.SEARCH) {
+      handleSearch();
+    }
+    if (formMode === FORM_MODE.EDIT) {
       updateMessage(messageToEdit.id, text);
       setMessageToEdit(null);
       setFormMode('create');
     }
+
     setText('');
   };
 
@@ -60,7 +69,7 @@ const MessageForm = ({
         placeholder="Message..."
       />
       <button className="bg-blue-600 px-3 py-2 h-[43px] rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
-        {formMode === 'create' ? <SendHorizonal /> : <Check />}
+        {formMode === 'create' ? <SendHorizonal /> : formMode === 'search' ? <Search /> : <Check />}
       </button>
     </form>
   );

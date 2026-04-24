@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 import type { Message, FormMode } from '../api/types';
 import { useChatMessages } from '../hooks/useChatMessages';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
+import { LucideSearch } from 'lucide-react';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -36,6 +37,11 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
 
   const isOwnMessage = (message: Message) => message.userId === currentUser?.id;
 
+  const handleSearch = () => {
+    const mes = messages.filter((message) => message.text.includes(text));
+    console.log(mes);
+  };
+
   const handleEdit = () => {
     if (menuForMessage) {
       setFormMode('edit');
@@ -57,6 +63,9 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-screen">
       <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
+        <button onClick={() => setFormMode('search')}>
+          <LucideSearch />
+        </button>
         {messages.map((message) => (
           <div key={message.id} className={cn('flex mb-1', isOwnMessage(message) ? 'justify-end' : 'justify-start')}>
             <ContextMenu>
@@ -117,6 +126,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
         setMessageToEdit={setMenuForMessage}
         updateMessage={updateMessage}
         sendMessage={sendMessage}
+        handleSearch={handleSearch}
       />
     </div>
   );

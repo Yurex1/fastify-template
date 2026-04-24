@@ -12,7 +12,7 @@ export default function HomePage() {
   return (
     <ResizablePanelGroup orientation="horizontal" className="max-w-full rounded-lg border md:min-w-[450px]">
       <ResizablePanel defaultSize="25%" maxSize="25%">
-        <div className="flex h-full items-center justify-center">
+        <div className="flex h-screen items-center justify-center">
           <ChatList currentChatId={currentChatId} setCurrentChatId={setCurrentChatId} />
         </div>
       </ResizablePanel>

@@ -21,6 +21,7 @@ export interface User {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  lastseen: Date;
 }
 
 export interface Session {
@@ -55,7 +56,7 @@ export interface Message {
   updatedAt: string;
 }
 
-export type FormMode = 'create' | 'edit';
+export type FormMode = 'create' | 'edit' | 'search';
 
 export type WSEvent =
   | { type: 'add'; payload: Message }

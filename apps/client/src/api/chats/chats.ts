@@ -6,8 +6,8 @@ const chatsApi = {
     const response = await api.post(`/chats/create/${memberId}`).json<Chat>();
     return response;
   },
-  getChatList: async () => {
-    const response = await api.get(`/chats/list?status=approved&page=1&limit=30`).json<Chat[]>();
+  getChatList: async (page: number = 1, limit: number = 30) => {
+    const response = await api.get(`/chats/list?status=approved&page=${page}&limit=${limit}`).json<Chat[]>();
     return response;
   },
   getPendingChatList: async () => {

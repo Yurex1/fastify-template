@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import useUserStore from '../stores/user';
 import { MESSAGE_TYPES } from '../utils/consts/messageTypes';
 import { useChatMessages } from './useChatMessages';
+import { CHAT_TYPES } from '../utils/consts/chatTypes';
+import { useAuthStore } from '../stores/auth';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -12,14 +14,12 @@ interface UseWebSocketProps {
 export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const token = useUserStore((s) => s.accessToken);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const { updateMessageCache } = useChatMessages({
+  const userId = useAuthStore((s) => s.user).id;
+  const { updateMessageCache, updateChatsCache } = useChatMessages({
     currentChatId,
   });
-  const onMessageReceivedRef = useRef(updateMessageCache);
-
-  useEffect(() => {
-    onMessageReceivedRef.current = updateMessageCache;
-  }, [updateMessageCache]);
+  const currentChatIdRef = useRef(currentChatId);
+  currentChatIdRef.current = currentChatId;
 
   useEffect(() => {
     if (!token) return;
@@ -28,20 +28,33 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      const chatId = currentChatIdRef.current;
 
       if (data.type === MESSAGE_TYPES.new) {
-        onMessageReceivedRef.current({ type: 'add', payload: data.payload });
+        updateMessageCache(chatId, { type: 'add', payload: data.payload });
+        updateChatsCache(CHAT_TYPES.update, chatId, data.payload.createdAt);
       }
+
       if (data.type === MESSAGE_TYPES.updated) {
-        onMessageReceivedRef.current({ type: 'update', payload: data.payload });
+        updateMessageCache(chatId, { type: 'update', payload: data.payload });
       }
       if (data.type === MESSAGE_TYPES.deleted) {
-        onMessageReceivedRef.current({ type: 'delete', payload: data.payload });
+        updateMessageCache(chatId, { type: 'delete', payload: data.payload });
+      }
+
+      if (data.type === MESSAGE_TYPES.getStatus) {
+        console.log(data.payload);
       }
     };
 
-    socket.onopen = () => setWs(socket);
-    socket.onclose = () => setWs(null);
+    socket.onopen = () => {
+      setWs(socket);
+      socket.send(JSON.stringify({ type: MESSAGE_TYPES.status, payload: { userId, isActive: true } }));
+    };
+    socket.onclose = () => {
+      setWs(null);
+      // socket.send(JSON.stringify({ type: MESSAGE_TYPES.status, payload: { userId, isActive: false } }));
+    };
 
     return () => socket.close();
   }, [token]);

@@ -4,22 +4,12 @@ import type { User } from '../api/types';
 interface UserState {
   currentUser: User;
   accessToken: string | null;
+
   setCurrentUser: (user: User) => void;
   setAccessToken: (token: string | null) => void;
   clearAccessToken: () => void;
   clear: () => void;
 }
-
-// const useUserStore = create<UserState>((set) => ({
-//   currentUser: null,
-//   accessToken: null,
-
-//   setCurrentUser: (user) => set({ currentUser: user }),
-//   setAccessToken: (token) => set({ accessToken: token }),
-//   clearAccessToken: () => set({ accessToken: null }),
-
-//   clear: () => set({ currentUser: null }),
-// }));
 
 import { persist } from 'zustand/middleware';
 
