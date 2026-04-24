@@ -12,6 +12,40 @@ function buildWsServer(repos: Repos): WsServer {
     sessionRepo: repos.sessions,
   });
 
+  const broadcastStatus = async (wsInstance: WsServer, uid: number, isActive: boolean) => {
+    try {
+      const peers = await repos.chatMember.getAllMembers(uid);
+
+      peers.forEach((peer) => {
+        if (wsInstance.hasConnection(peer.userId)) {
+          wsInstance.send(peer.userId, {
+            type: 'USER_STATUS',
+            payload: { userId: uid, isActive },
+          });
+        }
+      });
+    } catch (e) {
+      console.error('Broadcast Status Error:', e);
+    }
+  };
+
+  const sendOnlinePeers = async (wsInstance: WsServer, uid: number) => {
+    try {
+      const peers = await repos.chatMember.getAllMembers(uid);
+
+      const onlineIds = peers.filter((peer) => wsInstance.hasConnection(peer.userId)).map((peer) => peer.userId);
+
+      if (onlineIds.length > 0) {
+        wsInstance.send(uid, {
+          type: 'INITIAL_STATUS_SYNC',
+          payload: { onlineIds },
+        });
+      }
+    } catch (e) {
+      console.error('Initial Status Sync Error:', e);
+    }
+  };
+
   return {
     server: new WebSocketServer(config.server.ws),
     connections: new Map(),
@@ -32,10 +66,15 @@ function buildWsServer(repos: Repos): WsServer {
           }
 
           const user = await authService.verify('access', token);
-          repos.user.updateLastSeen(user.id);
           const uid = Number(user.id);
 
           this.connections.set(uid, ws);
+          broadcastStatus(this, uid, true);
+          setTimeout(() => {
+            sendOnlinePeers(this, uid);
+          }, 200);
+
+          await sendOnlinePeers(this, uid);
 
           ws.on('message', (rawData) => {
             try {
@@ -49,7 +88,9 @@ function buildWsServer(repos: Repos): WsServer {
 
           ws.on('close', () => {
             this.connections.delete(uid);
-            repos.user.updateLastSeen(user.id);
+            repos.user.updateLastSeen(uid);
+
+            broadcastStatus(this, uid, false);
           });
         } catch (e: any) {
           ws.send(
@@ -91,6 +132,7 @@ export const init = (repos: Repos) => {
   if (config.node_env !== 'test') {
     console.log('Starting WS server...');
     wsServer._listen();
+
     console.log('WS server listening on 9090...');
   }
 
