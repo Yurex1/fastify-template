@@ -8,6 +8,8 @@ build/
 
 .env.local
 .env.*.local
+.env.*
+.env
 
 .DS_Store
 Thumbs.db

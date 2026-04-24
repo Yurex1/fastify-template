@@ -143,8 +143,6 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
     }
 
     if (data.type === 'USER_STATUS') {
-      console.debug('klikoi');
-
       const { userId, isActive } = data.payload;
 
       try {

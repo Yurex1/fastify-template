@@ -20,20 +20,6 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     await pool.query(`INSERT INTO "public"."chatMember" ("chatId", "userId", status) VALUES ${placeholders}`, params);
   },
 
-  // async getAllMembersByChatId(chatId: number): Promise<{ userId: number; username: string }[]> {
-  //   const result = await pool.query<{ userId: number; username: string }>(
-  //     `SELECT
-  //    cm."userId",
-  //    u."username"
-  //  FROM "public"."chatMember" cm
-  //  JOIN "public"."users" u ON cm."userId" = u.id
-  //  WHERE cm."chatId" = $1`,
-  //     [chatId],
-  //   );
-
-  //   return result.rows.map((row) => row);
-  // },
-
   async getAllMembersByChatId(chatId) {
     const rows = await pool.queryAll(
       `
