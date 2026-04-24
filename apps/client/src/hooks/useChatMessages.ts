@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
-import type { Chat, Message } from '../api/types';
+import type { Message } from '../api/types';
 import type { WSEvent } from '../api/types';
 import { QueryKeys } from '../lib/queries';
 import { useCallback } from 'react';
@@ -54,42 +54,5 @@ export function useChatMessages({ currentChatId }: useChatMessagesProps) {
     [queryClient],
   );
 
-  const updateChatsCache = (type: string, chatId: number, newDate: string) => {
-    queryClient.setQueryData<InfiniteData<Chat[]>>([QueryKeys.chats], (old) => {
-      if (!old) return old;
-      if (type === 'update') {
-        let targetChat: Chat | null = null;
-
-        const updatedPages = old.pages.map((page) => {
-          const found = page.find((c) => c.id === chatId);
-          if (found) {
-            targetChat = { ...found, updatedAt: newDate };
-            return page.filter((c) => c.id !== chatId);
-          }
-          return page;
-        });
-
-        if (targetChat) {
-          const newPages = [...updatedPages];
-          newPages[0] = [targetChat, ...newPages[0]];
-
-          return {
-            ...old,
-            pages: newPages,
-          };
-        }
-
-        return old;
-      }
-
-      // if (type === 'create') {
-      //   return {
-      //     ...old,
-      //     pages: old.pages.map((page, index) => (index === 0 ? [WSEvent.payload, ...page] : page)),
-      //   };
-      // }
-    });
-  };
-
-  return { ...query, updateMessageCache, updateChatsCache };
+  return { ...query, updateMessageCache };
 }

@@ -35,9 +35,10 @@ export interface Chat {
   createdAt: string;
   updatedAt: string;
 
-  members: {
-    id: number;
+  members?: {
+    userId: number;
     username: string;
+    isOnline: boolean;
   }[];
 
   lastMessage?: {
@@ -64,3 +65,11 @@ export type WSEvent =
   | { type: 'delete'; payload: { messageId: number; chatId: number } };
 
 export type Action = WSEvent['type'];
+
+export interface Payload {
+  createdAt: string;
+  userId: number;
+  isActive: boolean;
+  lastSeen: string;
+  onlineIds: number[];
+}

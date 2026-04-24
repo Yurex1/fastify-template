@@ -1,5 +1,5 @@
-import { useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { fetchChats, deleteChat } from '../services/chats';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteChat } from '../services/chats';
 import { useAuthStore } from '../stores/auth';
 import { setLastChatId } from '../utils/lastOpenChatId';
 import { CreateChat } from './CreateChat';
@@ -11,6 +11,8 @@ import type { Chat } from '../api/types';
 import { QueryKeys } from '../lib/queries';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { EmptyBlock } from './EmptyBlock';
+import { useChats } from '../hooks/useChats';
+import { Dot } from 'lucide-react';
 
 interface ChatListProps {
   currentChatId: number | null;
@@ -23,14 +25,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
 
-  const query = useInfiniteQuery({
-    queryKey: [QueryKeys.chats],
-    queryFn: ({ pageParam = 1 }) => fetchChats({ page: pageParam }),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => (lastPage.length < 20 ? undefined : allPages.length + 1),
-    enabled: !!currentChatId,
-    staleTime: Infinity,
-  });
+  const query = useChats({ currentChatId });
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
@@ -56,32 +51,46 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
     setLastChatId(chatId);
   };
 
+  const isOnline = (chat: Chat) => {
+    return chat.members.find((m) => m.userId !== user?.id)?.isOnline;
+  };
+
+  const userName = (chat: Chat) => {
+    return chat.members.find((m) => m.userId !== user?.id)?.username || 'Unknown Chat';
+  };
+
   const chats = query.data?.pages.flat() || [];
+
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">Chats</h2>
 
       <CreateChat />
 
-      <div className={cn(' flex-1 w-full overflow-y-auto p-2')}>
+      <div className="flex-1 w-full overflow-y-auto p-2">
         {chats.map((chat) => (
           <ContextMenu key={chat.id}>
             <ContextMenuTrigger onContextMenu={() => setMenuForChat(chat)}>
               <div
                 onClick={() => handleChangeChatId(chat.id)}
                 className={cn(
-                  'p-4 cursor-pointer rounded-xl',
+                  'p-4 cursor-pointer rounded-xl relative',
                   currentChatId === chat.id ? 'bg-gray-600  text-white' : 'text-gray-400 hover:bg-gray-900',
                 )}
               >
-                <p className="font-medium">{chat.members.find((m) => m.id !== user?.id)?.username || 'Unknown Chat'}</p>
+                <p className="font-medium">{userName(chat)}</p>
                 <small className="text-gray-300 !text-[10px] leading-[8px]">
                   {new Date(chat.updatedAt).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}
                 </small>
-                {/* <p>{chat.members.find((m) => m.id !== user?.id)?.isActive ? 'online' : 'offline'}</p> */}
+
+                {!!isOnline(chat) && (
+                  <div className="absolute top-0 right-0 text-green-800">
+                    <Dot size={60} />
+                  </div>
+                )}
               </div>
             </ContextMenuTrigger>
             <ChatMenu onDelete={handleDelete} />
