@@ -20,18 +20,36 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     await pool.query(`INSERT INTO "public"."chatMember" ("chatId", "userId", status) VALUES ${placeholders}`, params);
   },
 
-  async getAllMembersByChatId(chatId: number): Promise<{ userId: number; username: string }[]> {
-    const result = await pool.query<{ userId: number; username: string }>(
-      `SELECT 
-     cm."userId", 
-     u."username" 
-   FROM "public"."chatMember" cm
-   JOIN "public"."users" u ON cm."userId" = u.id
-   WHERE cm."chatId" = $1`,
+  // async getAllMembersByChatId(chatId: number): Promise<{ userId: number; username: string }[]> {
+  //   const result = await pool.query<{ userId: number; username: string }>(
+  //     `SELECT
+  //    cm."userId",
+  //    u."username"
+  //  FROM "public"."chatMember" cm
+  //  JOIN "public"."users" u ON cm."userId" = u.id
+  //  WHERE cm."chatId" = $1`,
+  //     [chatId],
+  //   );
+
+  //   return result.rows.map((row) => row);
+  // },
+
+  async getAllMembersByChatId(chatId) {
+    const rows = await pool.queryAll(
+      `
+    SELECT 
+      m."userId", 
+      u.username, 
+      u.lastseen,
+      (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
+    FROM "public"."chatMember" m
+    INNER JOIN "public"."users" u ON u.id = m."userId"
+    WHERE m."chatId" = $1
+  `,
       [chatId],
     );
 
-    return result.rows.map((row) => row);
+    return rows;
   },
 
   async getAllMembers(userId: number): Promise<{ userId: number; username: string }[]> {
@@ -55,12 +73,8 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
 
     const rows = await pool.queryAll(
       `
-    SELECT 
-      c.id,
-      c."createdAt",
-      c."updatedAt",
-      u.id as "memberId",
-      u.username
+    SELECT c.id, c."createdAt", c."updatedAt", u.id as "memberId", u.username, u.lastseen,
+      (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
     FROM "public"."chats" c
     INNER JOIN "public"."chatMember" m 
       ON m."chatId" = c.id
@@ -85,11 +99,12 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
         {
           userId: row.memberId,
           username: row.username,
+          isOnline: row.isOnline,
+          lastseen: row.lastseen,
         },
       ],
     }));
   },
-
   async isMember(userId, chatId) {
     const row = await pool.queryOne<{ ok: number }>(
       `SELECT 1 AS ok FROM "public"."chatMember" WHERE "chatId" = $1 AND "userId" = $2 LIMIT 1`,

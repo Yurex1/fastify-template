@@ -35,6 +35,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
         members,
       };
     },
+
     list: async (userId, status, page, limit) => {
       return chatMemberRepo.listChatsForUser(userId, status, page, limit);
     },
@@ -141,7 +142,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       }
     }
 
-    if (data.type == 'USER_STATUS') {
+    if (data.type === 'USER_STATUS') {
       console.debug('klikoi');
 
       const { userId, isActive } = data.payload;
