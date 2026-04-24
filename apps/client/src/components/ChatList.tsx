@@ -13,6 +13,7 @@ import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { EmptyBlock } from './EmptyBlock';
 import { useChats } from '../hooks/useChats';
 import { Dot } from 'lucide-react';
+import Time from './Time';
 
 interface ChatListProps {
   currentChatId: number | null;
@@ -79,12 +80,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                 )}
               >
                 <p className="font-medium">{member(chat)?.username || 'Unknown Chat'}</p>
-                <small className="text-gray-300 !text-[10px] leading-[8px]">
-                  {new Date(chat.updatedAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </small>
+                <Time date={chat.updatedAt} />
 
                 {!!isOnline(chat) && (
                   <div className="absolute top-0 right-0 text-green-800">
@@ -92,13 +88,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                   </div>
                 )}
                 {!isOnline(chat) && (
-                  <small className="text-gray-300 !text-[10px] leading-[8px] absolute top-0 right-0">
-                    Last seen:{' '}
-                    {new Date(member(chat).lastseen).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </small>
+                  <Time date={member(chat).lastseen} text="Last seen:" additionalStyles="absolute top-0 right-0" />
                 )}
               </div>
             </ContextMenuTrigger>

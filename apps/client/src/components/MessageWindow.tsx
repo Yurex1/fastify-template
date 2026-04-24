@@ -11,6 +11,7 @@ import type { Message, FormMode } from '../api/types';
 import { useChatMessages } from '../hooks/useChatMessages';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { LucideSearch } from 'lucide-react';
+import Time from './Time';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -40,6 +41,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   const handleSearch = () => {
     const mes = messages.filter((message) => message.text.includes(text));
     console.log(mes);
+    // remove later
   };
 
   const handleEdit = () => {
@@ -88,12 +90,8 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
                     {message.createdAt !== message.updatedAt && (
                       <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
                     )}
-                    <small className="text-gray-300 !text-[10px] leading-[8px]">
-                      {new Date(message.updatedAt).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </small>
+
+                    <Time date={message.updatedAt} />
                   </div>
                 </div>
               </ContextMenuTrigger>

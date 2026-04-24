@@ -34,27 +34,60 @@ const MessageForm = ({
 }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const clearForm = () => {
+    setMessageToEdit(null);
+    setFormMode('create');
+    setText('');
+    return;
+  };
+
   const handleSend = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (text.trim().length <= 0) return;
-    if (formMode === FORM_MODE.CREATE) {
-      sendMessage(currentChatId, text);
-    }
-    if (formMode === FORM_MODE.SEARCH) {
-      handleSearch();
-    }
-    if (formMode === FORM_MODE.EDIT) {
-      updateMessage(messageToEdit.id, text);
-      setMessageToEdit(null);
-      setFormMode('create');
-    }
+    switch (formMode) {
+      case FORM_MODE.CREATE:
+        sendMessage(currentChatId, text);
+        break;
 
-    setText('');
+      case FORM_MODE.SEARCH:
+        handleSearch();
+        break;
+
+      case FORM_MODE.EDIT:
+        if (messageToEdit.text.trim() === text.trim()) {
+          clearForm();
+          break;
+        }
+        updateMessage(messageToEdit.id, text);
+        setMessageToEdit(null);
+        setFormMode('create');
+        break;
+
+      default:
+        setText('');
+        break;
+    }
   };
 
   useEffect(() => {
     textareaRef.current.focus();
   }, [handleSend]);
+
+  const formButton = () => {
+    switch (formMode) {
+      case 'create':
+        return <SendHorizonal />;
+
+      case 'search':
+        return <Search />;
+
+      case 'edit':
+        return <Check />;
+
+      default:
+        break;
+    }
+  };
 
   return (
     <form onSubmit={handleSend} className="p-4 bg-gray-950 border-t border-gray-800 flex gap-2 items-end">
@@ -69,7 +102,7 @@ const MessageForm = ({
         placeholder="Message..."
       />
       <button className="bg-blue-600 px-3 py-2 h-[43px] rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
-        {formMode === 'create' ? <SendHorizonal /> : formMode === 'search' ? <Search /> : <Check />}
+        {formButton()}
       </button>
     </form>
   );
