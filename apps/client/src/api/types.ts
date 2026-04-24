@@ -13,6 +13,12 @@ export interface ChangePassword {
   oldPassword: string;
   newPassword: string;
 }
+export interface Member {
+  userId: number;
+  username: string;
+  isOnline: boolean;
+  lastseen: string;
+}
 
 export interface User {
   id: number;
@@ -34,18 +40,7 @@ export interface Chat {
   id: number;
   createdAt: string;
   updatedAt: string;
-
-  members?: {
-    userId: number;
-    username: string;
-    isOnline: boolean;
-  }[];
-
-  lastMessage?: {
-    id: number;
-    text: string;
-    createdAt: string;
-  };
+  members: Member[];
 }
 
 export interface Message {

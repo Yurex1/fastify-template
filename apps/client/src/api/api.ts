@@ -1,6 +1,7 @@
 import ky from 'ky';
 import { ERROR_STATUSES } from '../utils/consts/errorStatus';
 import useUserStore from '../stores/user';
+const userAgent = navigator.userAgent;
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -14,7 +15,7 @@ const api = ky.create({
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
-        const userAgent = navigator.userAgent;
+
         request.headers.set('x-device-id', userAgent);
       },
     ],
@@ -25,7 +26,7 @@ const api = ky.create({
             const refreshRes = await ky
               .post(`${BASE_URL}/auth/refresh`, {
                 credentials: 'include',
-                headers: { 'x-device-id': navigator.userAgent },
+                headers: { 'x-device-id': userAgent },
               })
               .json<{ accessToken: string }>();
             useUserStore.getState().setAccessToken(refreshRes.accessToken);

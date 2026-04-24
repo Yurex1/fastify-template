@@ -55,8 +55,8 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
     return chat.members.find((m) => m.userId !== user?.id)?.isOnline;
   };
 
-  const userName = (chat: Chat) => {
-    return chat.members.find((m) => m.userId !== user?.id)?.username || 'Unknown Chat';
+  const member = (chat: Chat) => {
+    return chat.members.find((m) => m.userId !== user?.id);
   };
 
   const chats = query.data?.pages.flat() || [];
@@ -78,7 +78,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                   currentChatId === chat.id ? 'bg-gray-600  text-white' : 'text-gray-400 hover:bg-gray-900',
                 )}
               >
-                <p className="font-medium">{userName(chat)}</p>
+                <p className="font-medium">{member(chat)?.username || 'Unknown Chat'}</p>
                 <small className="text-gray-300 !text-[10px] leading-[8px]">
                   {new Date(chat.updatedAt).toLocaleTimeString([], {
                     hour: '2-digit',
@@ -90,6 +90,15 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                   <div className="absolute top-0 right-0 text-green-800">
                     <Dot size={60} />
                   </div>
+                )}
+                {!isOnline(chat) && (
+                  <small className="text-gray-300 !text-[10px] leading-[8px] absolute top-0 right-0">
+                    Last seen:{' '}
+                    {new Date(member(chat).lastseen).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </small>
                 )}
               </div>
             </ContextMenuTrigger>
