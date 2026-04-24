@@ -1,0 +1,121 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { deleteChat } from '../services/chats';
+import { useAuthStore } from '../stores/auth';
+import { setLastChatId } from '../utils/lastOpenChatId';
+import { CreateChat } from './CreateChat';
+import ChatMenu from './ContextMenu';
+import { cn } from '../lib/utils';
+import { ContextMenuTrigger, ContextMenu } from './ui/context-menu';
+import { useState } from 'react';
+import type { Chat } from '../api/types';
+import { QueryKeys } from '../lib/queries';
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
+import { EmptyBlock } from './EmptyBlock';
+import { useChats } from '../hooks/useChats';
+import { Dot } from 'lucide-react';
+
+interface ChatListProps {
+  currentChatId: number | null;
+  setCurrentChatId: (id: number) => void;
+}
+
+const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+
+  const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
+
+  const query = useChats({ currentChatId });
+  const { sentinelRef } = useIntersectionObserver({
+    hasNextPage: query.hasNextPage,
+    isFetchingNextPage: query.isFetchingNextPage,
+    fetchNextPage: query.fetchNextPage,
+    rootMargin: '300px',
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (chatId: number) => deleteChat(chatId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.chats] });
+    },
+  });
+
+  const handleDelete = () => {
+    if (menuForChat) {
+      deleteMutation.mutate(menuForChat.id);
+    }
+  };
+
+  const handleChangeChatId = (chatId: number) => {
+    setCurrentChatId(chatId);
+    setLastChatId(chatId);
+  };
+
+  const isOnline = (chat: Chat) => {
+    return chat.members.find((m) => m.userId !== user?.id)?.isOnline;
+  };
+
+  const member = (chat: Chat) => {
+    return chat.members.find((m) => m.userId !== user?.id);
+  };
+
+  const chats = query.data?.pages.flat() || [];
+
+  return (
+    <div className="w-full h-full flex flex-col overflow-hidden">
+      <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">Chats</h2>
+
+      <CreateChat />
+
+      <div className="flex-1 w-full overflow-y-auto p-2">
+        {chats.map((chat) => (
+          <ContextMenu key={chat.id}>
+            <ContextMenuTrigger onContextMenu={() => setMenuForChat(chat)}>
+              <div
+                onClick={() => handleChangeChatId(chat.id)}
+                className={cn(
+                  'p-4 cursor-pointer rounded-xl relative',
+                  currentChatId === chat.id ? 'bg-gray-600  text-white' : 'text-gray-400 hover:bg-gray-900',
+                )}
+              >
+                <p className="font-medium">{member(chat)?.username || 'Unknown Chat'}</p>
+                <small className="text-gray-300 !text-[10px] leading-[8px]">
+                  {new Date(chat.updatedAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </small>
+
+                {!!isOnline(chat) && (
+                  <div className="absolute top-0 right-0 text-green-800">
+                    <Dot size={60} />
+                  </div>
+                )}
+                {!isOnline(chat) && (
+                  <small className="text-gray-300 !text-[10px] leading-[8px] absolute top-0 right-0">
+                    Last seen:{' '}
+                    {new Date(member(chat).lastseen).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </small>
+                )}
+              </div>
+            </ContextMenuTrigger>
+            <ChatMenu onDelete={handleDelete} />
+          </ContextMenu>
+        ))}
+        <div ref={sentinelRef} className="h-1 w-full" />
+
+        {query.isFetchingNextPage && (
+          <div className="text-center py-2 text-gray-500 text-xs italic">Loading old messages...</div>
+        )}
+
+        {query.isLoading && <div className="text-center py-2 text-gray-500 text-xs">Loading...</div>}
+        {!query.isLoading && chats.length === 0 && <EmptyBlock />}
+      </div>
+    </div>
+  );
+};
+
+export default ChatList;
