@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { User } from '../api/types';
 
 interface UserState {
-  currentUser: User;
+  currentUser: User | null;
   accessToken: string | null;
 
   setCurrentUser: (user: User) => void;

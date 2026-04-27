@@ -4,7 +4,7 @@ export interface Message extends BaseEntity {
   userId: number;
   chatId: number;
   text: string;
-  reactions?: {};
+  reactions?: Record<string, number[]>;
 }
 
 export type CreateMessage = Omit<Message, keyof BaseEntity>;

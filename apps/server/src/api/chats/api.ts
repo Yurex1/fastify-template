@@ -9,7 +9,8 @@ export const init = ({ chatService }: Deps): ChatApi => {
       access: 'access',
       schema: schemas.create,
       params: ['memberId'],
-      handler: (user, request) => {
+
+      handler: (user, request, _reply) => {
         const { memberId } = request.params;
         return chatService.create(user.id, memberId);
       },

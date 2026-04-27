@@ -127,8 +127,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
             payload: updatedMessage,
           });
         });
-      } catch (err: any) {
-        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      } catch (err: unknown) {
+        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
       }
     }
 
@@ -145,8 +145,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
             payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
           });
         });
-      } catch (err: any) {
-        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      } catch (err: unknown) {
+        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
       }
     }
 
@@ -166,8 +166,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
             payload: { messageId, chatId: msg.chatId },
           });
         });
-      } catch (err: any) {
-        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      } catch (err: unknown) {
+        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
       }
     }
 
@@ -183,8 +183,8 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
             payload: { userId, isActive },
           });
         });
-      } catch (err: any) {
-        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      } catch (err: unknown) {
+        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
       }
     }
   });

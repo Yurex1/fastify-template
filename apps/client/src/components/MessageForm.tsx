@@ -1,95 +1,17 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import type { FormMode, Message } from '../api/types';
-import { SendHorizonal, Check, Search } from 'lucide-react';
-import { FORM_MODE } from '../utils/consts/formModes';
 
 interface MessageForm {
-  currentChatId: number | null;
-
   text: string;
   setText: (text: string) => void;
-  formMode: FormMode;
-  setFormMode: (text: FormMode) => void;
-  messageToEdit: Message;
-  setMessageToEdit: (text: Message) => void;
-  updateMessage: (id: number, text: string) => void;
-  sendMessage: (ChatId: number, text: string) => void;
-
-  handleSearch: () => void;
+  formButton: () => React.ReactNode;
+  handleSend: (e: React.SubmitEvent) => void;
 }
-const MessageForm = ({
-  currentChatId,
-
-  text,
-  setText,
-  formMode,
-  setFormMode,
-  messageToEdit,
-  setMessageToEdit,
-  updateMessage,
-  sendMessage,
-
-  handleSearch,
-}: MessageForm) => {
+const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const clearForm = () => {
-    setMessageToEdit(null);
-    setFormMode('create');
-    setText('');
-    return;
-  };
-
-  const handleSend = (e: React.SubmitEvent) => {
-    e.preventDefault();
-    if (text.trim().length <= 0) return;
-    switch (formMode) {
-      case FORM_MODE.CREATE:
-        sendMessage(currentChatId, text);
-        clearForm();
-        break;
-
-      case FORM_MODE.SEARCH:
-        handleSearch();
-        clearForm();
-        break;
-
-      case FORM_MODE.EDIT:
-        if (messageToEdit.text.trim() === text.trim()) {
-          clearForm();
-          break;
-        }
-        updateMessage(messageToEdit.id, text);
-        setMessageToEdit(null);
-        setFormMode('create');
-        clearForm();
-        break;
-
-      default:
-        setText('');
-        break;
-    }
-  };
-
-  const formButton = () => {
-    switch (formMode) {
-      case 'create':
-        return <SendHorizonal />;
-
-      case 'search':
-        return <Search />;
-
-      case 'edit':
-        return <Check />;
-
-      default:
-        break;
-    }
-  };
-
   useEffect(() => {
-    textareaRef.current.focus();
+    if (textareaRef) textareaRef?.current?.focus();
   }, [handleSend]);
 
   return (

@@ -13,7 +13,9 @@ import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { LucideSearch } from 'lucide-react';
 import Time from './Time';
 import { EmojiMenu } from './EmojiMenu';
-import { ReactionList, userPressedEmojis } from './ReactionList';
+import { ReactionList } from './ReactionList';
+import { userPressedEmojis } from '../utils/pressedEmoji';
+import { useMessageForm } from '../hooks/useMessageForm';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -22,9 +24,9 @@ interface MessageWindowProps {
 const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   const currentUser = useAuthStore((state) => state.user);
   const { data, isLoading, fetchNextPage, isFetchingNextPage, hasNextPage } = useChatMessages({
-    currentChatId,
+    currentChatId: currentChatId!,
   });
-  const { deleteMessage, updateMessage, updateReaction, sendMessage } = useWebSocket({ currentChatId });
+  const { deleteMessage, updateMessage, updateReaction, sendMessage } = useWebSocket({ currentChatId: currentChatId! });
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage,
     isFetchingNextPage,
@@ -59,6 +61,18 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
       toast.success('Text copied');
     }
   };
+  const { handleSend, formButton } = useMessageForm({
+    formMode,
+    setMessageToEdit: setMenuForMessage,
+    setFormMode,
+    setText,
+    text,
+    sendMessage,
+    currentChatId,
+    handleSearch,
+    messageToEdit: menuForMessage,
+    updateMessage,
+  });
 
   if (!currentChatId || !currentUser) {
     return <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-950 h-full">Select chat</div>;
@@ -67,7 +81,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-screen">
       <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
-        <button className="absolute z-[999]" onClick={() => setFormMode('search')}>
+        <button className="fixed z-[999]" onClick={() => setFormMode('search')}>
           <LucideSearch />
         </button>
         {messages.map((message) => (
@@ -106,22 +120,21 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
                 </ContextMenuTrigger>
 
                 <MessageMenu
-                  additional={
-                    <EmojiMenu
-                      pressedEmojis={userPressedEmojis(message, currentUser.id)}
-                      handleClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-                        const selectedEmoji = e.currentTarget.textContent;
-                        if (selectedEmoji) {
-                          updateReaction(message.id, currentUser.id, selectedEmoji);
-                        }
-                      }}
-                    />
-                  }
                   isOwnMessage={isOwnMessage(message)}
                   onEdit={handleEdit}
                   onCopy={handleCopy}
                   onDelete={() => menuForMessage && deleteMessage(menuForMessage.id)}
-                />
+                >
+                  <EmojiMenu
+                    pressedEmojis={userPressedEmojis(message, currentUser.id)}
+                    handleClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+                      const selectedEmoji = e.currentTarget.textContent;
+                      if (selectedEmoji) {
+                        updateReaction(message.id, currentUser.id, selectedEmoji);
+                      }
+                    }}
+                  />
+                </MessageMenu>
               </ContextMenu>
             }
           </div>
@@ -137,18 +150,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
         {!isLoading && messages.length === 0 && <EmptyBlock />}
       </div>
 
-      <MessageForm
-        currentChatId={currentChatId}
-        text={text}
-        formMode={formMode}
-        messageToEdit={menuForMessage}
-        setText={setText}
-        setFormMode={setFormMode}
-        setMessageToEdit={setMenuForMessage}
-        updateMessage={updateMessage}
-        sendMessage={sendMessage}
-        handleSearch={handleSearch}
-      />
+      <MessageForm text={text} setText={setText} handleSend={handleSend} formButton={formButton} />
     </div>
   );
 };

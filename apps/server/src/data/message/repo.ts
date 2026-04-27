@@ -16,9 +16,9 @@ class MessageRepository extends EntityRepo<Message> {
     return await this.pool.queryAll<Message>(query, params);
   }
 
-  async updateReactions(id: number, userId: number, reaction: string): Promise<Message> {
+  async updateReactions(id: number, userId: number, reaction: string): Promise<Message | null> {
     const { query, params } = updateReactions(id, userId, reaction);
-    return await this.pool.queryOne<Message>(query, params);
+    return await this.pool.queryOne<Message | null>(query, params);
   }
 }
 

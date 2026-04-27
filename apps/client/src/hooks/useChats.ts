@@ -62,6 +62,7 @@ export function useChats({ currentChatId }: useChatsProps) {
 
       if (type === USER_TYPES.getInitialStatus) {
         queryClient.setQueriesData<InfiniteData<Chat[]>>({ queryKey: [QueryKeys.chats] }, (old) => {
+          if (!old) return old;
           return {
             ...old,
             pages: old.pages.map((page) =>

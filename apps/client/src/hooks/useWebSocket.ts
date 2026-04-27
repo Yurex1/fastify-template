@@ -9,7 +9,7 @@ import { USER_TYPES } from '../utils/consts/userTypes';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 interface UseWebSocketProps {
-  currentChatId: number | null;
+  currentChatId: number;
 }
 
 export function useWebSocket({ currentChatId }: UseWebSocketProps) {

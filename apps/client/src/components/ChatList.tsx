@@ -89,7 +89,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                 )}
                 {!isOnline(chat) && (
                   <Time
-                    date={member(chat).lastseen}
+                    date={member(chat)?.lastseen || ''}
                     text="Last seen:"
                     additionalStyles="opacity-[0.4] absolute bottom-0 right-0"
                   />

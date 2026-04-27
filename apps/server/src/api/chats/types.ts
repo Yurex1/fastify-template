@@ -9,7 +9,7 @@ type ListParam = SchemaType.FromSchema<typeof schemas.list>;
 type RemoveChatParam = SchemaType.FromSchema<typeof schemas.removeChat>;
 
 export interface ChatApi extends API {
-  create: ProtectedEndpoint<CreateParam, Chat>;
+  create: ProtectedEndpoint<CreateParam, ChatPreview>;
   list: ProtectedEndpoint<ListParam, ChatPreview[]>;
   removeChat: ProtectedEndpoint<RemoveChatParam, { removed: boolean }>;
 }

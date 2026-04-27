@@ -1,4 +1,4 @@
-import type { Chat, ChatPreview } from '../../entities/chat';
+import type { ChatPreview } from '../../entities/chat';
 import type { ChatRepo } from '../../data/chat/types';
 import type { ChatMemberRepo, ChatMemberStatus } from '../../data/chatMember/types';
 import type { UserRepo } from '../../data/user/types';
