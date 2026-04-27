@@ -12,6 +12,7 @@ export interface ChatService {
   sendMessage: (userId: number, chatId: number, text: string) => Promise<Message>;
   getMessagesByChatId: (userId: number, chatId: number, page: number, limit: number) => Promise<Message[]>;
   updateMessage: (id: number, definition: UpdateMessage) => Promise<Message>;
+  updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;
   removeChat: (userId: number, chatId: number) => Promise<{ removed: boolean }>;
 }
 

@@ -79,6 +79,16 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       return messageRepo.updateMessage(id, definition);
     },
 
+    updateReactions: async (id, userId, reaction) => {
+      const existingMessage = await messageRepo.findOne({ id });
+
+      if (!existingMessage) {
+        throw exception.notFound('MESSAGE_NOT_FOUND');
+      }
+
+      return messageRepo.updateReactions(id, userId, reaction);
+    },
+
     removeChat: async (userId, chatId) => {
       const member = await chatMemberRepo.isMember(userId, chatId);
       if (!member) throw exception.forbidden('NOT_A_MEMBER');
@@ -121,6 +131,25 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
         wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
       }
     }
+
+    if (data.type === 'UPDATE_REACTION') {
+      const { id, userId, reaction } = data.payload;
+      try {
+        const updatedMessage = await service.updateReactions(id, userId, reaction);
+        if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
+
+        const memberIds = await chatMemberRepo.getAllMembersByChatId(updatedMessage.chatId);
+        memberIds.forEach((member) => {
+          wsServer.send(member.userId, {
+            type: 'MESSAGE_REACTIONS_UPDATED',
+            payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
+          });
+        });
+      } catch (err: any) {
+        wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      }
+    }
+
     if (data.type === 'DELETE_MESSAGE') {
       const { messageId } = data.payload;
 

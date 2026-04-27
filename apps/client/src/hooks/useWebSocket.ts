@@ -41,6 +41,11 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
       if (data.type === MESSAGE_TYPES.updated) {
         updateMessageCache(chatId, { type: 'update', payload: data.payload });
       }
+
+      if (data.type === MESSAGE_TYPES.updatedRection) {
+        updateMessageCache(chatId, { type: 'update', payload: data.payload });
+      }
+
       if (data.type === MESSAGE_TYPES.deleted) {
         updateMessageCache(chatId, { type: 'delete', payload: data.payload });
         updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
@@ -72,10 +77,13 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const updateMessage = (messageId: number, text: string) => {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.update, payload: { messageId, text: text.trim() } }));
   };
+  const updateReaction = (id: number, userId: number, reaction: string) => {
+    ws?.send(JSON.stringify({ type: MESSAGE_TYPES.updateReaction, payload: { id, userId, reaction } }));
+  };
 
   const deleteMessage = (messageId: number) => {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.delete, payload: { messageId } }));
   };
 
-  return { sendMessage, updateMessage, deleteMessage };
+  return { sendMessage, updateMessage, updateReaction, deleteMessage };
 }

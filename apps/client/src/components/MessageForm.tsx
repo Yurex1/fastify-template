@@ -47,10 +47,12 @@ const MessageForm = ({
     switch (formMode) {
       case FORM_MODE.CREATE:
         sendMessage(currentChatId, text);
+        clearForm();
         break;
 
       case FORM_MODE.SEARCH:
         handleSearch();
+        clearForm();
         break;
 
       case FORM_MODE.EDIT:
@@ -61,6 +63,7 @@ const MessageForm = ({
         updateMessage(messageToEdit.id, text);
         setMessageToEdit(null);
         setFormMode('create');
+        clearForm();
         break;
 
       default:
@@ -68,10 +71,6 @@ const MessageForm = ({
         break;
     }
   };
-
-  useEffect(() => {
-    textareaRef.current.focus();
-  }, [handleSend]);
 
   const formButton = () => {
     switch (formMode) {
@@ -88,6 +87,10 @@ const MessageForm = ({
         break;
     }
   };
+
+  useEffect(() => {
+    textareaRef.current.focus();
+  }, [handleSend]);
 
   return (
     <form onSubmit={handleSend} className="p-4 bg-gray-950 border-t border-gray-800 flex gap-2 items-end">

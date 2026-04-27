@@ -56,6 +56,10 @@ export function useChats({ currentChatId }: useChatsProps) {
         // use the chat's createdAt date
       }
 
+      // if (type === CHAT_TYPES.create) {
+      // add new chat on the top and make it currentChat
+      // }
+
       if (type === USER_TYPES.getInitialStatus) {
         queryClient.setQueriesData<InfiniteData<Chat[]>>({ queryKey: [QueryKeys.chats] }, (old) => {
           return {

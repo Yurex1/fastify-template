@@ -12,6 +12,8 @@ import { useChatMessages } from '../hooks/useChatMessages';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { LucideSearch } from 'lucide-react';
 import Time from './Time';
+import { EmojiMenu } from './EmojiMenu';
+import { ReactionList, userPressedEmojis } from './ReactionList';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -22,7 +24,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   const { data, isLoading, fetchNextPage, isFetchingNextPage, hasNextPage } = useChatMessages({
     currentChatId,
   });
-  const { deleteMessage, updateMessage, sendMessage } = useWebSocket({ currentChatId });
+  const { deleteMessage, updateMessage, updateReaction, sendMessage } = useWebSocket({ currentChatId });
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage,
     isFetchingNextPage,
@@ -65,42 +67,63 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-screen">
       <div className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
-        <button onClick={() => setFormMode('search')}>
+        <button className="absolute z-[999]" onClick={() => setFormMode('search')}>
           <LucideSearch />
         </button>
         {messages.map((message) => (
           <div key={message.id} className={cn('flex mb-1', isOwnMessage(message) ? 'justify-end' : 'justify-start')}>
-            <ContextMenu>
-              <ContextMenuTrigger
-                onContextMenu={() => {
-                  if (isOwnMessage(message)) setMenuForMessage(message);
-                }}
-                asChild
-              >
-                <div
-                  className={cn(
-                    'px-3 py-2 rounded-2xl max-w-[70%]',
-                    isOwnMessage(message)
-                      ? 'bg-violet-700 text-white rounded-tr-none'
-                      : 'bg-gray-800 text-white rounded-tl-none',
-                  )}
+            {
+              <ContextMenu>
+                <ContextMenuTrigger
+                  onContextMenu={() => {
+                    setMenuForMessage(message);
+                  }}
+                  asChild
                 >
-                  <p className="text-sm break-words leading-[20px]">{message.text}</p>
-                  <div className="flex items-center justify-end gap-2 mt-1">
-                    {message.createdAt !== message.updatedAt && (
-                      <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
+                  <div
+                    onDoubleClick={() => updateReaction(message.id, currentUser.id, '❤️')}
+                    className={cn(
+                      'px-3 py-2 rounded-2xl max-w-[70%] relative',
+                      isOwnMessage(message)
+                        ? 'bg-violet-700 text-white rounded-tr-none'
+                        : 'bg-gray-800 text-white rounded-tl-none',
                     )}
+                  >
+                    <p className="text-sm break-words leading-[20px]">{message.text}</p>
 
-                    <Time date={message.updatedAt} />
+                    <div className="flex justify-between gap-2">
+                      <ReactionList message={message} updateReaction={updateReaction} />
+
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        {message.createdAt !== message.updatedAt && (
+                          <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
+                        )}
+
+                        <Time date={message.updatedAt} />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </ContextMenuTrigger>
-              <MessageMenu
-                onEdit={handleEdit}
-                onCopy={handleCopy}
-                onDelete={() => menuForMessage && deleteMessage(menuForMessage.id)}
-              />
-            </ContextMenu>
+                </ContextMenuTrigger>
+
+                <MessageMenu
+                  additional={
+                    <EmojiMenu
+                      pressedEmojis={userPressedEmojis(message, currentUser.id)}
+                      handleClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+                        const selectedEmoji = e.currentTarget.textContent;
+                        if (selectedEmoji) {
+                          updateReaction(message.id, currentUser.id, selectedEmoji);
+                        }
+                      }}
+                    />
+                  }
+                  isOwnMessage={isOwnMessage(message)}
+                  onEdit={handleEdit}
+                  onCopy={handleCopy}
+                  onDelete={() => menuForMessage && deleteMessage(menuForMessage.id)}
+                />
+              </ContextMenu>
+            }
           </div>
         ))}
 
