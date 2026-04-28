@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 const WS_URL = process.env.VITE_WS_URL;
+const PORT = process.env.VITE_API_PORT;
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: Number(PORT) || 3000,
     proxy: {
       '/api': {
         target: WS_URL,
