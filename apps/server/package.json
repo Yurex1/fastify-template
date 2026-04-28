@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
-    "start": "node dist/src/main.js",
+    "start": "node dist/main.js",
     "test": "NODE_ENV=test tsx --test --test-concurrency=1 test/**/*.test.js --timeout 5000",
     "test:auth": "NODE_ENV=test tsx --test test/auth.test.js",
     "test:user": "NODE_ENV=test tsx --test test/user.test.js",

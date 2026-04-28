@@ -5,7 +5,7 @@ export const config = {
   server: {
     http: {
       url: env.requireEnv('SERVER_URL'),
-      port: parseInt(process.env.HTTP_PORT || '8080'),
+      port: parseInt(process.env.PORT || process.env.HTTP_PORT || '8080'),
       host: process.env.HOST || '0.0.0.0',
     },
     ws: {
