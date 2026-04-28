@@ -1,0 +1,7 @@
+-- up
+ALTER TABLE "public"."users" 
+ADD COLUMN "lastseen" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- down
+ALTER TABLE "public"."users" 
+DROP COLUMN IF EXISTS "lastseen";
