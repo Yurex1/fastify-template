@@ -8,8 +8,13 @@ class FirebaseNotificationService {
 
   constructor() {
     try {
+      const firebaseConfig = {
+        ...config.firebase,
+        privateKey: config.firebase.privateKey?.replace(/\\n/g, '\n'),
+      };
+
       admin.initializeApp({
-        credential: admin.credential.cert(config.firebase),
+        credential: admin.credential.cert(firebaseConfig),
       });
       this.messaging = admin.messaging();
       console.log('Firebase Admin SDK initialized successfully');

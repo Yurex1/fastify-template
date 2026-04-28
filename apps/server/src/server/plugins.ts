@@ -25,7 +25,7 @@ const swaggerPlugin: Plugin = {
   options: {
     swagger: {
       info: { title: 'fastify-template', version: '1.0.0' },
-      host: config.server.http.url,
+      host: config.server.http.host,
       schemes: ['http', 'https'],
       securityDefinitions: {
         ApiToken: {
