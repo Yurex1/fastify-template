@@ -8,12 +8,12 @@ import type { Plugin } from './types';
 const corsPlugin: Plugin = {
   plugin: cors,
   options: {
-    origin: ['https://fastify-templateserver-production.up.railway.app'],
+    origin: ['https://fastify-templateclient-production.up.railway.app', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'X-Requested-With'],
     exposedHeaders: ['Set-Cookie'],
-    preflightContinue: false,
+
     optionsSuccessStatus: 204,
   },
 };
