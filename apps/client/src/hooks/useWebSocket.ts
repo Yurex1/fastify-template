@@ -9,7 +9,7 @@ import { USER_TYPES } from '../utils/consts/userTypes';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 interface UseWebSocketProps {
-  currentChatId: number | null;
+  currentChatId: number;
 }
 
 export function useWebSocket({ currentChatId }: UseWebSocketProps) {
@@ -19,7 +19,7 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const { updateMessageCache } = useChatMessages({
     currentChatId,
   });
-  const { updateChatsCache } = useChats({ currentChatId });
+  const { updateChatsCache } = useChats();
 
   const currentChatIdRef = useRef(currentChatId);
   currentChatIdRef.current = currentChatId;
@@ -27,7 +27,7 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   useEffect(() => {
     if (!token) return;
 
-    const socket = new WebSocket(`${WS_URL}/ws/${token}`);
+    const socket = new WebSocket(`${WS_URL}/ws?token=${token}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
@@ -41,6 +41,11 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
       if (data.type === MESSAGE_TYPES.updated) {
         updateMessageCache(chatId, { type: 'update', payload: data.payload });
       }
+
+      if (data.type === MESSAGE_TYPES.updatedRection) {
+        updateMessageCache(chatId, { type: 'update', payload: data.payload });
+      }
+
       if (data.type === MESSAGE_TYPES.deleted) {
         updateMessageCache(chatId, { type: 'delete', payload: data.payload });
         updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
@@ -72,10 +77,13 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const updateMessage = (messageId: number, text: string) => {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.update, payload: { messageId, text: text.trim() } }));
   };
+  const updateReaction = (id: number, userId: number, reaction: string) => {
+    ws?.send(JSON.stringify({ type: MESSAGE_TYPES.updateReaction, payload: { id, userId, reaction } }));
+  };
 
   const deleteMessage = (messageId: number) => {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.delete, payload: { messageId } }));
   };
 
-  return { sendMessage, updateMessage, deleteMessage };
+  return { sendMessage, updateMessage, updateReaction, deleteMessage };
 }

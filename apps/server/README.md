@@ -188,7 +188,6 @@ Create a `.env` file in the project root with the following variables:
 SERVER_URL=http://localhost:8080
 HTTP_PORT=8080
 HOST=0.0.0.0
-WS_PORT=9090
 
 # Database Configuration
 PG_HOST=localhost

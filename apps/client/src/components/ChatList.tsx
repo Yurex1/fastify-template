@@ -13,6 +13,7 @@ import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { EmptyBlock } from './EmptyBlock';
 import { useChats } from '../hooks/useChats';
 import { Dot } from 'lucide-react';
+import Time from './Time';
 
 interface ChatListProps {
   currentChatId: number | null;
@@ -25,7 +26,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
 
-  const query = useChats({ currentChatId });
+  const query = useChats();
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
@@ -75,16 +76,11 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                 onClick={() => handleChangeChatId(chat.id)}
                 className={cn(
                   'p-4 cursor-pointer rounded-xl relative',
-                  currentChatId === chat.id ? 'bg-gray-600  text-white' : 'text-gray-400 hover:bg-gray-900',
+                  currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-800',
                 )}
               >
                 <p className="font-medium">{member(chat)?.username || 'Unknown Chat'}</p>
-                <small className="text-gray-300 !text-[10px] leading-[8px]">
-                  {new Date(chat.updatedAt).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </small>
+                <Time date={chat.updatedAt} />
 
                 {!!isOnline(chat) && (
                   <div className="absolute top-0 right-0 text-green-800">
@@ -92,13 +88,11 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
                   </div>
                 )}
                 {!isOnline(chat) && (
-                  <small className="text-gray-300 !text-[10px] leading-[8px] absolute top-0 right-0">
-                    Last seen:{' '}
-                    {new Date(member(chat).lastseen).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </small>
+                  <Time
+                    date={member(chat)?.lastseen || ''}
+                    text="Last seen:"
+                    additionalStyles="opacity-[0.4] absolute bottom-0 right-0"
+                  />
                 )}
               </div>
             </ContextMenuTrigger>

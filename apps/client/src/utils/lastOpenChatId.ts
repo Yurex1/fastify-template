@@ -1,11 +1,12 @@
 export const getLastChatId = () => {
   const lastChatId = sessionStorage.getItem('chatId') || null;
-  return Number(lastChatId) || null;
+  return lastChatId ? Number(lastChatId) : null;
 };
 
 export const setLastChatId = (chatId: number | null) => {
-  if (typeof chatId === null) sessionStorage.removeItem('chatId');
-  else {
+  if (chatId === null) {
+    sessionStorage.removeItem('chatId');
+  } else {
     sessionStorage.setItem('chatId', chatId.toString());
   }
 };

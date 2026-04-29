@@ -1,59 +1,17 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
-import type { FormMode, Message } from '../api/types';
-import { SendHorizonal, Check, Search } from 'lucide-react';
-import { FORM_MODE } from '../utils/consts/formModes';
 
 interface MessageForm {
-  currentChatId: number | null;
-
   text: string;
   setText: (text: string) => void;
-  formMode: FormMode;
-  setFormMode: (text: FormMode) => void;
-  messageToEdit: Message;
-  setMessageToEdit: (text: Message) => void;
-  updateMessage: (id: number, text: string) => void;
-  sendMessage: (ChatId: number, text: string) => void;
-
-  handleSearch: () => void;
+  formButton: () => React.ReactNode;
+  handleSend: (e: React.SubmitEvent) => void;
 }
-const MessageForm = ({
-  currentChatId,
-
-  text,
-  setText,
-  formMode,
-  setFormMode,
-  messageToEdit,
-  setMessageToEdit,
-  updateMessage,
-  sendMessage,
-
-  handleSearch,
-}: MessageForm) => {
+const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = (e: React.SubmitEvent) => {
-    e.preventDefault();
-    if (text.trim().length <= 0) return;
-    if (formMode === FORM_MODE.CREATE) {
-      sendMessage(currentChatId, text);
-    }
-    if (formMode === FORM_MODE.SEARCH) {
-      handleSearch();
-    }
-    if (formMode === FORM_MODE.EDIT) {
-      updateMessage(messageToEdit.id, text);
-      setMessageToEdit(null);
-      setFormMode('create');
-    }
-
-    setText('');
-  };
-
   useEffect(() => {
-    textareaRef.current.focus();
+    if (textareaRef) textareaRef?.current?.focus();
   }, [handleSend]);
 
   return (
@@ -69,7 +27,7 @@ const MessageForm = ({
         placeholder="Message..."
       />
       <button className="bg-blue-600 px-3 py-2 h-[43px] rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
-        {formMode === 'create' ? <SendHorizonal /> : formMode === 'search' ? <Search /> : <Check />}
+        {formButton()}
       </button>
     </form>
   );
