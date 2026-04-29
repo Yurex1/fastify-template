@@ -8,10 +8,13 @@ import type { Plugin } from './types';
 const corsPlugin: Plugin = {
   plugin: cors,
   options: {
-    origin: config.cors.allowedOrigins,
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'X-Requested-With'],
+    exposedHeaders: ['Set-Cookie'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   },
 };
 
