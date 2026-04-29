@@ -27,7 +27,7 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   useEffect(() => {
     if (!token) return;
 
-    const socket = new WebSocket(`${WS_URL}/ws/${token}`);
+    const socket = new WebSocket(`${WS_URL}/ws?token=${token}`);
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);

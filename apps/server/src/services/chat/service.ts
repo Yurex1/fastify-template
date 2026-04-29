@@ -2,7 +2,9 @@ import { ChatMemberStatus } from '../../data/chatMember/types';
 import { exception } from '../../utils/exception/util';
 import type { ChatService, Deps } from './types';
 
-export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer }: Deps): ChatService => {
+export const init = (deps: Deps): ChatService => {
+  const { chatRepo, chatMemberRepo, userRepo, messageRepo } = deps;
+
   const service: ChatService = {
     create: async (userId, memberId) => {
       if (memberId === userId) {
@@ -10,14 +12,10 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       }
 
       const memberExists = await userRepo.existsById(memberId);
-      if (!memberExists) {
-        throw exception.notFound('USER_NOT_FOUND');
-      }
+      if (!memberExists) throw exception.notFound('USER_NOT_FOUND');
 
       const existing = await chatMemberRepo.findDirectChat(userId, memberId);
-      if (existing) {
-        throw exception.badRequest('CHAT_ALREADY_EXIST');
-      }
+      if (existing) throw exception.badRequest('CHAT_ALREADY_EXIST');
 
       const chat = await chatRepo.create({});
 
@@ -36,7 +34,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       };
     },
 
-    list: async (userId, status, page, limit) => {
+    list: async (userId, status, page = 1, limit = 20) => {
       return chatMemberRepo.listChatsForUser(userId, status, page, limit);
     },
 
@@ -45,20 +43,7 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
       const message = await messageRepo.create({ userId, chatId, text });
-      const memberIds = await chatMemberRepo.getAllMembersByChatId(Number(chatId));
       await chatRepo.update(chatId, { updatedAt: new Date() });
-
-      memberIds.forEach((member) => {
-        if (wsServer.hasConnection(member.userId)) {
-          wsServer.send(member.userId, {
-            type: 'NEW_MESSAGE',
-            payload: {
-              ...message,
-              chatId: chatId,
-            },
-          });
-        }
-      });
 
       return message;
     },
@@ -71,11 +56,9 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
     },
 
     updateMessage: async (id, definition) => {
-      const existingMessage = await messageRepo.findOne({ id });
+      const existing = await messageRepo.findOne({ id });
+      if (!existing) throw exception.notFound('MESSAGE_NOT_FOUND');
 
-      if (!existingMessage) {
-        throw exception.notFound('MESSAGE_NOT_FOUND');
-      }
       return messageRepo.updateMessage(id, definition);
     },
 
@@ -90,104 +73,11 @@ export const init = ({ chatRepo, chatMemberRepo, userRepo, messageRepo, wsServer
     },
 
     removeChat: async (userId, chatId) => {
-      const member = await chatMemberRepo.isMember(userId, chatId);
-      if (!member) throw exception.forbidden('NOT_A_MEMBER');
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
       return chatRepo.remove(chatId);
     },
   };
-
-  wsServer.onMessage(async (uid, data) => {
-    if (data.type === 'SEND_MESSAGE') {
-      const { chatId, text } = data.payload;
-      try {
-        await service.sendMessage(uid, chatId, text);
-      } catch (err) {
-        if (wsServer.hasConnection(uid) && err instanceof Error) {
-          wsServer.send(uid, {
-            type: 'ERROR',
-            payload: {
-              chatId,
-              message: err.message,
-            },
-          });
-        }
-        console.error(err);
-      }
-    }
-
-    if (data.type === 'UPDATE_MESSAGE') {
-      const { messageId, text } = data.payload;
-      try {
-        const updatedMessage = await service.updateMessage(messageId, { text });
-
-        const memberIds = await chatMemberRepo.getAllMembersByChatId(updatedMessage.chatId);
-        memberIds.forEach((member) => {
-          wsServer.send(member.userId, {
-            type: 'MESSAGE_UPDATED',
-            payload: updatedMessage,
-          });
-        });
-      } catch (err: unknown) {
-        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
-      }
-    }
-
-    if (data.type === 'UPDATE_REACTION') {
-      const { id, userId, reaction } = data.payload;
-      try {
-        const updatedMessage = await service.updateReactions(id, userId, reaction);
-        if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
-
-        const memberIds = await chatMemberRepo.getAllMembersByChatId(updatedMessage.chatId);
-        memberIds.forEach((member) => {
-          wsServer.send(member.userId, {
-            type: 'MESSAGE_REACTIONS_UPDATED',
-            payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
-          });
-        });
-      } catch (err: unknown) {
-        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
-      }
-    }
-
-    if (data.type === 'DELETE_MESSAGE') {
-      const { messageId } = data.payload;
-
-      try {
-        const msg = await messageRepo.findOne({ id: messageId });
-        if (!msg) throw exception.notFound('MESSAGE_NOT_FOUND');
-
-        await messageRepo.remove(messageId);
-
-        const memberIds = await chatMemberRepo.getAllMembersByChatId(msg.chatId);
-        memberIds.forEach((member) => {
-          wsServer.send(member.userId, {
-            type: 'MESSAGE_DELETED',
-            payload: { messageId, chatId: msg.chatId },
-          });
-        });
-      } catch (err: unknown) {
-        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
-      }
-    }
-
-    if (data.type === 'USER_STATUS') {
-      const { userId, isActive } = data.payload;
-
-      try {
-        const memberIds = await chatMemberRepo.getAllMembers(userId);
-
-        memberIds.forEach((member) => {
-          wsServer.send(member.userId, {
-            type: 'STATUS',
-            payload: { userId, isActive },
-          });
-        });
-      } catch (err: unknown) {
-        if (err instanceof Error) wsServer.send(uid, { type: 'ERROR', payload: { message: err.message } });
-      }
-    }
-  });
 
   return service;
 };

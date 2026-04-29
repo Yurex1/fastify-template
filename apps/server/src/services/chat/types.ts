@@ -4,7 +4,6 @@ import type { ChatMemberRepo, ChatMemberStatus } from '../../data/chatMember/typ
 import type { UserRepo } from '../../data/user/types';
 import { Message, UpdateMessage } from '../../entities/message';
 import { MessageRepo } from '../../data/message/types';
-import { WsServer } from '../../server/types';
 
 export interface ChatService {
   create: (userId: number, memberId: number) => Promise<ChatPreview>;
@@ -21,5 +20,4 @@ export interface Deps {
   chatMemberRepo: ChatMemberRepo;
   userRepo: UserRepo;
   messageRepo: MessageRepo;
-  wsServer: WsServer;
 }

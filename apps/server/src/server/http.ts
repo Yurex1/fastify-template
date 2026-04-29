@@ -3,6 +3,7 @@ import { plugins } from './plugins';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
+import { wsPlugin } from './ws';
 
 export const server = fastify({
   logger: true,
@@ -21,8 +22,11 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({ services, apis }: Deps): Promise<typeof server> => {
+export const init = async ({ services, apis, repos }: Deps & { repos: any }) => {
   await registerPlugins();
+
+  await server.register(wsPlugin, { repos, services });
+
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {
       const { access, method, params, schema, handler } = endpoint;
@@ -69,14 +73,15 @@ export const init = async ({ services, apis }: Deps): Promise<typeof server> => 
       });
     }
   }
-  if (config.node_env !== 'test')
+  if (config.node_env !== 'test') {
     server.listen(config.server.http, (err) => {
       if (err) {
         console.error('Failed to start server:', err);
         process.exit(1);
       }
-      console.log(`HTTP server listening on ${config.server.http.port}...`);
+      console.log(`HTTP + WS server listening on ${config.server.http.port}...`);
     });
+  }
 
   return server;
 };
