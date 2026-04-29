@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteChat } from '../services/chats';
+import { deleteChat, fetchChats } from '../services/chats';
 import { useAuthStore } from '../stores/auth';
 import { setLastChatId } from '../utils/lastOpenChatId';
 import { CreateChat } from './CreateChat';
 import ChatMenu from './ContextMenu';
 import { cn } from '../lib/utils';
 import { ContextMenuTrigger, ContextMenu } from './ui/context-menu';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Chat } from '../api/types';
 import { QueryKeys } from '../lib/queries';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
@@ -59,6 +59,10 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
   const member = (chat: Chat) => {
     return chat.members.find((m) => m.userId !== user?.id);
   };
+
+  useEffect(() => {
+    fetchChats({ page: 1 });
+  }, []);
 
   const chats = query.data?.pages.flat() || [];
 
