@@ -5,11 +5,7 @@ import type { Chat, Payload } from '../api/types';
 import { USER_TYPES } from '../utils/consts/userTypes';
 import { CHAT_TYPES } from '../utils/consts/chatTypes';
 
-interface useChatsProps {
-  currentChatId: number | null;
-}
-
-export function useChats({ currentChatId }: useChatsProps) {
+export function useChats() {
   const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
@@ -17,7 +13,6 @@ export function useChats({ currentChatId }: useChatsProps) {
     queryFn: ({ pageParam = 1 }) => chatsApi.getChatList(pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => (lastPage.length < 20 ? undefined : allPages.length + 1),
-    enabled: !!currentChatId,
     staleTime: Infinity,
   });
 
@@ -56,9 +51,9 @@ export function useChats({ currentChatId }: useChatsProps) {
         // use the chat's createdAt date
       }
 
-      // if (type === CHAT_TYPES.create) {
-      // add new chat on the top and make it currentChat
-      // }
+      if (type === CHAT_TYPES.create) {
+        // add new chat on the top and make it currentChat
+      }
 
       if (type === USER_TYPES.getInitialStatus) {
         queryClient.setQueriesData<InfiniteData<Chat[]>>({ queryKey: [QueryKeys.chats] }, (old) => {
