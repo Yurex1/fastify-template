@@ -22,10 +22,10 @@ async function registerPlugins() {
   }
 }
 
-export const init = async ({ services, apis, repos }: Deps & { repos: any }) => {
+export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
 
-  await server.register(wsPlugin, { repos, services });
+  await server.register(wsPlugin, { services });
 
   for (const [service, api] of Object.entries(apis)) {
     for (const [route, endpoint] of Object.entries(api)) {

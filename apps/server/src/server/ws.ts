@@ -2,12 +2,12 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import websocket from '@fastify/websocket';
 import type { WebSocket } from 'ws';
-import { Repos } from '../data/types';
 import { WsServer } from './types';
 import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
+import { CHAT_ACTIONS } from '../services/chat/consts';
 
-export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repos: Repos; services: Services }) => {
+export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
   await fastify.register(websocket);
 
   const connections = new Map<number, WebSocket>();
@@ -49,7 +49,9 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
     try {
       const { token } = req.query;
 
-      if (!token) throw new Error('NO_TOKEN_PROVIDED');
+      if (!token) {
+        throw exception.unauthorized('NO_TOKEN_PROVIDED');
+      }
 
       const user = await services.auth.verify('access', token);
       const uid = Number(user.id);
@@ -62,8 +64,11 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
       socket.on('message', async (rawData) => {
         try {
           const data = JSON.parse(rawData.toString());
+          const uid = Number(user.id);
 
-          if (data.type === 'SEND_MESSAGE') {
+          eventHandlers.forEach((handler) => handler(uid, data));
+
+          if (data.type === CHAT_ACTIONS.sendMessage) {
             const { chatId, text } = data.payload;
 
             const message = await services.chat.sendMessage(uid, chatId, text);
@@ -72,13 +77,13 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
 
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
-                type: 'NEW_MESSAGE',
+                type: CHAT_ACTIONS.newMessage,
                 payload: message,
               });
             });
           }
 
-          if (data.type === 'UPDATE_MESSAGE') {
+          if (data.type === CHAT_ACTIONS.updateMessage) {
             const { messageId, text } = data.payload;
 
             const updated = await services.chat.updateMessage(messageId, { text });
@@ -87,13 +92,13 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
 
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
-                type: 'MESSAGE_UPDATED',
+                type: CHAT_ACTIONS.updatedMessage,
                 payload: updated,
               });
             });
           }
 
-          if (data.type === 'UPDATE_REACTION') {
+          if (data.type === CHAT_ACTIONS.updateReaction) {
             const { id, userId, reaction } = data.payload;
             try {
               const updatedMessage = await services.chat.updateReactions(id, userId, reaction);
@@ -102,7 +107,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
               const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
               memberIds.forEach((member) => {
                 fastify.ws.send(member.userId, {
-                  type: 'MESSAGE_REACTIONS_UPDATED',
+                  type: CHAT_ACTIONS.updatedReaction,
                   payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
                 });
               });
@@ -111,7 +116,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
             }
           }
 
-          if (data.type === 'DELETE_MESSAGE') {
+          if (data.type === CHAT_ACTIONS.deleteMesage) {
             const { messageId } = data.payload;
 
             const msg = await services.chat.findMessage({ id: messageId });
@@ -123,13 +128,13 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
 
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
-                type: 'MESSAGE_DELETED',
+                type: CHAT_ACTIONS.deletedMessage,
                 payload: { messageId, chatId: msg.chatId },
               });
             });
           }
 
-          if (data.type === 'USER_STATUS') {
+          if (data.type === CHAT_ACTIONS.getStatus) {
             const { userId, isActive } = data.payload;
 
             try {
@@ -137,7 +142,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
 
               memberIds.forEach((member) => {
                 fastify.ws.send(member.userId, {
-                  type: 'STATUS',
+                  type: CHAT_ACTIONS.sendStatus,
                   payload: { userId, isActive },
                 });
               });
@@ -149,6 +154,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { repo
           console.error(e);
         }
       });
+
       socket.on('close', () => {
         connections.delete(uid);
         services.user.updateLastSeen(uid).catch(console.error);
