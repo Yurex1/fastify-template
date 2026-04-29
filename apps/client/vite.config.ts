@@ -6,9 +6,12 @@ const ALLOWED_HOSTS = process.env.VITE_ALLOWED_HOSTS;
 
 export default defineConfig({
   plugins: [react()],
+<<<<<<< HEAD
   preview: {
     allowedHosts: ALLOWED_HOSTS?.split(',') || [],
   },
+=======
+>>>>>>> d921383 ([TEMPLATE]: chat consts (refactor))
   server: {
     port: Number(PORT) || 3000,
     proxy: {

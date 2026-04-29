@@ -64,7 +64,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       socket.on('message', async (rawData) => {
         try {
           const data = JSON.parse(rawData.toString());
-
           const uid = Number(user.id);
 
           eventHandlers.forEach((handler) => handler(uid, data));
@@ -79,7 +78,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
                 type: CHAT_ACTIONS.newMessage,
-
                 payload: message,
               });
             });
@@ -95,7 +93,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
                 type: CHAT_ACTIONS.updatedMessage,
-
                 payload: updated,
               });
             });
@@ -111,7 +108,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
               memberIds.forEach((member) => {
                 fastify.ws.send(member.userId, {
                   type: CHAT_ACTIONS.updatedReaction,
-
                   payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
                 });
               });
@@ -133,7 +129,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
             members.forEach((m) => {
               fastify.ws.send(m.userId, {
                 type: CHAT_ACTIONS.deletedMessage,
-
                 payload: { messageId, chatId: msg.chatId },
               });
             });
