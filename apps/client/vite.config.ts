@@ -5,6 +5,9 @@ const PORT = process.env.VITE_API_PORT;
 
 export default defineConfig({
   plugins: [react()],
+  preview: {
+    allowedHosts: process.env.ALLOWED_HOSTS.split(','),
+  },
   server: {
     port: Number(PORT) || 3000,
     proxy: {
