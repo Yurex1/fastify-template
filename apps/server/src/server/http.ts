@@ -19,6 +19,7 @@ export const server = fastify({
 async function registerPlugins() {
   for (const plugin of plugins) {
     await server.register(plugin.plugin, plugin.options);
+    console.log(plugin.options);
   }
 }
 
