@@ -38,6 +38,22 @@ export const init = (deps: Deps): ChatService => {
       return chatMemberRepo.listChatsForUser(userId, status, page, limit);
     },
 
+    getAllMembers: async (userId) => {
+      return chatMemberRepo.getAllMembers(userId);
+    },
+
+    getAllMembersByChatId: async (chatId) => {
+      return chatMemberRepo.getAllMembersByChatId(chatId);
+    },
+
+    findMessage: async (definition) => {
+      return messageRepo.findOne(definition);
+    },
+
+    removeMessage: async (id) => {
+      return messageRepo.remove(id);
+    },
+
     sendMessage: async (userId, chatId, text) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');

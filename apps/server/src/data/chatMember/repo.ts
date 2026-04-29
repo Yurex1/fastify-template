@@ -1,6 +1,6 @@
 import type { TypedPool } from '../../infra/pg';
 import type { Chat } from '../../entities/chat';
-import type { ChatMemberRepo, ChatMemberStatus } from './types';
+import type { ChatMemberRepo, ChatMember, ChatMemberStatus } from './types';
 
 export const init = (pool: TypedPool): ChatMemberRepo => ({
   async addMembers(chatId, members) {
@@ -38,11 +38,13 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     return rows;
   },
 
-  async getAllMembers(userId: number): Promise<{ userId: number; username: string }[]> {
-    const result = await pool.query<{ userId: number; username: string }>(
+  async getAllMembers(userId: number): Promise<ChatMember[]> {
+    const result = await pool.query<ChatMember>(
       `SELECT DISTINCT
             u.id AS "userId",
-            u.username
+            u.username,
+            u."isOnline",  
+          u.lastseen 
         FROM "public"."chatMember" cm1
         JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
         JOIN "public"."users" u ON cm2."userId" = u.id

@@ -62,7 +62,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
   useEffect(() => {
     fetchChats({ page: 1 });
-  }, []);
+  }, [query.data]);
 
   const chats = query.data?.pages.flat() || [];
 
