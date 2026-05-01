@@ -43,7 +43,7 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
       `SELECT DISTINCT
             u.id AS "userId",
             u.username,
-            u."isOnline",  
+             (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline",  
           u.lastseen 
         FROM "public"."chatMember" cm1
         JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
