@@ -1,5 +1,7 @@
 import { ChatMemberStatus } from '../../data/chatMember/types';
+import { server } from '../../server/http';
 import { exception } from '../../utils/exception/util';
+import { CHAT_ACTIONS } from './consts';
 import type { ChatService, Deps } from './types';
 
 export const init = (deps: Deps): ChatService => {
@@ -26,6 +28,15 @@ export const init = (deps: Deps): ChatService => {
 
       const members = await chatMemberRepo.getAllMembersByChatId(chat.id);
 
+      for (const member of members) {
+        if (server.ws.hasConnection(member.userId)) {
+          server.ws.send(member.userId, {
+            type: CHAT_ACTIONS.created,
+            payload: chat,
+          });
+        }
+      }
+
       return {
         id: chat.id,
         createdAt: chat.createdAt,
@@ -36,6 +47,22 @@ export const init = (deps: Deps): ChatService => {
 
     list: async (userId, status, page = 1, limit = 20) => {
       return chatMemberRepo.listChatsForUser(userId, status, page, limit);
+    },
+
+    getAllMembers: async (userId) => {
+      return chatMemberRepo.getAllMembers(userId);
+    },
+
+    getAllMembersByChatId: async (chatId) => {
+      return chatMemberRepo.getAllMembersByChatId(chatId);
+    },
+
+    findMessage: async (definition) => {
+      return messageRepo.findOne(definition);
+    },
+
+    removeMessage: async (id) => {
+      return messageRepo.remove(id);
     },
 
     sendMessage: async (userId, chatId, text) => {
@@ -75,6 +102,17 @@ export const init = (deps: Deps): ChatService => {
     removeChat: async (userId, chatId) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      const members = await chatMemberRepo.getAllMembersByChatId(chatId);
+
+      for (const member of members) {
+        if (server.ws.hasConnection(member.userId)) {
+          server.ws.send(member.userId, {
+            type: CHAT_ACTIONS.deleted,
+            payload: chatId,
+          });
+        }
+      }
+
       return chatRepo.remove(chatId);
     },
   };

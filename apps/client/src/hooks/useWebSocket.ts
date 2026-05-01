@@ -19,7 +19,7 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const { updateMessageCache } = useChatMessages({
     currentChatId,
   });
-  const { updateChatsCache } = useChats({ currentChatId });
+  const { updateChatsCache } = useChats();
 
   const currentChatIdRef = useRef(currentChatId);
   currentChatIdRef.current = currentChatId;

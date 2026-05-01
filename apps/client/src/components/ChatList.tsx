@@ -26,7 +26,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
 
-  const query = useChats({ currentChatId });
+  const query = useChats();
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,

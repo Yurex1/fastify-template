@@ -11,7 +11,7 @@ export const start = async () => {
   const services = servicesInit(repos);
   const apis = apisInit(services);
 
-  const server = await serverInit({ services, apis, repos });
+  const server = await serverInit({ services, apis });
 
   return {
     repos,

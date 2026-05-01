@@ -3,10 +3,8 @@ import { ERROR_STATUSES } from '../utils/consts/errorStatus';
 import useUserStore from '../stores/user';
 const userAgent = navigator.userAgent;
 
-const BASE_URL = import.meta.env.VITE_API_URL;
-
 const api = ky.create({
-  baseUrl: BASE_URL,
+  baseUrl: import.meta.env.VITE_API_URL,
   credentials: 'include',
   hooks: {
     beforeRequest: [
@@ -24,7 +22,7 @@ const api = ky.create({
         if (response.status === ERROR_STATUSES.UNAUTHORIZED && !request.url.includes('auth/refresh')) {
           try {
             const refreshRes = await ky
-              .post(`${BASE_URL}/auth/refresh`, {
+              .post(`${import.meta.env.VITE_API_UR}/auth/refresh`, {
                 credentials: 'include',
                 headers: { 'x-device-id': userAgent },
               })

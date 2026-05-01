@@ -8,10 +8,6 @@ export const config = {
       port: parseInt(process.env.PORT || process.env.HTTP_PORT || '8080'),
       host: process.env.HOST || '0.0.0.0',
     },
-    ws: {
-      port: parseInt(process.env.WS_PORT || '9090'),
-      host: process.env.HOST || '0.0.0.0',
-    },
   },
   pg: {
     host: env.requireEnv('PG_HOST'),
@@ -39,7 +35,7 @@ export const config = {
     secretAccessKey: env.requireEnv('AWS_SECRET_ACCESS_KEY'),
   },
   cors: {
-    allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS?.split(',') || []).map((origin) => origin.trim()).filter(Boolean),
+    allowedOrigins: env.requireEnv('CORS_ALLOWED_ORIGINS').split(',') || [],
   },
   node_env: process.env.NODE_ENV || 'development',
 };
