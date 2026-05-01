@@ -16,6 +16,7 @@ import { EmojiMenu } from './EmojiMenu';
 import { ReactionList } from './ReactionList';
 import { userPressedEmojis } from '../utils/pressedEmoji';
 import { useMessageForm } from '../hooks/useMessageForm';
+import { TypingBlock } from './TypingBlock';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -150,6 +151,7 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
         {!isLoading && messages.length === 0 && <EmptyBlock />}
       </div>
 
+      <TypingBlock />
       <MessageForm text={text} setText={setText} handleSend={handleSend} formButton={formButton} />
     </div>
   );

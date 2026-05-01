@@ -63,7 +63,9 @@ export type WSEvent =
 export type Action = WSEvent['type'];
 
 export interface Payload {
+  id: number;
   createdAt: string;
+  updatedAt: string;
   userId: number;
   isActive: boolean;
   lastSeen: string;

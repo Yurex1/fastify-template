@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { getLastChatId } from '../utils/lastOpenChatId';
+import { useWebSocket } from '../hooks/useWebSocket';
+import { useAuthStore } from '../stores/auth';
+import { debounce } from '../utils/debouce';
 
 interface MessageForm {
   text: string;
@@ -9,10 +13,19 @@ interface MessageForm {
 }
 const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const currentChatId = getLastChatId();
+  const currentUser = useAuthStore((s) => s.user);
+  const { typing } = useWebSocket({ currentChatId });
 
   useEffect(() => {
     if (textareaRef) textareaRef?.current?.focus();
   }, [handleSend]);
+
+  function handleTyping(e: React.ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>) {
+    setText(e.target.value);
+    if (!currentUser) return;
+    debounce(() => typing(currentUser.id), 300);
+  }
 
   return (
     <form onSubmit={handleSend} className="p-4 bg-gray-950 border-t border-gray-800 flex gap-2 items-end">
@@ -20,7 +33,8 @@ const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => 
         ref={textareaRef}
         cacheMeasurements
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        // onChange={(e) => setText(e.target.value)}
+        onChange={(e) => handleTyping(e)}
         minRows={1}
         maxRows={10}
         className="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:outline-none resize-none"

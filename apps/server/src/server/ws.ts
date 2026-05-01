@@ -11,37 +11,21 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   await fastify.register(websocket);
 
   const connections = new Map<number, WebSocket>();
+  const typingTimers = new Map<number, NodeJS.Timeout>();
   const eventHandlers: Array<(uid: number, data: any) => void> = [];
 
-  const broadcastStatus = async (uid: number, isActive: boolean) => {
-    try {
-      const peers = await services.chat.getAllMembersByChatId(uid);
-      for (const peer of peers) {
-        if (fastify.ws.hasConnection(peer.userId)) {
-          fastify.ws.send(peer.userId, {
-            type: 'USER_STATUS',
-            payload: { userId: uid, isActive },
-          });
-        }
-      }
-    } catch (e) {
-      console.error('Broadcast Status Error:', e);
-    }
-  };
-
-  const sendOnlinePeers = async (uid: number) => {
+  const broadcastStatus = async (uid: number, type: string, payload: {}) => {
     try {
       const peers = await services.chat.getAllMembers(uid);
-      const onlineIds = peers.filter((p) => fastify.ws.hasConnection(p.userId)).map((p) => p.userId);
 
-      if (onlineIds.length > 0) {
-        fastify.ws.send(uid, {
-          type: 'INITIAL_STATUS_SYNC',
-          payload: { onlineIds },
+      for (const peer of peers) {
+        fastify.ws.send(peer.userId, {
+          type: type,
+          payload: payload,
         });
       }
     } catch (e) {
-      console.error('Initial Status Sync Error:', e);
+      console.error('Broadcast Status Error:', e);
     }
   };
 
@@ -58,8 +42,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       connections.set(uid, socket);
 
-      await broadcastStatus(uid, true);
-      setTimeout(() => sendOnlinePeers(uid), 150);
+      await broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: true });
 
       socket.on('message', async (rawData) => {
         try {
@@ -96,6 +79,21 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
                 payload: updated,
               });
             });
+          }
+
+          if (data.type === CHAT_ACTIONS.typing) {
+            if (typingTimers.has(uid)) {
+              clearTimeout(typingTimers.get(uid)!);
+            } else {
+              await broadcastStatus(uid, 'IS_TYPING', { userName: user.username, isTyping: true });
+            }
+
+            const timer = setTimeout(async () => {
+              typingTimers.delete(uid);
+              await broadcastStatus(uid, 'STOP_TYPING', { userId: uid, isTyping: false });
+            }, 3000);
+
+            typingTimers.set(uid, timer);
           }
 
           if (data.type === CHAT_ACTIONS.updateReaction) {
@@ -157,8 +155,12 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       socket.on('close', () => {
         connections.delete(uid);
+        if (typingTimers.has(uid)) {
+          clearTimeout(typingTimers.get(uid)!);
+          typingTimers.delete(uid);
+        }
         services.user.updateLastSeen(uid).catch(console.error);
-        broadcastStatus(uid, false);
+        broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: false });
       });
     } catch (e: any) {
       console.error('WS Auth Error:', e.message);
