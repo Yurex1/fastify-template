@@ -11,7 +11,9 @@ const corsPlugin: Plugin = {
     origin: config.cors.allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'X-Requested-With'],
+    exposedHeaders: ['Set-Cookie'],
+    optionsSuccessStatus: 204,
   },
 };
 
@@ -25,7 +27,7 @@ const swaggerPlugin: Plugin = {
   options: {
     swagger: {
       info: { title: 'fastify-template', version: '1.0.0' },
-      host: config.server.http.url,
+      host: config.server.http.host,
       schemes: ['http', 'https'],
       securityDefinitions: {
         ApiToken: {

@@ -22,9 +22,10 @@ export async function createChat(memberId: number) {
     const response = await chatsApi.createChat(memberId);
     return response;
   } catch (error) {
-    if (error.message.includes('404')) toast.error('There is no user with this ID');
-    if (error.message.includes('400')) toast.error('Chat with this user already exists');
-
+    if (error instanceof Error) {
+      if (error.message.includes('404')) toast.error('There is no user with this ID');
+      if (error.message.includes('400')) toast.error('Chat with this user already exists');
+    }
     return;
   }
 }

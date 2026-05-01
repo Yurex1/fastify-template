@@ -48,6 +48,7 @@ export interface Message {
   userId: number;
   chatId: number;
   text: string;
+  reactions: Record<string, number[]>;
   createdAt: string;
   updatedAt: string;
 }

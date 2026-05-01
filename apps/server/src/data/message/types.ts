@@ -5,5 +5,6 @@ export interface MessageRepo {
   findByChatId: (chatId: number, page: number, limit: number) => Promise<Message[]>;
   findOne: (definition: Partial<Message>) => Promise<Message | null>;
   updateMessage: (id: number, definition: Partial<UpdateMessage>) => Promise<Message>;
+  updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;
   remove: (id: number) => Promise<{ removed: boolean }>;
 }

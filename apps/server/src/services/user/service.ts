@@ -24,6 +24,10 @@ export const init = ({ userRepo }: Deps): UserService => ({
     return userRepo.update(id, definition);
   },
 
+  updateLastSeen: async (userId) => {
+    return userRepo.updateLastSeen(userId);
+  },
+
   updateEmail: async (id, email) => {
     return userRepo.updateEmail(id, email);
   },

@@ -7,9 +7,8 @@ import { init as authServiceInit } from './auth/service';
 import { init as postServiceInit } from './post/service';
 import { init as notificationServiceInit } from '../firebase/notification/service';
 import { init as s3ServiceInit } from './s3/service';
-import { Services } from './types';
 
-export const init = (repos: Repos, _wsServer: WsServer): Services => {
+export const init = (repos: Repos) => {
   const service = serviceInit();
   const user = userServiceInit({ userRepo: repos.user });
   const auth = authServiceInit({ userRepo: repos.user, sessionRepo: repos.sessions });
@@ -19,7 +18,6 @@ export const init = (repos: Repos, _wsServer: WsServer): Services => {
     chatMemberRepo: repos.chatMember,
     userRepo: repos.user,
     messageRepo: repos.message,
-    wsServer: _wsServer,
   });
 
   const notification = notificationServiceInit();

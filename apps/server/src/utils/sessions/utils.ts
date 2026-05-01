@@ -37,7 +37,7 @@ export const sessions = {
     return { id: payload.id };
   },
   toSessionResponse: (session: Session): SessionResponse => {
-    const { refreshToken, ...response } = session;
+    const { ...response } = session;
     return response;
   },
 };

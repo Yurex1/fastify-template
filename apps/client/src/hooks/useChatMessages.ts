@@ -6,7 +6,7 @@ import { QueryKeys } from '../lib/queries';
 import { useCallback } from 'react';
 
 interface useChatMessagesProps {
-  currentChatId: number | null;
+  currentChatId: number;
 }
 
 export function useChatMessages({ currentChatId }: useChatMessagesProps) {
