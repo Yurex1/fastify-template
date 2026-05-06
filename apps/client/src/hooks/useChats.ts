@@ -17,7 +17,7 @@ export function useChats() {
   });
 
   const updateChatsCache = (type: string, chatId: number, data: Payload) => {
-    queryClient.setQueryData<InfiniteData<Chat[]>>([QueryKeys.chats], (old) => {
+    queryClient.setQueryData<InfiniteData<Chat[], number>>([QueryKeys.chats], (old) => {
       if (!old) return old;
 
       if (type === CHAT_TYPES.update) {
@@ -53,6 +53,10 @@ export function useChats() {
 
       if (type === CHAT_TYPES.create) {
         // add new chat on the top and make it currentChat
+        // return {
+        //   ...old,
+        //   pages: old.pages.map((page, index) => (index === 0 ? [data, ...page] : page)),
+        // };
       }
 
       if (type === USER_TYPES.getInitialStatus) {

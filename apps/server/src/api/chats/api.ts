@@ -39,6 +39,41 @@ export const init = ({ chatService }: Deps): ChatApi => {
       },
     },
 
+    pinMessage: {
+      method: 'post',
+      access: 'access',
+      schema: schemas.pinMessage,
+
+      handler: async (user, request) => {
+        const { chatId, messageId } = request.body;
+        return chatService.pinMessage(user.id, chatId, messageId);
+      },
+    },
+
+    unpinMessage: {
+      method: 'delete',
+      access: 'access',
+      schema: schemas.unpinMessage,
+
+      handler: async (user, request) => {
+        const { chatId, messageId } = request.body;
+        return chatService.unpinMessage(user.id, chatId, messageId);
+      },
+    },
+
+    getAllPinnedMessages: {
+      method: 'get',
+      access: 'access',
+      schema: schemas.getAllPinnedMessages,
+      params: ['chatId'],
+      handler: (_user, request) => {
+        const { chatId } = request.params;
+        const { page, limit } = request.query;
+
+        return chatService.getAllPinnedMessages(chatId, page, limit);
+      },
+    },
+
     removeChat: {
       method: 'delete',
       access: 'access',

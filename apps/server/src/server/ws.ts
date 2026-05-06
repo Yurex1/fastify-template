@@ -7,41 +7,27 @@ import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
 
+import { createMessageHandlers } from './messageHandlers';
+
 export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
   await fastify.register(websocket);
 
   const connections = new Map<number, WebSocket>();
+  const typingTimers = new Map<number, NodeJS.Timeout>();
+  const heartbeatStates = new Map<number, { isAlive: boolean; timer: NodeJS.Timeout }>();
   const eventHandlers: Array<(uid: number, data: any) => void> = [];
+  const PING_INTERVAL_MS = 25000;
 
-  const broadcastStatus = async (uid: number, isActive: boolean) => {
-    try {
-      const peers = await services.chat.getAllMembersByChatId(uid);
-      for (const peer of peers) {
-        if (fastify.ws.hasConnection(peer.userId)) {
-          fastify.ws.send(peer.userId, {
-            type: 'USER_STATUS',
-            payload: { userId: uid, isActive },
-          });
-        }
-      }
-    } catch (e) {
-      console.error('Broadcast Status Error:', e);
+  const cleanupConnection = (uid: number) => {
+    const heartbeat = heartbeatStates.get(uid);
+    if (heartbeat) {
+      clearInterval(heartbeat.timer);
+      heartbeatStates.delete(uid);
     }
-  };
-
-  const sendOnlinePeers = async (uid: number) => {
-    try {
-      const peers = await services.chat.getAllMembers(uid);
-      const onlineIds = peers.filter((p) => fastify.ws.hasConnection(p.userId)).map((p) => p.userId);
-
-      if (onlineIds.length > 0) {
-        fastify.ws.send(uid, {
-          type: 'INITIAL_STATUS_SYNC',
-          payload: { onlineIds },
-        });
-      }
-    } catch (e) {
-      console.error('Initial Status Sync Error:', e);
+    connections.delete(uid);
+    if (typingTimers.has(uid)) {
+      clearTimeout(typingTimers.get(uid)!);
+      typingTimers.delete(uid);
     }
   };
 
@@ -58,97 +44,62 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       connections.set(uid, socket);
 
-      await broadcastStatus(uid, true);
-      setTimeout(() => sendOnlinePeers(uid), 150);
+      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
+
+      const heartbeatTimer = setInterval(() => {
+        const state = heartbeatStates.get(uid);
+        if (!state || socket.readyState !== 1) return;
+
+        if (!state.isAlive) {
+          socket.terminate();
+          return;
+        }
+
+        state.isAlive = false;
+        try {
+          socket.ping();
+        } catch (error) {
+          socket.terminate();
+        }
+      }, PING_INTERVAL_MS);
+
+      socket.on('pong', () => {
+        const state = heartbeatStates.get(uid);
+        if (state) {
+          state.isAlive = true;
+        }
+      });
+
+      heartbeatStates.set(uid, { isAlive: true, timer: heartbeatTimer });
+
+      await handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: true });
 
       socket.on('message', async (rawData) => {
         try {
           const data = JSON.parse(rawData.toString());
+
           const uid = Number(user.id);
 
           eventHandlers.forEach((handler) => handler(uid, data));
 
           if (data.type === CHAT_ACTIONS.sendMessage) {
-            const { chatId, text } = data.payload;
-
-            const message = await services.chat.sendMessage(uid, chatId, text);
-
-            const members = await services.chat.getAllMembersByChatId(chatId);
-
-            members.forEach((m) => {
-              fastify.ws.send(m.userId, {
-                type: CHAT_ACTIONS.newMessage,
-                payload: message,
-              });
-            });
+            await handlers.handleSendMessage(data);
           }
 
           if (data.type === CHAT_ACTIONS.updateMessage) {
-            const { messageId, text } = data.payload;
+            await handlers.handleUpdateMessage(data);
+          }
 
-            const updated = await services.chat.updateMessage(messageId, { text });
-
-            const members = await services.chat.getAllMembersByChatId(updated.chatId);
-
-            members.forEach((m) => {
-              fastify.ws.send(m.userId, {
-                type: CHAT_ACTIONS.updatedMessage,
-                payload: updated,
-              });
-            });
+          if (data.type === CHAT_ACTIONS.typing) {
+            await handlers.handleTyping(typingTimers);
           }
 
           if (data.type === CHAT_ACTIONS.updateReaction) {
-            const { id, userId, reaction } = data.payload;
-            try {
-              const updatedMessage = await services.chat.updateReactions(id, userId, reaction);
-              if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
-
-              const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
-              memberIds.forEach((member) => {
-                fastify.ws.send(member.userId, {
-                  type: CHAT_ACTIONS.updatedReaction,
-                  payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
-                });
-              });
-            } catch (err: unknown) {
-              if (err instanceof Error) fastify.ws.send(uid, { type: 'ERROR', payload: { message: err.message } });
-            }
+            await handlers.handleUpdateReaction(data);
           }
 
           if (data.type === CHAT_ACTIONS.deleteMesage) {
-            const { messageId } = data.payload;
-
-            const msg = await services.chat.findMessage({ id: messageId });
-            if (!msg) throw new Error('NOT_FOUND');
-
-            await services.chat.removeMessage(messageId);
-
-            const members = await services.chat.getAllMembersByChatId(msg.chatId);
-
-            members.forEach((m) => {
-              fastify.ws.send(m.userId, {
-                type: CHAT_ACTIONS.deletedMessage,
-                payload: { messageId, chatId: msg.chatId },
-              });
-            });
-          }
-
-          if (data.type === CHAT_ACTIONS.getStatus) {
-            const { userId, isActive } = data.payload;
-
-            try {
-              const memberIds = await services.chat.getAllMembers(userId);
-
-              memberIds.forEach((member) => {
-                fastify.ws.send(member.userId, {
-                  type: CHAT_ACTIONS.sendStatus,
-                  payload: { userId, isActive },
-                });
-              });
-            } catch (err: unknown) {
-              if (err instanceof Error) fastify.ws.send(uid, { type: 'ERROR', payload: { message: err.message } });
-            }
+            await handlers.handleDeleteMessage(data);
           }
         } catch (e) {
           console.error(e);
@@ -156,9 +107,15 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       });
 
       socket.on('close', () => {
-        connections.delete(uid);
+        cleanupConnection(uid);
         services.user.updateLastSeen(uid).catch(console.error);
-        broadcastStatus(uid, false);
+        handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: false });
+        connections.delete(uid);
+        if (typingTimers.has(uid)) {
+          clearTimeout(typingTimers.get(uid)!);
+          typingTimers.delete(uid);
+        }
+        services.user.updateLastSeen(uid).catch(console.error);
       });
     } catch (e: any) {
       console.error('WS Auth Error:', e.message);

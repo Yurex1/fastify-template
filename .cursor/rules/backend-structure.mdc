@@ -1,0 +1,168 @@
+---
+alwaysApply: true
+---
+
+## Backend project structure (apps/server)
+
+This rule describes **how the backend is organized** and **how to add new repos/services/APIs**.
+
+### Structure schema (folder tree)
+
+```
+apps/server/src/
+  main.ts                  # composition root: pg -> repos -> services -> apis -> server
+  config.ts                # env-driven config
+  infra/
+    pg.ts
+  entities/
+    user.ts
+    post.ts
+    ...                     # one domain entity per file
+  data/
+    main.ts                 # collects repos into `Repos`
+    types.ts                # `Repos` interface
+    EntityRepo.ts           # base repo helper
+    <feature>/
+      types.ts              # <Feature>Repo interface + IO types
+      sql.ts                # SQL builders -> { query, params }
+      repo.ts               # init(pool) -> <Feature>Repo
+  services/
+    main.ts                 # collects services into `Services`
+    types.ts                # `Services` interface
+    <feature>/
+      types.ts              # Deps + <Feature>Service types
+      service.ts            # init(deps) -> <Feature>Service
+  api/
+    main.ts                 # collects APIs into `APIs`
+    types.ts                # Endpoint + APIs typing
+    <feature>/
+      schemas.ts            # AJV schemas
+      types.ts              # <Feature>Api type
+      api.ts                # init(deps) -> endpoints
+  server/
+    http.ts                 # Fastify + auto-register routes from apis
+    plugins.ts
+    ws.ts
+    types.ts
+  utils/
+    env/util.ts
+    exception/util.ts
+    sessions/
+      ...                   # jwt + session helpers
+    ...                     # small reusable helpers
+```
+
+### Architecture and dependency direction
+
+- **composition root**: `apps/server/src/main.ts`
+  - Wires: `infra/pg` → `data` (repos) → `services` → `api` → `server/http`
+- **layers** (depend only “down”, never “up”):
+  - **`infra/`**: low-level integrations (e.g. `infra/pg.ts` typed pool)
+  - **`data/`**: repositories and SQL builders (DB access only)
+  - **`services/`**: business logic + orchestration (uses repos)
+  - **`api/`**: endpoint definitions (uses services; no DB)
+  - **`server/`**: Fastify server, plugins, route registration (glue)
+  - **`entities/`**: shared domain types used across layers
+  - **`utils/`**: cross-cutting helpers (env, exceptions, sessions, etc.)
+
+### How routing works
+
+Routes are **auto-registered** in `apps/server/src/server/http.ts` by iterating the object returned from `apps/server/src/api/main.ts`.
+
+- **service name**: the key in `apis` (e.g. `user`, `auth`, `post`)
+- **route name**: the key inside that API object (e.g. `id`, `get-all`)
+- **final path**: `/${service}/${route}` plus optional URL params derived from `endpoint.params`
+  - Example: `params: ['id']` → `/:id`
+- **auth**: controlled by `endpoint.access` (`'none' | 'access' | 'refresh'`)
+
+### Type-safety rule (required)
+
+- **Everything must be typed**:
+  - **All function parameters and return types** must be explicit (no implicit `any`).
+  - **All “props”-like objects** (deps objects, DTOs, request param/body types, service inputs/outputs) must have named types/interfaces and be imported where used.
+  - Prefer the existing pattern of `types.ts` files per module (`data/<feature>/types.ts`, `services/<feature>/types.ts`, `api/<feature>/types.ts`) and keep the public surface typed there.
+
+### Where to add a new “feature”
+
+For a new domain area (example name: `comment`) you typically add:
+
+- **`entities/comment.ts`**: domain types (what a Comment is)
+- **`data/comment/`**:
+  - `types.ts` (repo interface + input/output types)
+  - `sql.ts` (SQL builder functions)
+  - `repo.ts` (repo implementation; takes `TypedPool`)
+- **`services/comment/`**:
+  - `types.ts` (service interface + deps)
+  - `service.ts` (business logic; throws via `utils/exception`)
+- **`api/comment/`**:
+  - `types.ts` (API shape using `Endpoint` types)
+  - `schemas.ts` (Fastify/AJV schemas used by `server/http.ts`)
+  - `api.ts` (endpoint definitions; calls service methods)
+
+### Adding a new repository (data layer)
+
+Create a folder `apps/server/src/data/<feature>/` with:
+
+- **`types.ts`**: export `<Feature>Repo` interface (methods your service needs)
+- **`sql.ts`**: export functions that return `{ query, params }` (keep SQL here)
+- **`repo.ts`**:
+  - export `init(pool: TypedPool): <Feature>Repo`
+  - implement using `pool.queryOne/queryMany` or by extending `data/EntityRepo.ts` (see `data/user/repo.ts`)
+
+Then **register it**:
+
+- Update `apps/server/src/data/types.ts` (`Repos` interface): add `<feature>: <Feature>Repo`
+- Update `apps/server/src/data/main.ts`: import `<feature>RepoInit`, instantiate it, and return it in the `Repos` object
+
+Rules:
+
+- Repos **must not** import from `services/` or `api/`.
+- Prefer returning `null` from repo methods when “not found”; let services decide whether to throw.
+
+### Adding a new service (business layer)
+
+Create `apps/server/src/services/<feature>/` with:
+
+- **`types.ts`**:
+  - `export type Deps = { ...repos needed... }`
+  - `export interface <Feature>Service { ... }`
+- **`service.ts`**:
+  - `export const init = (deps: Deps): <Feature>Service => ({ ... })`
+  - Use `utils/exception/util.ts` for domain errors (e.g. not found, unauthorized)
+
+Then **register it**:
+
+- Update `apps/server/src/services/types.ts` (`Services` interface): add `<feature>: <Feature>Service`
+- Update `apps/server/src/services/main.ts`: import `<feature>ServiceInit`, pass the needed repos, return under `<feature>`
+
+Rules:
+
+- Services **may** import from `data/`, `entities/`, `utils/` and other services only when truly necessary (avoid cycles).
+- Services should be the only layer that enforces “not found” semantics via exceptions.
+
+### Adding a new API module (endpoint definitions)
+
+Create `apps/server/src/api/<feature>/` with:
+
+- **`schemas.ts`**: exported schema objects referenced by endpoints
+- **`types.ts`**: `<Feature>Api` type describing the endpoints
+- **`api.ts`**:
+  - `export const init = ({ <deps> }: Deps): <Feature>Api => ({ ...endpoints... })`
+  - Each endpoint matches the shared `Endpoint` contract (`apps/server/src/api/types.ts`)
+  - Put `access`, `method`, optional `params`, `schema`, and `handler`
+
+Then **register it**:
+
+- Update `apps/server/src/api/types.ts` (`APIs` interface): add `<feature>: <Feature>Api`
+- Update `apps/server/src/api/main.ts`: import `<feature>ApiInit`, instantiate it with the service deps, and return it under `<feature>`
+
+Rules:
+
+- API handlers **must not** talk to DB/repositories directly; go through services.
+- Keep handlers thin: map request → service call → return result.
+
+### Touchpoints you should usually check
+
+- **Environment/config**: if the feature needs config, add to `apps/server/src/config.ts` (using `env.requireEnv`)
+- **Auth/session behavior**: controlled in `server/http.ts` via `endpoint.access`
+- **Websocket behavior**: if needed, it is registered in `apps/server/src/server/http.ts` via `wsPlugin`

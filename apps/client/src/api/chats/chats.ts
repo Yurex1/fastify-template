@@ -1,5 +1,5 @@
 import api from '../api';
-import type { Chat, Message } from '../types';
+import type { Chat, Message, PinnedMessage } from '../types';
 
 const chatsApi = {
   createChat: async (memberId: number) => {
@@ -19,6 +19,24 @@ const chatsApi = {
     const response = await api
       .get(`/chats/getMessagesByChatId/${chatId}?page=${page}&limit=${limit}`)
       .json<Message[]>();
+    return response;
+  },
+
+  getAllPinnedMessages: async (chatId: number, page: number = 1, limit: number = 30) => {
+    const response = await api
+      .get(`/chats/getAllPinnedMessages/${chatId}?page=${page}&limit=${limit}`)
+      .json<PinnedMessage[]>();
+    return response;
+  },
+
+  pinMessage: async (chatId: number, messageId: number) => {
+    const response = await api.post(`/chats/pinMessage`, { json: { chatId, messageId } }).json<PinnedMessage[]>();
+    return response;
+  },
+
+  unpinMessage: async (chatId: number, messageId: number) => {
+    const response = await api.delete(`/chats/unpinMessage`, { json: { chatId, messageId } }).json();
+
     return response;
   },
 

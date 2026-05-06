@@ -1,6 +1,7 @@
 import type { TypedPool } from '../../infra/pg';
 import type { Chat } from '../../entities/chat';
-import type { ChatMemberRepo, ChatMember, ChatMemberStatus } from './types';
+import type { ChatMemberRepo, ChatMemberStatus } from './types';
+import { ChatMember } from '../../entities/chatMember';
 
 export const init = (pool: TypedPool): ChatMemberRepo => ({
   async addMembers(chatId, members) {
@@ -28,9 +29,9 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
       u.username, 
       u.lastseen,
       (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
-    FROM "public"."chatMember" m
-    INNER JOIN "public"."users" u ON u.id = m."userId"
-    WHERE m."chatId" = $1
+      FROM "public"."chatMember" m
+      INNER JOIN "public"."users" u ON u.id = m."userId"
+      WHERE m."chatId" = $1
   `,
       [chatId],
     );
@@ -41,19 +42,18 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
   async getAllMembers(userId: number): Promise<ChatMember[]> {
     const result = await pool.query<ChatMember>(
       `SELECT DISTINCT
-            u.id AS "userId",
-            u.username,
-             (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline",  
-          u.lastseen 
-        FROM "public"."chatMember" cm1
-        JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
-        JOIN "public"."users" u ON cm2."userId" = u.id
-        WHERE cm1."userId" = $1 AND cm2."userId" != $1
-  `,
+          u.id AS "userId",
+          u.username,
+          u.lastseen,
+          (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
+      FROM "public"."chatMember" cm1
+      JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
+      JOIN "public"."users" u ON cm2."userId" = u.id
+      WHERE cm1."userId" = $1 AND cm2."userId" != $1`,
       [userId],
     );
 
-    return result.rows.map((row) => row);
+    return result.rows;
   },
 
   async listChatsForUser(userId, status, page, limit) {
