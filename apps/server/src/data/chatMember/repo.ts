@@ -53,7 +53,7 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
       [userId],
     );
 
-    return result.rows.map((row) => row);
+    return result.rows;
   },
 
   async listChatsForUser(userId, status, page, limit) {

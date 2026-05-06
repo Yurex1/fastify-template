@@ -14,6 +14,8 @@ interface UseWebSocketProps {
 
 export function useWebSocket({ currentChatId }: UseWebSocketProps) {
   const token = useUserStore((s) => s.accessToken);
+  const setIsTyping = useUserStore((s) => s.setIsTyping);
+
   const [ws, setWs] = useState<WebSocket | null>(null);
 
   const { updateMessageCache } = useChatMessages({
@@ -58,6 +60,16 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
       if (data.type === USER_TYPES.getInitialStatus) {
         updateChatsCache(data.type, chatId, data.payload);
       }
+
+      if (data.type === 'NEW_CHAT_CREATED') {
+        updateChatsCache('create', chatId, data.payload);
+      }
+      if (data.type === 'IS_TYPING') {
+        setIsTyping(data.payload.userName, true);
+      }
+      if (data.type === MESSAGE_TYPES.stopTyping) {
+        setIsTyping(data.payload.userId, false);
+      }
     };
 
     socket.onopen = () => {
@@ -85,5 +97,9 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.delete, payload: { messageId } }));
   };
 
-  return { sendMessage, updateMessage, updateReaction, deleteMessage };
+  const typing = (userId: number) => {
+    ws?.send(JSON.stringify({ type: MESSAGE_TYPES.typing, payload: { userId } }));
+  };
+
+  return { sendMessage, updateMessage, updateReaction, deleteMessage, typing };
 }

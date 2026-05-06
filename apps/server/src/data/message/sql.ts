@@ -9,7 +9,8 @@ export const selectByChatId = (chatId: number, offset: number = 0, limit: number
       m."reactions",
       m."chatId", 
       m."createdAt", 
-      m."updatedAt"
+      m."updatedAt",
+      m."read"
     FROM "public"."message" m
     WHERE m."chatId" = $1
     ORDER BY m."createdAt" DESC 

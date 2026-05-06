@@ -12,4 +12,5 @@ export const CHAT_ACTIONS = {
   updateReaction: 'UPDATE_REACTION',
   deleteMesage: 'DELETE_MESSAGE',
   sendStatus: 'STATUS',
+  typing: 'TYPING',
 };
