@@ -1,4 +1,4 @@
-import { Copy, PencilIcon, TrashIcon } from 'lucide-react';
+import { Copy, PencilIcon, Pin, Reply, TrashIcon } from 'lucide-react';
 import {
   ContextMenuContent,
   ContextMenuGroup,
@@ -11,6 +11,9 @@ import type { JSX } from 'react';
 interface UniversalMenuProps {
   onEdit?: () => void;
   onCopy?: () => void;
+  onPin?: () => void;
+  onReply?: () => void;
+  isPinned?: boolean;
   onDelete: () => void;
   isOwnMessage?: boolean;
   children?: React.ReactNode;
@@ -22,16 +25,27 @@ interface MenuItemProps {
   onClick: () => void;
 }
 
-export default function ContextMenu({ onEdit, onCopy, onDelete, isOwnMessage, children }: UniversalMenuProps) {
+export default function ContextMenu({
+  onEdit,
+  onCopy,
+  onPin,
+  isPinned,
+  onReply,
+  onDelete,
+  isOwnMessage,
+  children,
+}: UniversalMenuProps) {
   const topItems = [
-    onEdit && { id: 1, text: 'Edit', icon: <PencilIcon size={16} />, onClick: onEdit },
+    onEdit && isOwnMessage && { id: 1, text: 'Edit', icon: <PencilIcon size={16} />, onClick: onEdit },
     onCopy && { id: 2, text: 'Copy', icon: <Copy size={16} />, onClick: onCopy },
+    onPin && { id: 3, text: isPinned ? 'Unpin' : 'Pin', icon: <Pin size={16} />, onClick: onPin },
+    onReply && { id: 4, text: 'Reply', icon: <Reply size={16} />, onClick: onReply },
   ].filter((item): item is MenuItemProps => Boolean(item));
 
   return (
     <ContextMenuContent>
       {children}
-      {isOwnMessage && topItems.length > 0 && (
+      {topItems.length > 0 && (
         <>
           <ContextMenuLabel>Actions</ContextMenuLabel>
           <ContextMenuGroup>

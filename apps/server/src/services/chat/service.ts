@@ -5,7 +5,7 @@ import { CHAT_ACTIONS } from './consts';
 import type { ChatService, Deps } from './types';
 
 export const init = (deps: Deps): ChatService => {
-  const { chatRepo, chatMemberRepo, userRepo, messageRepo } = deps;
+  const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo } = deps;
 
   const service: ChatService = {
     create: async (userId, memberId) => {
@@ -57,6 +57,10 @@ export const init = (deps: Deps): ChatService => {
       return chatMemberRepo.getAllMembersByChatId(chatId);
     },
 
+    getAllPinnedMessages: async (chatId, page = 1, limit = 20) => {
+      return pinnedMessagesRepo.findByChatId(chatId, page, limit);
+    },
+
     findMessage: async (definition) => {
       return messageRepo.findOne(definition);
     },
@@ -65,11 +69,11 @@ export const init = (deps: Deps): ChatService => {
       return messageRepo.remove(id);
     },
 
-    sendMessage: async (userId, chatId, text) => {
+    sendMessage: async (userId, chatId, text, reply_id) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
-      const message = await messageRepo.create({ userId, chatId, text });
+      const message = await messageRepo.create({ userId, chatId, text, reply_id: reply_id || null });
       await chatRepo.update(chatId, { updatedAt: new Date() });
 
       return message;
@@ -97,6 +101,58 @@ export const init = (deps: Deps): ChatService => {
       }
 
       return messageRepo.updateReactions(id, userId, reaction);
+    },
+
+    pinMessage: async (userId, chatId, messageId) => {
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+
+      const message = await messageRepo.findOne({ id: messageId });
+      if (!message) throw exception.notFound('MESSAGE_NOT_FOUND');
+
+      const pinned = await pinnedMessagesRepo.create({
+        chat_id: chatId,
+        message_id: messageId,
+        pinned_at: new Date(),
+      });
+
+      const members = await chatMemberRepo.getAllMembersByChatId(chatId);
+
+      for (const member of members) {
+        if (server.ws.hasConnection(member.userId)) {
+          server.ws.send(member.userId, {
+            type: CHAT_ACTIONS.pinnedMessage,
+            payload: {
+              chatId,
+              messageId,
+              isPinned: true,
+              pinnedAt: pinned.pinned_at,
+              message,
+            },
+          });
+        }
+      }
+
+      return pinned;
+    },
+
+    unpinMessage: async (userId, chatId, messageId) => {
+      const removed = await pinnedMessagesRepo.removeByMessageId(chatId, messageId);
+
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      const members = await chatMemberRepo.getAllMembersByChatId(chatId);
+
+      for (const member of members) {
+        if (server.ws.hasConnection(member.userId)) {
+          server.ws.send(member.userId, {
+            type: CHAT_ACTIONS.unpinedMessage,
+            payload: { messageId, chatId },
+          });
+        }
+      }
+
+      return removed;
     },
 
     removeChat: async (userId, chatId) => {

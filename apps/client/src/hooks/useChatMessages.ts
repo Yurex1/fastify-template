@@ -42,6 +42,18 @@ export function useChatMessages({ currentChatId }: useChatMessagesProps) {
                 message.id === WSEvent.payload.id ? { ...message, ...WSEvent.payload } : message,
               );
             }
+            if (WSEvent.type === 'pin') {
+              return page.map((message) =>
+                message.id === WSEvent.payload.messageId ? { ...message, isPinned: WSEvent.payload.isPinned } : message,
+              );
+            }
+
+            if (WSEvent.type === 'unpin') {
+              return page.map((message) =>
+                message.id === WSEvent.payload.messageId ? { ...message, isPinned: false } : message,
+              );
+            }
+
             if (WSEvent.type === 'delete') {
               return page.filter((message) => message.id !== WSEvent.payload.messageId);
             }

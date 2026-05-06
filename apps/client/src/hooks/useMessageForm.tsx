@@ -1,6 +1,6 @@
 import type { FormMode, Message } from '../api/types';
 import { FORM_MODE } from '../utils/consts/formModes';
-import { SendHorizonal, Check, Search } from 'lucide-react';
+import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
 
 interface useMessageFormProps {
   currentChatId: number | null;
@@ -8,10 +8,11 @@ interface useMessageFormProps {
   setText: (text: string) => void;
   formMode: FormMode;
   setFormMode: (text: FormMode) => void;
+  setReplyTo?: (val: Message | null) => void;
   messageToEdit: Message | null;
   setMessageToEdit: (message: Message | null) => void;
-  updateMessage: (id: number, text: string) => void;
-  sendMessage: (ChatId: number, text: string) => void;
+  updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
+  sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
   handleSearch: () => void;
 }
 
@@ -22,6 +23,7 @@ export function useMessageForm({
   messageToEdit,
   setText,
   setFormMode,
+  setReplyTo,
   setMessageToEdit,
   updateMessage,
   sendMessage,
@@ -30,11 +32,12 @@ export function useMessageForm({
   const clearForm = () => {
     setMessageToEdit(null);
     setFormMode('create');
+    setReplyTo(null);
     setText('');
     return;
   };
 
-  const handleSend = (e: React.SubmitEvent) => {
+  const handleSend = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
     if (text.trim().length <= 0) return;
     switch (formMode) {
@@ -54,9 +57,16 @@ export function useMessageForm({
           clearForm();
           break;
         }
-        updateMessage(messageToEdit.id, text);
-        setMessageToEdit(null);
+        updateMessage(messageToEdit.id, { type: 'text', content: text });
         setFormMode('create');
+        clearForm();
+        break;
+
+      case FORM_MODE.REPLY:
+        if (!messageToEdit || !currentChatId) break;
+
+        sendMessage(currentChatId, text, messageToEdit.id);
+
         clearForm();
         break;
 
@@ -76,6 +86,9 @@ export function useMessageForm({
 
       case 'edit':
         return <Check />;
+
+      case 'reply':
+        return <Reply />;
 
       default:
         break;

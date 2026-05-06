@@ -9,6 +9,7 @@ export default defineConfig({
   preview: {
     allowedHosts: ALLOWED_HOSTS?.split(',') || [],
   },
+
   server: {
     port: Number(PORT) || 3000,
     proxy: {

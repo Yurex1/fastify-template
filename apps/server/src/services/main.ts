@@ -18,6 +18,7 @@ export const init = (repos: Repos) => {
     chatMemberRepo: repos.chatMember,
     userRepo: repos.user,
     messageRepo: repos.message,
+    pinnedMessagesRepo: repos.pinnedMessages,
   });
 
   const notification = notificationServiceInit();

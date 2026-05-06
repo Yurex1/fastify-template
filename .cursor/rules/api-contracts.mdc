@@ -1,0 +1,71 @@
+---
+alwaysApply: true
+---
+
+## API contracts (Fastify backend + Vite client)
+
+This rule standardizes HTTP API behavior for this repo so frontend (`apps/client`) and backend (`apps/server`) stay aligned.
+
+### 1) Source of truth
+
+- Backend endpoints live in `apps/server/src/api/**`.
+- Each endpoint must define **JSON Schema** (`schema`) for request + response whenever feasible (template already uses Swagger/OpenAPI generation).
+- Client should treat the backend contract as authoritative; when changing an endpoint, update both:
+  - backend schema/types
+  - client call site types/handling (e.g. `apps/client/src/api/**`)
+
+### 2) Naming, routing, params
+
+Backend routing follows the project convention described in `apps/server/src/server/http.ts` + `apps/server/src/api/main.ts`:
+
+- **Service**: API module key (e.g. `user`, `auth`, `post`)
+- **Route**: endpoint key within that service (e.g. `get-all`, `id`)
+- **Path**: `/${service}/${route}` plus URL params from `endpoint.params`
+  - Example: `service=user`, `route=id`, `params=['id']` → `/user/id/:id`
+- **No “magic” paths**: avoid registering ad-hoc routes in random places; keep the auto-registration pattern intact.
+
+### 3) Access / auth contract
+
+Every endpoint declares access:
+
+- `none`: public
+- `access`: requires valid access token (user is authenticated)
+- `refresh`: requires refresh token (token rotation / session refresh)
+
+Rules:
+
+- If endpoint reads/modifies user-owned resources, it must be `access` (or stricter).
+- Never rely on the client to enforce authorization; backend must enforce it.
+
+### 4) Request validation & error shape
+
+Rules:
+
+- Validate **params**, **querystring**, and **body** with JSON Schema.
+- Prefer explicit 4xx errors for user mistakes; 5xx only for unexpected failures.
+- Keep errors **stable** for the client. When changing an error code/message, treat it as a breaking change.
+
+Recommended minimum error response shape (unless an existing project standard differs):
+
+- `{ success: false, error: { code: string, message: string } }`
+
+### 5) Pagination, filtering, ordering (when applicable)
+
+When returning lists:
+
+- Use deterministic ordering (explicit `ORDER BY`).
+- If the list can grow, add pagination (`limit`, `cursor` or `offset`) and document defaults/max.
+- Validate `limit` bounds in schema and in service logic.
+
+### 6) Type safety alignment (TS + schema)
+
+- No implicit `any`.
+- Request/response TypeScript types must align with JSON Schema.
+- Avoid “lying” schemas (e.g. schema says optional but handler requires it).
+
+### 7) Backward compatibility
+
+- Adding optional fields is generally safe.
+- Removing/renaming fields or changing semantics is breaking.
+- Changing auth requirements is breaking for clients.
+

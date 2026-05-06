@@ -2,15 +2,24 @@ import type { RowSqlResult } from '../../utils/rowSql/types';
 
 export const selectByChatId = (chatId: number, offset: number = 0, limit: number = 30): RowSqlResult => ({
   query: `
-    SELECT 
+   SELECT 
       m.id, 
       m."userId", 
       m."text", 
       m."reactions",
       m."chatId", 
       m."createdAt", 
-      m."updatedAt"
+      m."updatedAt",
+      m."read",
+      m."reply_id",
+      CASE 
+        WHEN pm.id IS NOT NULL THEN true 
+        ELSE false 
+      END as "isPinned"
+
     FROM "public"."message" m
+    LEFT JOIN "public"."chat_pinned_message" pm 
+      ON pm.message_id = m.id
     WHERE m."chatId" = $1
     ORDER BY m."createdAt" DESC 
     LIMIT $2 OFFSET $3
