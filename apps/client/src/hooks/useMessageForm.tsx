@@ -1,8 +1,8 @@
 import type { Message } from '../api/types';
-import useUserStore from '../stores/user';
 import { FORM_MODE } from '../utils/consts/formModes';
 import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
 import { useMessageActions } from './useMessageActions';
+import useChatUIStore from '../stores/chatUI';
 
 interface useMessageFormProps {
   currentChatId: number | null;
@@ -24,8 +24,8 @@ export function useMessageForm({
     deleteMessage,
   });
 
-  const messageToEdit = useUserStore((s) => s.menuForMessage);
-  const setMessageToEdit = useUserStore((s) => s.setMenuForMessage);
+  const messageToEdit = useChatUIStore((s) => s.menuForMessage);
+  const setMessageToEdit = useChatUIStore((s) => s.setMenuForMessage);
 
   const clearForm = () => {
     setMessageToEdit(null);

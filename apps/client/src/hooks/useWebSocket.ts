@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import useUserStore from '../stores/user';
 import { MESSAGE_TYPES } from '../utils/consts/messageTypes';
 import { useChatMessages } from './useChatMessages';
 import { CHAT_TYPES } from '../utils/consts/chatTypes';
@@ -8,6 +7,8 @@ import { USER_TYPES } from '../utils/consts/userTypes';
 
 import { usePinnedMessages } from './usePinnedMessages';
 import { useUserStatus } from '../stores/userStatus';
+import { useAuthStore } from '../stores/auth';
+import useChatUIStore from '../stores/chatUI';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -16,8 +17,8 @@ interface UseWebSocketProps {
 }
 
 export function useWebSocket({ currentChatId }: UseWebSocketProps) {
-  const token = useUserStore((s) => s.accessToken);
-  const setIsTyping = useUserStore((s) => s.setIsTyping);
+  const token = useAuthStore((s) => s.accessToken);
+  const setIsTyping = useChatUIStore((s) => s.setIsTyping);
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -62,8 +63,6 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
       socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         const chatId = currentChatIdRef.current;
-
-        console.log('🔵 WS RECEIVED:', data.type, data);
 
         switch (data.type) {
           case MESSAGE_TYPES.new:

@@ -19,7 +19,7 @@ interface MessageWindowProps {
 }
 
 const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
-  const currentUser = useAuthStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.currentUser);
   const { data, isLoading, fetchNextPage, isFetchingNextPage, hasNextPage } = useChatMessages({
     currentChatId: currentChatId!,
   });

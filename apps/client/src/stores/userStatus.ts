@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { parseStatuses } from '../utils/userStatus';
 
 interface UserStatusStore {
   statuses: number[];
@@ -14,36 +15,32 @@ export const useUserStatus = create<UserStatusStore>((set) => ({
   lastSeenMap: {},
 
   setStatuses: (newStatuses) => {
-    const onlineIds: number[] = [];
-    const lastSeenMap: Record<number, string> = {};
-
-    newStatuses.forEach(({ userId, isOnline, lastseen }) => {
-      if (isOnline) {
-        onlineIds.push(userId);
-      } else if (lastseen) {
-        lastSeenMap[userId] = lastseen;
-      }
+    const { onlineIds, lastSeenMap } = parseStatuses(newStatuses);
+    set({
+      statuses: Array.from(onlineIds),
+      lastSeenMap,
     });
-
-    set({ statuses: onlineIds, lastSeenMap });
   },
 
   updateStatus: (userId, isOnline, lastseen) =>
     set((state) => {
-      let newOnline = [...state.statuses];
-      let newLastSeenMap = { ...state.lastSeenMap };
-
+      let nextStatuses = [...state.statuses];
       if (isOnline) {
-        if (!newOnline.includes(userId)) newOnline.push(userId);
-        delete newLastSeenMap[userId];
+        if (!nextStatuses.includes(userId)) nextStatuses.push(userId);
       } else {
-        newOnline = newOnline.filter((id) => id !== userId);
-        if (lastseen) newLastSeenMap[userId] = lastseen;
+        nextStatuses = nextStatuses.filter((id) => id !== userId);
+      }
+
+      const nextLastSeenMap = { ...state.lastSeenMap };
+      if (isOnline) {
+        delete nextLastSeenMap[userId];
+      } else if (lastseen) {
+        nextLastSeenMap[userId] = lastseen;
       }
 
       return {
-        statuses: newOnline,
-        lastSeenMap: newLastSeenMap,
+        statuses: nextStatuses,
+        lastSeenMap: nextLastSeenMap,
       };
     }),
 }));

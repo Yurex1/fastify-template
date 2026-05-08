@@ -1,4 +1,3 @@
-// import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';

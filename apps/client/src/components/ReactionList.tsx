@@ -8,7 +8,7 @@ interface ReactionListProps {
 }
 
 export const ReactionList = ({ message, updateReaction }: ReactionListProps) => {
-  const currentUser = useAuthStore((state) => state.user);
+  const currentUser = useAuthStore((state) => state.currentUser);
 
   if (!currentUser || !message.reactions || Object.keys(message.reactions).length === 0) {
     return null;

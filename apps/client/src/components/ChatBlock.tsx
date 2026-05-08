@@ -18,7 +18,7 @@ interface ChatBlockProps {
 }
 export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlockProps) => {
   const queryClient = useQueryClient();
-  const user = useAuthStore((s) => s.user);
+  const user = useAuthStore((s) => s.currentUser);
 
   const member = (chat: Chat) => {
     return chat.members.find((m) => m.id !== user?.id);

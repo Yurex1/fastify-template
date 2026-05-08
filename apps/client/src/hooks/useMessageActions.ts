@@ -1,6 +1,7 @@
 import type { Message } from '../api/types';
-import useUserStore from '../stores/user';
 import { toast } from 'react-toastify';
+import useMessageFormStore from '../stores/messageForm';
+import useChatUIStore from '../stores/chatUI';
 
 interface useMessageActionsProps {
   messages: Message[];
@@ -8,7 +9,8 @@ interface useMessageActionsProps {
 }
 
 export function useMessageActions({ messages, deleteMessage }: useMessageActionsProps) {
-  const { formMode, setFormMode, text, setText, replyTo, setReplyTo, menuForMessage } = useUserStore();
+  const { formMode, setFormMode, text, setText, replyTo, setReplyTo } = useMessageFormStore();
+  const menuForMessage = useChatUIStore((s) => s.menuForMessage);
 
   const handleSearch = () => {
     const mes = messages.filter((message) => message.text.includes(text));

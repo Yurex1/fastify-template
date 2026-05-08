@@ -9,8 +9,8 @@ import { useAuthStore } from '../stores/auth';
 import { Pin } from 'lucide-react';
 import chatsApi from '../api/chats/chats';
 import { isOwnMessage } from '../utils/isOwnMessage';
-import useUserStore from '../stores/user';
 import { useMessageActions } from '../hooks/useMessageActions';
+import useChatUIStore from '../stores/chatUI';
 
 interface MessageBlockProps {
   message: Message;
@@ -20,8 +20,8 @@ interface MessageBlockProps {
 }
 
 export const MessageBlock = ({ message, messages, updateReaction, deleteMessage }: MessageBlockProps) => {
-  const currentUser = useAuthStore((state) => state.user);
-  const setMenuForMessage = useUserStore((s) => s.setMenuForMessage);
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const setMenuForMessage = useChatUIStore((s) => s.setMenuForMessage);
 
   const { handleEdit, handleCopy, handleReply, handleDelete } = useMessageActions({
     messages,

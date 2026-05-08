@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { getLastChatId } from '../utils/lastOpenChatId';
-import { useDebounce } from '../hooks/useDebounce';
+import useDebounce from '../hooks/useDebounce';
 
 interface MessageForm {
   text: string;
