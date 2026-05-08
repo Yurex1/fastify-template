@@ -1,34 +1,32 @@
-import type { FormMode, Message } from '../api/types';
+import type { Message } from '../api/types';
+import useUserStore from '../stores/user';
 import { FORM_MODE } from '../utils/consts/formModes';
 import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
+import { useMessageActions } from './useMessageActions';
 
 interface useMessageFormProps {
   currentChatId: number | null;
-  text: string;
-  setText: (text: string) => void;
-  formMode: FormMode;
-  setFormMode: (text: FormMode) => void;
-  setReplyTo?: (val: Message | null) => void;
-  messageToEdit: Message | null;
-  setMessageToEdit: (message: Message | null) => void;
+  messages: Message[];
   updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
   sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
-  handleSearch: () => void;
+  deleteMessage: (id: number) => void;
 }
 
 export function useMessageForm({
-  currentChatId,
-  text,
-  formMode,
-  messageToEdit,
-  setText,
-  setFormMode,
-  setReplyTo,
-  setMessageToEdit,
-  updateMessage,
   sendMessage,
-  handleSearch,
+  messages,
+  currentChatId,
+  updateMessage,
+  deleteMessage,
 }: useMessageFormProps) {
+  const { formMode, text, setText, setReplyTo, setFormMode, handleSearch } = useMessageActions({
+    messages,
+    deleteMessage,
+  });
+
+  const messageToEdit = useUserStore((s) => s.menuForMessage);
+  const setMessageToEdit = useUserStore((s) => s.setMenuForMessage);
+
   const clearForm = () => {
     setMessageToEdit(null);
     setFormMode('create');

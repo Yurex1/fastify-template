@@ -12,9 +12,8 @@ interface Props {
 export const OpenPinnedMessages = ({ currentChatId, pinnedMode, setPinnedMode }: Props) => {
   const { data } = usePinnedMessages({ currentChatId });
 
-  const allPinned = data?.pages.flat() || [];
-  const count = allPinned.length;
-  const pinned = allPinned[allPinned.length - 1];
+  const count = data?.pages.flat().length || 0;
+  const pinned = data?.pages?.[0]?.[0];
 
   if (!pinned) return null;
 

@@ -23,35 +23,55 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     }
   };
 
+  const broadcastForChatMembers = async (chatId: number, type: string, payload: {}) => {
+    try {
+      const peers = await services.chat.getAllMembersByChatId(chatId);
+      for (const peer of peers) {
+        fastifyWs.send(peer.userId, { type, payload });
+      }
+    } catch (e) {
+      console.error('Broadcast Status Error:', e);
+    }
+  };
+
   const handleSendMessage = async (data: any) => {
     const { chatId, text, reply_id } = data.payload;
-    await broadcastStatus(uid, 'STOP_TYPING', { userId: uid, isTyping: false });
     const message = await services.chat.sendMessage(uid, chatId, text, reply_id);
-    const members = await services.chat.getAllMembersByChatId(chatId);
-    members.forEach((m) => fastifyWs.send(m.userId, { type: CHAT_ACTIONS.newMessage, payload: message }));
+    await broadcastForChatMembers(message.chatId, CHAT_ACTIONS.newMessage, message);
   };
 
   const handleUpdateMessage = async (data: {
-    payload: { messageId: number; definition: { content: string; type: string } };
+    payload: { messageId: number; definition: { content: string; type: 'text' } };
   }) => {
     const { messageId, definition } = data.payload;
-    await broadcastStatus(uid, 'STOP_TYPING', { userId: uid, isTyping: false });
+
     const key = definition.type;
     const updated = await services.chat.updateMessage(messageId, { [key]: definition.content });
-    const members = await services.chat.getAllMembersByChatId(updated.chatId);
-    members.forEach((m) => fastifyWs.send(m.userId, { type: CHAT_ACTIONS.updatedMessage, payload: updated }));
+    await broadcastForChatMembers(updated.chatId, CHAT_ACTIONS.updatedMessage, updated);
   };
 
-  const handleTyping = async (typingTimers: Map<number, NodeJS.Timeout>) => {
+  const handleTyping = async (chatId: number, typingTimers: Map<number, NodeJS.Timeout>) => {
     if (typingTimers.has(uid)) {
       clearTimeout(typingTimers.get(uid)!);
     } else {
-      await broadcastStatus(uid, 'IS_TYPING', { userName: user.username, isTyping: true });
+      const peers = (await services.chat.getAllMembersByChatId(chatId)).filter((member) => member.userId !== uid);
+      for (const peer of peers) {
+        fastifyWs.send(peer.userId, {
+          type: CHAT_ACTIONS.typing,
+          payload: { userName: user.username, chatId, isTyping: false },
+        });
+      }
     }
     const timer = setTimeout(async () => {
       typingTimers.delete(uid);
-      await broadcastStatus(uid, 'STOP_TYPING', { userId: uid, isTyping: false });
-    }, 3000);
+      const peers = (await services.chat.getAllMembersByChatId(chatId)).filter((member) => member.userId !== uid);
+      for (const peer of peers) {
+        fastifyWs.send(peer.userId, {
+          type: CHAT_ACTIONS.stopTyping,
+          payload: { userName: user.username, chatId, isTyping: false },
+        });
+      }
+    }, 500);
     typingTimers.set(uid, timer);
   };
 
@@ -77,34 +97,29 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     const msg = await services.chat.findMessage({ id: messageId });
     if (!msg) throw new Error('NOT_FOUND');
     await services.chat.removeMessage(messageId);
-    const members = await services.chat.getAllMembersByChatId(msg.chatId);
-    members.forEach((m) =>
-      fastifyWs.send(m.userId, {
-        type: CHAT_ACTIONS.deletedMessage,
-        payload: { messageId, chatId: msg.chatId },
-      }),
-    );
-
-    members.forEach((m) =>
-      fastifyWs.send(m.userId, {
-        type: CHAT_ACTIONS.unpinedMessage,
-        payload: { messageId, chatId: msg.chatId },
-      }),
-    );
+    await broadcastForChatMembers(msg.chatId, CHAT_ACTIONS.deletedMessage, { messageId, chatId: msg.chatId });
+    await broadcastForChatMembers(msg.chatId, CHAT_ACTIONS.unpinnedMessage, { messageId, chatId: msg.chatId });
   };
 
-  const handleGetStatus = async (data: { payload: { userId: number; isActive: boolean } }) => {
-    const { userId, isActive } = data.payload;
+  const handleInitialStatuses = async () => {
     try {
-      const memberIds = await services.chat.getAllMembers(userId);
-      memberIds.forEach((member) =>
-        fastifyWs.send(member.userId, {
-          type: CHAT_ACTIONS.sendStatus,
-          payload: { userId, isActive },
-        }),
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error) fastifyWs.send(uid, { type: 'ERROR', payload: { message: err.message } });
+      const peers = await services.chat.getAllMembers(uid);
+
+      const initialStatuses = peers
+        .filter((peer) => fastifyWs.hasConnection(peer.userId))
+        .map((peer) => ({
+          userId: peer.userId,
+          isOnline: true,
+        }));
+
+      if (initialStatuses.length > 0) {
+        fastifyWs.send(uid, {
+          type: CHAT_ACTIONS.initialState,
+          payload: initialStatuses,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send initial statuses:', e);
     }
   };
 
@@ -114,7 +129,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     handleTyping,
     handleUpdateReaction,
     handleDeleteMessage,
-    handleGetStatus,
+    handleInitialStatuses,
     broadcastStatus,
   };
 };

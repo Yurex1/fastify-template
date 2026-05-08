@@ -1,8 +1,7 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';
-import type { Chat, Payload } from '../api/types';
-import { USER_TYPES } from '../utils/consts/userTypes';
+import type { Chat, Message, Payload } from '../api/types';
 import { CHAT_TYPES } from '../utils/consts/chatTypes';
 
 export function useChats() {
@@ -22,11 +21,12 @@ export function useChats() {
 
       if (type === CHAT_TYPES.update) {
         let targetChat: Chat | null = null;
+        const payload = data as Message;
 
         const updatedPages = old.pages.map((page) => {
           const found = page.find((c) => c.id === chatId);
           if (found) {
-            targetChat = { ...found, updatedAt: data.createdAt };
+            targetChat = { ...found, updatedAt: payload.createdAt };
             return page.filter((c) => c.id !== chatId);
           }
           return page;
@@ -35,68 +35,14 @@ export function useChats() {
         if (targetChat) {
           const newPages = [...updatedPages];
           newPages[0] = [targetChat, ...newPages[0]];
-
-          return {
-            ...old,
-            pages: newPages,
-          };
+          return { ...old, pages: newPages };
         }
-
         return old;
       }
 
-      if (type === CHAT_TYPES.delete) {
-        // update the updatedAt field of the Chat to the time
-        // the last message was created and if there are no messages,
-        // use the chat's createdAt date
-      }
-
-      if (type === CHAT_TYPES.create) {
-        // add new chat on the top and make it currentChat
-        // return {
-        //   ...old,
-        //   pages: old.pages.map((page, index) => (index === 0 ? [data, ...page] : page)),
-        // };
-      }
-
-      if (type === USER_TYPES.getInitialStatus) {
-        queryClient.setQueriesData<InfiniteData<Chat[]>>({ queryKey: [QueryKeys.chats] }, (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) =>
-              page.map((chat) => {
-                const updatedMembers = chat.members.map((member) => ({
-                  ...member,
-
-                  isOnline: data.onlineIds.includes(member.userId) ? true : member.isOnline,
-                }));
-
-                return { ...chat, members: updatedMembers };
-              }),
-            ),
-          };
-        });
-      }
-
-      if (type === USER_TYPES.getStatus) {
-        const { userId, isActive, lastSeen } = data;
-        queryClient.setQueriesData<InfiniteData<Chat[]>>({ queryKey: [QueryKeys.chats] }, (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) =>
-              page.map((chat) => {
-                const updatedMembers = chat.members.map((member) =>
-                  member.userId === userId ? { ...member, isOnline: isActive, lastSeen } : member,
-                );
-                return { ...chat, members: updatedMembers };
-              }),
-            ),
-          };
-        });
-      }
+      return old;
     });
   };
+
   return { ...query, updateChatsCache };
 }

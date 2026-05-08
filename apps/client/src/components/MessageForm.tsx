@@ -1,21 +1,22 @@
 import { useEffect, useRef } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { getLastChatId } from '../utils/lastOpenChatId';
-import { useWebSocket } from '../hooks/useWebSocket';
-import { useAuthStore } from '../stores/auth';
-import { debounce } from '../utils/debouce';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface MessageForm {
   text: string;
   setText: (text: string) => void;
   formButton: () => React.ReactNode;
   handleSend: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  typing: (currentChatId: number) => void;
 }
-const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => {
+const MessageForm = ({ text, setText, handleSend, formButton, typing }: MessageForm) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentChatId = getLastChatId();
-  const currentUser = useAuthStore((s) => s.user);
-  const { typing } = useWebSocket({ currentChatId });
+
+  const debouncedTyping = useDebounce(() => {
+    typing(currentChatId);
+  }, 500);
 
   useEffect(() => {
     if (textareaRef) textareaRef?.current?.focus();
@@ -23,8 +24,7 @@ const MessageForm = ({ text, setText, handleSend, formButton }: MessageForm) => 
 
   function handleTyping(e: React.ChangeEvent<HTMLTextAreaElement, HTMLTextAreaElement>) {
     setText(e.target.value);
-    if (!currentUser) return;
-    debounce(() => typing(currentUser.id), 300);
+    debouncedTyping();
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

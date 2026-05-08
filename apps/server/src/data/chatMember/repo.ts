@@ -1,7 +1,8 @@
 import type { TypedPool } from '../../infra/pg';
-import type { Chat } from '../../entities/chat';
+import type { Chat, ChatPreview } from '../../entities/chat';
 import type { ChatMemberRepo, ChatMemberStatus } from './types';
 import { ChatMember } from '../../entities/chatMember';
+import { checkMember, selectAllMembers, selectAllMembersByChatId, selectChatsForUser, selectDirectChat } from './sql';
 
 export const init = (pool: TypedPool): ChatMemberRepo => ({
   async addMembers(chatId, members) {
@@ -22,99 +23,28 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
   },
 
   async getAllMembersByChatId(chatId) {
-    const rows = await pool.queryAll(
-      `
-    SELECT 
-      m."userId", 
-      u.username, 
-      u.lastseen,
-      (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
-      FROM "public"."chatMember" m
-      INNER JOIN "public"."users" u ON u.id = m."userId"
-      WHERE m."chatId" = $1
-  `,
-      [chatId],
-    );
-
-    return rows;
+    const { query, params } = selectAllMembersByChatId(chatId);
+    return await pool.queryAll<ChatMember>(query, params);
   },
 
-  async getAllMembers(userId: number): Promise<ChatMember[]> {
-    const result = await pool.query<ChatMember>(
-      `SELECT DISTINCT
-          u.id AS "userId",
-          u.username,
-          u.lastseen,
-          (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
-      FROM "public"."chatMember" cm1
-      JOIN "public"."chatMember" cm2 ON cm1."chatId" = cm2."chatId"
-      JOIN "public"."users" u ON cm2."userId" = u.id
-      WHERE cm1."userId" = $1 AND cm2."userId" != $1`,
-      [userId],
-    );
-
-    return result.rows;
+  async getAllMembers(userId) {
+    const { query, params } = selectAllMembers(userId);
+    return await pool.queryAll<ChatMember>(query, params);
   },
 
   async listChatsForUser(userId, status, page, limit) {
-    const offset = (page - 1) * limit;
-
-    const rows = await pool.queryAll(
-      `
-    SELECT c.id, c."createdAt", c."updatedAt", u.id as "memberId", u.username, u.lastseen,
-      (u.lastseen > NOW() - INTERVAL '5 minutes') as "isOnline"
-    FROM "public"."chats" c
-    INNER JOIN "public"."chatMember" m 
-      ON m."chatId" = c.id
-      AND m."userId" = $1
-      AND m.status = $2::chat_member_status
-    INNER JOIN "public"."chatMember" m2 
-      ON m2."chatId" = c.id
-      AND m2."userId" != $1
-    INNER JOIN "public"."users" u 
-      ON u.id = m2."userId"
-    ORDER BY c."updatedAt" DESC
-    LIMIT $3 OFFSET $4
-    `,
-      [userId, status, limit, offset],
-    );
-
-    return rows.map((row) => ({
-      id: row.id,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      members: [
-        {
-          userId: row.memberId,
-          username: row.username,
-          isOnline: row.isOnline,
-          lastseen: row.lastseen,
-        },
-      ],
-    }));
+    const { query, params } = selectChatsForUser(userId, status, page, limit);
+    return await pool.queryAll<ChatPreview>(query, params);
   },
+
   async isMember(userId, chatId) {
-    const row = await pool.queryOne<{ ok: number }>(
-      `SELECT 1 AS ok FROM "public"."chatMember" WHERE "chatId" = $1 AND "userId" = $2 LIMIT 1`,
-      [chatId, userId],
-    );
+    const { query, params } = checkMember(chatId, userId);
+    const row = await pool.queryOne<boolean>(query, params);
     return !!row;
   },
 
   async findDirectChat(userId: number, otherUserId: number) {
-    return pool.queryOne<Chat>(
-      `
-    SELECT c.id, c."createdAt", c."updatedAt"
-    FROM "public"."chats" c
-    INNER JOIN "public"."chatMember" m1 ON m1."chatId" = c.id AND m1."userId" = $1
-    INNER JOIN "public"."chatMember" m2 ON m2."chatId" = c.id AND m2."userId" = $2
-    WHERE NOT EXISTS (
-      SELECT 1 FROM "public"."chatMember" mx
-      WHERE mx."chatId" = c.id AND mx."userId" NOT IN ($1, $2)
-    )
-    LIMIT 1
-    `,
-      [userId, otherUserId],
-    );
+    const { query, params } = selectDirectChat(userId, otherUserId);
+    return await pool.queryOne<Chat | null>(query, params);
   },
 });

@@ -109,6 +109,7 @@ export const init = (deps: Deps): ChatService => {
 
       const message = await messageRepo.findOne({ id: messageId });
       if (!message) throw exception.notFound('MESSAGE_NOT_FOUND');
+      if (message.chatId !== chatId) throw exception.forbidden('CANNOT_PIN_THIS_MESSAGE');
 
       const pinned = await pinnedMessagesRepo.create({
         chat_id: chatId,
@@ -137,16 +138,16 @@ export const init = (deps: Deps): ChatService => {
     },
 
     unpinMessage: async (userId, chatId, messageId) => {
-      const removed = await pinnedMessagesRepo.removeByMessageId(chatId, messageId);
-
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+
+      const removed = await pinnedMessagesRepo.removeByMessageId(chatId, messageId);
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
       for (const member of members) {
         if (server.ws.hasConnection(member.userId)) {
           server.ws.send(member.userId, {
-            type: CHAT_ACTIONS.unpinedMessage,
+            type: CHAT_ACTIONS.unpinnedMessage,
             payload: { messageId, chatId },
           });
         }

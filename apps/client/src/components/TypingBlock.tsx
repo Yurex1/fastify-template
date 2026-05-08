@@ -1,8 +1,11 @@
 import useUserStore from '../stores/user';
+import { getLastChatId } from '../utils/lastOpenChatId';
 
 export const TypingBlock = () => {
   const isTyping = useUserStore((s) => s.isTyping);
+  const currentChatId = getLastChatId();
 
+  if (isTyping.chatId !== currentChatId) return null;
   if (!isTyping.isTyping) return null;
 
   return (

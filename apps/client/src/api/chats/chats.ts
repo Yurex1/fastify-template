@@ -1,47 +1,52 @@
 import api from '../api';
 import type { Chat, Message, PinnedMessage } from '../types';
+import { ENDPOINTS } from './consts';
 
 const chatsApi = {
   createChat: async (memberId: number) => {
-    const response = await api.post(`/chats/create/${memberId}`).json<Chat>();
+    const response = await api.post(`${ENDPOINTS.CHAT_CREATE}/${memberId}`).json<Chat>();
     return response;
   },
   getChatList: async (page: number = 1, limit: number = 30) => {
-    const response = await api.get(`/chats/list?status=approved&page=${page}&limit=${limit}`).json<Chat[]>();
+    const response = await api.get(`${ENDPOINTS.CHAT_GET_LIST}&page=${page}&limit=${limit}`).json<Chat[]>();
     return response;
   },
   getPendingChatList: async () => {
-    const response = await api.get(`/chats/list?status=pending&page=1&limit=30`).json<Chat[]>();
+    const response = await api.get(`${ENDPOINTS.CHAT_GET_PENDING_LIST}&page=1&limit=30`).json<Chat[]>();
     return response;
   },
 
   getMessagesByChatId: async (chatId: number, page: number = 1, limit: number = 30) => {
     const response = await api
-      .get(`/chats/getMessagesByChatId/${chatId}?page=${page}&limit=${limit}`)
+      .get(`${ENDPOINTS.CHAT_GET_MESSAGES}/${chatId}?page=${page}&limit=${limit}`)
       .json<Message[]>();
     return response;
   },
 
   getAllPinnedMessages: async (chatId: number, page: number = 1, limit: number = 30) => {
     const response = await api
-      .get(`/chats/getAllPinnedMessages/${chatId}?page=${page}&limit=${limit}`)
+      .get(`${ENDPOINTS.CHAT_GET_PINNED_MESSAGES}/${chatId}?page=${page}&limit=${limit}`)
       .json<PinnedMessage[]>();
     return response;
   },
 
   pinMessage: async (chatId: number, messageId: number) => {
-    const response = await api.post(`/chats/pinMessage`, { json: { chatId, messageId } }).json<PinnedMessage[]>();
+    const response = await api
+      .post(`${ENDPOINTS.CHAT_POST_PINNED_MESSAGE}`, { json: { chatId, messageId } })
+      .json<PinnedMessage>();
     return response;
   },
 
   unpinMessage: async (chatId: number, messageId: number) => {
-    const response = await api.delete(`/chats/unpinMessage`, { json: { chatId, messageId } }).json();
+    const response = await api
+      .delete(`${ENDPOINTS.CHAT_DELETE_PINNED_MESSAGE}`, { json: { chatId, messageId } })
+      .json();
 
     return response;
   },
 
   removeChat: async (chatId: number) => {
-    const response = await api.delete(`/chats/removeChat/${chatId}`).json<boolean>();
+    const response = await api.delete(`${ENDPOINTS.CHAT_DELETE}/${chatId}`).json<boolean>();
     return response;
   },
 };

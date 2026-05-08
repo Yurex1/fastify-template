@@ -7,6 +7,7 @@ import { useChats } from './useChats';
 import { USER_TYPES } from '../utils/consts/userTypes';
 
 import { usePinnedMessages } from './usePinnedMessages';
+import { useUserStatus } from '../stores/userStatus';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -62,62 +63,67 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
         const data = JSON.parse(event.data);
         const chatId = currentChatIdRef.current;
 
-        if (data.type === MESSAGE_TYPES.new) {
-          updateMessageCache(chatId, { type: 'add', payload: data.payload });
-          updateChatsCache(CHAT_TYPES.update, chatId, data.payload);
-        }
+        console.log('🔵 WS RECEIVED:', data.type, data);
 
-        if (data.type === MESSAGE_TYPES.updated) {
-          updateMessageCache(chatId, { type: 'update', payload: data.payload });
-        }
+        switch (data.type) {
+          case MESSAGE_TYPES.new:
+            updateMessageCache(chatId, { type: 'add', payload: data.payload });
+            updateChatsCache(CHAT_TYPES.update, chatId, data.payload);
+            break;
 
-        if (data.type === MESSAGE_TYPES.updatedRection) {
-          updateMessageCache(chatId, { type: 'update', payload: data.payload });
-        }
+          case MESSAGE_TYPES.updated:
+          case MESSAGE_TYPES.updatedRection:
+            updateMessageCache(chatId, { type: 'update', payload: data.payload });
+            break;
 
-        if (data.type === MESSAGE_TYPES.deleted) {
-          updateMessageCache(chatId, { type: 'delete', payload: data.payload });
-          updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
-        }
+          case MESSAGE_TYPES.deleted:
+            updateMessageCache(chatId, { type: 'delete', payload: data.payload });
+            updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
+            break;
 
-        if (data.type === USER_TYPES.getStatus) {
-          updateChatsCache(data.type, chatId, data.payload);
-        }
+          case USER_TYPES.getInitialStatus:
+            useUserStatus.getState().setStatuses(data.payload);
+            break;
 
-        if (data.type === USER_TYPES.getInitialStatus) {
-          updateChatsCache(data.type, chatId, data.payload);
-        }
+          case USER_TYPES.getStatus:
+            const { userId, isOnline, lastseen } = data.payload;
+            useUserStatus.getState().updateStatus(userId, isOnline, lastseen);
+            break;
 
-        if (data.type === CHAT_TYPES.created) {
-          updateChatsCache('create', chatId, data.payload);
-        }
-        if (data.type === MESSAGE_TYPES.isTyping) {
-          setIsTyping(data.payload.userName, true);
-        }
-        if (data.type === MESSAGE_TYPES.stopTyping) {
-          setIsTyping(data.payload.userId, false);
-        }
+          case CHAT_TYPES.created:
+            updateChatsCache('create', chatId, data.payload);
+            break;
 
-        if (data.type === MESSAGE_TYPES.pinned) {
-          const { messageId, isPinned }: { messageId: number; isPinned: boolean } = data.payload;
+          case MESSAGE_TYPES.isTyping:
+            setIsTyping(data.payload.userName, data.payload.chatId, true);
+            break;
 
-          updateMessageCache(chatId, {
-            type: 'pin',
-            payload: { messageId, isPinned },
-          });
+          case MESSAGE_TYPES.stopTyping:
+            setIsTyping(data.payload.userName, data.payload.chatId, false);
+            break;
 
-          updatePinnedMessagesCache('pin', data.payload);
-        }
+          case MESSAGE_TYPES.pinned: {
+            const { messageId, isPinned }: { messageId: number; isPinned: boolean } = data.payload;
+            updateMessageCache(chatId, {
+              type: 'pin',
+              payload: { messageId, isPinned },
+            });
+            updatePinnedMessagesCache('pin', data.payload);
+            break;
+          }
 
-        if (data.type === MESSAGE_TYPES.unpinnedMessage) {
-          const { chatId, messageId } = data.payload;
+          case MESSAGE_TYPES.unpinnedMessage: {
+            const { chatId: payloadChatId, messageId } = data.payload;
+            updateMessageCache(payloadChatId, {
+              type: 'unpin',
+              payload: { chatId: payloadChatId, messageId },
+            });
+            updatePinnedMessagesCache('unpin', data.payload);
+            break;
+          }
 
-          updateMessageCache(chatId, {
-            type: 'unpin',
-            payload: { chatId, messageId },
-          });
-
-          updatePinnedMessagesCache('unpin', data.payload);
+          default:
+            break;
         }
       };
 
@@ -156,7 +162,7 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.send, payload: { chatId, text: text.trim(), reply_id } }));
   };
 
-  const updateMessage = (messageId: number, definition: { type: string; content: any }) => {
+  const updateMessage = (messageId: number, definition: { type: string; content: 'text' }) => {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.update, payload: { messageId, definition } }));
   };
   const updateReaction = (id: number, userId: number, reaction: string) => {
@@ -167,8 +173,8 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
     ws?.send(JSON.stringify({ type: MESSAGE_TYPES.delete, payload: { messageId } }));
   };
 
-  const typing = (userId: number) => {
-    ws?.send(JSON.stringify({ type: MESSAGE_TYPES.typing, payload: { userId } }));
+  const typing = (chatId: number) => {
+    ws?.send(JSON.stringify({ type: MESSAGE_TYPES.isTyping, payload: { chatId } }));
   };
 
   return { sendMessage, updateMessage, updateReaction, deleteMessage, typing };

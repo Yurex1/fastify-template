@@ -5,6 +5,7 @@ export const selectByChatId = (chatId: number, offset: number = 0, limit: number
    SELECT 
       m.id, 
       m."userId", 
+      u.username,
       m."text", 
       m."reactions",
       m."chatId", 
@@ -18,8 +19,9 @@ export const selectByChatId = (chatId: number, offset: number = 0, limit: number
       END as "isPinned"
 
     FROM "public"."message" m
+    LEFT JOIN "public"."users" u ON u.id = m."userId"
     LEFT JOIN "public"."chat_pinned_message" pm 
-      ON pm.message_id = m.id
+      ON pm.message_id = m.id AND pm.chat_id = $1
     WHERE m."chatId" = $1
     ORDER BY m."createdAt" DESC 
     LIMIT $2 OFFSET $3

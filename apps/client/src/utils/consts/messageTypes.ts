@@ -10,9 +10,6 @@ export const MESSAGE_TYPES = {
   update: 'UPDATE_MESSAGE',
   updateReaction: 'UPDATE_REACTION',
   delete: 'DELETE_MESSAGE',
-  typing: 'TYPING',
-
   isTyping: 'IS_TYPING',
-
   stopTyping: 'STOP_TYPING',
 };

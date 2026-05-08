@@ -3,8 +3,6 @@ import { useAuthStore } from '../stores/auth';
 import { useWebSocket } from '../hooks/useWebSocket';
 import MessageForm from './MessageForm';
 import { EmptyBlock } from './EmptyBlock';
-import { toast } from 'react-toastify';
-import type { Message, FormMode } from '../api/types';
 import { useChatMessages } from '../hooks/useChatMessages';
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { LucideSearch } from 'lucide-react';
@@ -14,6 +12,7 @@ import { ReplyBlock } from './ReplyBlock';
 import PinnedMessagesList from './PinnedMessagesList';
 import { MessageBlock } from './MessageBlock';
 import { OpenPinnedMessages } from './OpenPinnedMessages';
+import { useMessageActions } from '../hooks/useMessageActions';
 
 interface MessageWindowProps {
   currentChatId: number | null;
@@ -24,68 +23,26 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
   const { data, isLoading, fetchNextPage, isFetchingNextPage, hasNextPage } = useChatMessages({
     currentChatId: currentChatId!,
   });
-  const { deleteMessage, updateMessage, updateReaction, sendMessage } = useWebSocket({
+  const { deleteMessage, updateMessage, updateReaction, sendMessage, typing } = useWebSocket({
     currentChatId: currentChatId!,
   });
+
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
     rootMargin: '300px',
   });
-
-  const [text, setText] = useState<string>('');
-  const [formMode, setFormMode] = useState<FormMode>('create');
-  const [menuForMessage, setMenuForMessage] = useState<Message | null>(null);
-  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const messages = data?.pages.flat() || [];
+  const { replyTo, text, setText, setReplyTo, setFormMode } = useMessageActions({ messages, deleteMessage });
   const [pinnedMode, setPinnedMode] = useState<boolean>(false);
 
-  const messages = data?.pages.flat() || [];
-
-  const handleSearch = () => {
-    const mes = messages.filter((message) => message.text.includes(text));
-    console.log(mes);
-    // remove later
-  };
-
-  const handleEdit = () => {
-    if (menuForMessage) {
-      setFormMode('edit');
-      setText(menuForMessage.text);
-    }
-  };
-
-  const handleCopy = () => {
-    if (menuForMessage?.text) {
-      navigator.clipboard.writeText(menuForMessage.text);
-      toast.success('Text copied');
-    }
-  };
-
-  const handleReply = () => {
-    if (menuForMessage) {
-      setFormMode('reply');
-      setReplyTo(menuForMessage);
-    }
-  };
-
-  const handleDelete = () => {
-    if (menuForMessage) {
-      deleteMessage(menuForMessage.id);
-    }
-  };
   const { handleSend, formButton } = useMessageForm({
-    formMode,
-    setMessageToEdit: setMenuForMessage,
-    setFormMode,
-    setReplyTo,
-    setText,
-    text,
+    messages,
     sendMessage,
     currentChatId,
-    handleSearch,
-    messageToEdit: menuForMessage,
     updateMessage,
+    deleteMessage,
   });
 
   if (!currentChatId || !currentUser) {
@@ -100,13 +57,8 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
           <PinnedMessagesList
             messages={messages}
             currentChatId={currentChatId}
-            menuForMessage={menuForMessage}
-            setMenuForMessage={setMenuForMessage}
             updateReaction={updateReaction}
-            handleEdit={handleEdit}
-            handleCopy={handleCopy}
-            handleDelete={handleDelete}
-            handleReply={handleReply}
+            handleDelete={deleteMessage}
           />
         )}
 
@@ -119,13 +71,8 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
               key={message.id}
               message={message}
               messages={messages}
-              menuForMessage={menuForMessage}
-              setMenuForMessage={setMenuForMessage}
               updateReaction={updateReaction}
-              handleEdit={handleEdit}
-              handleCopy={handleCopy}
-              handleDelete={handleDelete}
-              handleReply={handleReply}
+              deleteMessage={deleteMessage}
             />
           ))}
 
@@ -139,10 +86,12 @@ const MessageWindow = ({ currentChatId }: MessageWindowProps) => {
         {!isLoading && messages.length === 0 && <EmptyBlock />}
       </div>
 
-      {replyTo && <ReplyBlock message={replyTo} userName={'o'} onClose={() => setReplyTo(null)} />}
+      {replyTo && <ReplyBlock message={replyTo} userName={replyTo.username} onClose={() => setReplyTo(null)} />}
 
       <TypingBlock />
-      <MessageForm text={text} setText={setText} handleSend={handleSend} formButton={formButton} />
+      {!pinnedMode && (
+        <MessageForm text={text} setText={setText} handleSend={handleSend} formButton={formButton} typing={typing} />
+      )}
     </div>
   );
 };

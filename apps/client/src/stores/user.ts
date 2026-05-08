@@ -1,14 +1,23 @@
 import { create } from 'zustand';
-import type { User } from '../api/types';
+import type { FormMode, Message, User } from '../api/types';
 
 interface UserState {
   currentUser: User | null;
   accessToken: string | null;
-  isTyping: { userName: string | null; isTyping: boolean };
-  setIsTyping: (userName: string, isTyping: boolean) => void;
+  isTyping: { userName: string | null; chatId: number; isTyping: boolean };
+  setIsTyping: (userName: string, chatId: number, isTyping: boolean) => void;
   setCurrentUser: (user: User) => void;
   setAccessToken: (token: string | null) => void;
   clearAccessToken: () => void;
+  formMode: FormMode;
+  text: string;
+  replyTo: Message | null;
+
+  setFormMode: (mode: FormMode) => void;
+  setText: (text: string) => void;
+  setReplyTo: (message: Message | null) => void;
+  menuForMessage: Message | null;
+  setMenuForMessage: (message: Message) => void;
   clear: () => void;
 }
 
@@ -19,12 +28,21 @@ const useUserStore = create<UserState>()(
     (set) => ({
       currentUser: null,
       accessToken: null,
-      isTyping: { userName: null, isTyping: false },
+      isTyping: { userName: null, chatId: null, isTyping: false },
+      menuForMessage: null,
+      formMode: 'create',
+      text: '',
+      replyTo: null,
 
-      setIsTyping: (userName, isTyping) => {
+      setFormMode: (formMode) => set({ formMode }),
+      setText: (text) => set({ text }),
+      setReplyTo: (replyTo) => set({ replyTo }),
+
+      setIsTyping: (userName, chatId, isTyping) => {
         set({
           isTyping: {
             userName,
+            chatId,
             isTyping,
           },
         });
@@ -33,6 +51,7 @@ const useUserStore = create<UserState>()(
       setCurrentUser: (user) => set({ currentUser: user }),
       setAccessToken: (token) => set({ accessToken: token }),
       clearAccessToken: () => set({ accessToken: null }),
+      setMenuForMessage: (message) => set({ menuForMessage: message }),
 
       clear: () => set({ currentUser: null }),
     }),

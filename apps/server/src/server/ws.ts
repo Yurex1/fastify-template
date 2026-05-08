@@ -73,11 +73,11 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       heartbeatStates.set(uid, { isAlive: true, timer: heartbeatTimer });
 
       await handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: true });
+      await handlers.handleInitialStatuses();
 
       socket.on('message', async (rawData) => {
         try {
           const data = JSON.parse(rawData.toString());
-
           const uid = Number(user.id);
 
           eventHandlers.forEach((handler) => handler(uid, data));
@@ -91,7 +91,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
           }
 
           if (data.type === CHAT_ACTIONS.typing) {
-            await handlers.handleTyping(typingTimers);
+            await handlers.handleTyping(data.payload.chatId, typingTimers);
           }
 
           if (data.type === CHAT_ACTIONS.updateReaction) {
@@ -107,15 +107,18 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       });
 
       socket.on('close', () => {
-        cleanupConnection(uid);
         services.user.updateLastSeen(uid).catch(console.error);
-        handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: false });
-        connections.delete(uid);
+        cleanupConnection(uid);
         if (typingTimers.has(uid)) {
           clearTimeout(typingTimers.get(uid)!);
           typingTimers.delete(uid);
         }
-        services.user.updateLastSeen(uid).catch(console.error);
+
+        handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, {
+          userId: uid,
+          isOnline: false,
+          lastseen: new Date(),
+        });
       });
     } catch (e: any) {
       console.error('WS Auth Error:', e.message);

@@ -16,7 +16,7 @@ class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
     return await this.pool.queryAll<PinnedMessage>(query, params);
   }
 
-  async removeByMessageId(chatId: number, messageId: number): Promise<{ messageId: number; chatId: number }> {
+  async removeByMessageId(chatId: number, messageId: number): Promise<{ chatId: number; messageId: number }> {
     const { query, params } = deleteByChatAndMessage(chatId, messageId);
 
     const result = await this.pool.queryOne<{ chat_id: number; message_id: number }>(query, params);
@@ -39,6 +39,6 @@ export const init = (pool: TypedPool): PinnedMessagesRepo => {
     create: (message: CreatePinnedMessage) => pinnedMessagesRepo.create(message),
     findByChatId: (chatId: number, page: number, limit: number) => pinnedMessagesRepo.findByChatId(chatId, page, limit),
     findOne: (definition: Partial<PinnedMessage>) => pinnedMessagesRepo.findOne(definition),
-    removeByMessageId: (messageId: number, chatId: number) => pinnedMessagesRepo.removeByMessageId(messageId, chatId),
+    removeByMessageId: (chatId: number, messageId: number) => pinnedMessagesRepo.removeByMessageId(chatId, messageId),
   };
 };

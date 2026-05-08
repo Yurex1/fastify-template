@@ -7,12 +7,14 @@ export const CHAT_ACTIONS = {
   deletedMessage: 'MESSAGE_DELETED',
   getStatus: 'USER_STATUS',
   pinnedMessage: 'PINNED_MESSAGE',
-  unpinedMessage: 'UNPINNED_MESSAGE',
+  unpinnedMessage: 'UNPINNED_MESSAGE',
+  initialState: 'INITIAL_STATUSES',
 
   sendMessage: 'SEND_MESSAGE',
   updateMessage: 'UPDATE_MESSAGE',
   updateReaction: 'UPDATE_REACTION',
   deleteMesage: 'DELETE_MESSAGE',
   sendStatus: 'STATUS',
-  typing: 'TYPING',
+  typing: 'IS_TYPING',
+  stopTyping: 'STOP_TYPING',
 };

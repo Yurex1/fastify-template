@@ -6,51 +6,40 @@ import Time from './Time';
 import MessageMenu from './ContextMenu';
 import { ContextMenu, ContextMenuTrigger } from './ui/context-menu';
 import { useAuthStore } from '../stores/auth';
-import type { SetStateAction } from 'react';
 import { Pin } from 'lucide-react';
 import chatsApi from '../api/chats/chats';
+import { isOwnMessage } from '../utils/isOwnMessage';
+import useUserStore from '../stores/user';
+import { useMessageActions } from '../hooks/useMessageActions';
 
 interface MessageBlockProps {
   message: Message;
   messages: Message[];
-  menuForMessage: Message;
-  setMenuForMessage: React.Dispatch<SetStateAction<Message>>;
   updateReaction: (id: number, userId: number, reaction: string) => void;
-  handleEdit: () => void;
-  handleCopy: () => void;
-  handleDelete: () => void;
-  handleReply: () => void;
+  deleteMessage: (id: number) => void;
 }
 
-export const MessageBlock = ({
-  message,
-  messages,
-  menuForMessage,
-  setMenuForMessage,
-  updateReaction,
-  handleEdit,
-  handleCopy,
-  handleDelete,
-  handleReply,
-}: MessageBlockProps) => {
+export const MessageBlock = ({ message, messages, updateReaction, deleteMessage }: MessageBlockProps) => {
   const currentUser = useAuthStore((state) => state.user);
+  const setMenuForMessage = useUserStore((s) => s.setMenuForMessage);
+
+  const { handleEdit, handleCopy, handleReply, handleDelete } = useMessageActions({
+    messages,
+    deleteMessage,
+  });
+
+  const isOwn = isOwnMessage(message.userId, currentUser.id);
+
+  const replyMessage = messages.find((mes) => mes.id === message.reply_id);
+  function togglePin() {
+    if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
+    else chatsApi.pinMessage(message.chatId, message.id);
+  }
 
   if (!message) return null;
 
-  const isOwnMessage = (message: Message) => message.userId === currentUser?.id;
-  const replyMessage = messages.find((mes) => mes.id === message.reply_id);
-  function togglePin() {
-    if (message.isPinned) chatsApi.unpinMessage(menuForMessage.chatId, menuForMessage.id);
-    else chatsApi.pinMessage(menuForMessage.chatId, menuForMessage.id);
-  }
-
   return (
-    <div
-      className={cn(
-        'flex mb-1 whitespace-pre-wrap break-words',
-        isOwnMessage(message) ? 'justify-end' : 'justify-start',
-      )}
-    >
+    <div className={cn('flex mb-1 whitespace-pre-wrap break-words', isOwn ? 'justify-end' : 'justify-start')}>
       <ContextMenu>
         <ContextMenuTrigger
           onContextMenu={() => {
@@ -62,9 +51,7 @@ export const MessageBlock = ({
             onDoubleClick={() => updateReaction(message.id, currentUser.id, '❤️')}
             className={cn(
               'px-3 py-2 rounded-2xl max-w-[70%] relative',
-              isOwnMessage(message)
-                ? 'bg-violet-700 text-white rounded-tr-none'
-                : 'bg-gray-800 text-white rounded-tl-none',
+              isOwn ? 'bg-violet-700 text-white rounded-tr-none' : 'bg-gray-800 text-white rounded-tl-none',
             )}
           >
             {message.reply_id && (
@@ -94,13 +81,13 @@ export const MessageBlock = ({
         </ContextMenuTrigger>
 
         <MessageMenu
-          isOwnMessage={isOwnMessage(message)}
+          isOwn={isOwn}
+          isPinned={message.isPinned}
+          onDelete={handleDelete}
           onEdit={handleEdit}
           onCopy={handleCopy}
-          onDelete={handleDelete}
-          isPinned={message.isPinned}
-          onPin={togglePin}
           onReply={handleReply}
+          onPin={togglePin}
         >
           <EmojiMenu
             pressedEmojis={userPressedEmojis(message, currentUser.id)}
