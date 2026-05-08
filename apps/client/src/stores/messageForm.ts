@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { FormMode, Message } from '../api/types';
 
 interface useMessageFormProps {
@@ -10,8 +11,6 @@ interface useMessageFormProps {
   setText: (text: string) => void;
   setReplyTo: (message: Message | null) => void;
 }
-
-import { persist } from 'zustand/middleware';
 
 const useMessageFormStore = create<useMessageFormProps>()(
   persist(

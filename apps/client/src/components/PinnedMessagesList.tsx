@@ -27,7 +27,7 @@ const PinnedMessagesList = ({ currentChatId, messages, updateReaction, handleDel
 
       {pinnedMessages.map((message) => (
         <MessageBlock
-          key={message.messageId}
+          key={message.message.id}
           message={{
             ...message.message,
             isPinned: true,

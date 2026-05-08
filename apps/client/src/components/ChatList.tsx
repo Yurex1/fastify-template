@@ -36,7 +36,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
       <div className="flex-1 w-full overflow-y-auto p-2">
         {chats.map((chat) => (
-          <ChatBlock chat={chat} currentChatId={currentChatId} handleChangeChatId={handleChangeChatId} />
+          <ChatBlock key={chat.id} chat={chat} currentChatId={currentChatId} handleChangeChatId={handleChangeChatId} />
         ))}
         <div ref={sentinelRef} className="h-1 w-full" />
 

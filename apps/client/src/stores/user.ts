@@ -1,8 +1,7 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface UserState {}
-
-import { persist } from 'zustand/middleware';
 
 const useUserStore = create<UserState>()(persist((set) => ({}), { name: 'user-storage' }));
 

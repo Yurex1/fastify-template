@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Message } from '../api/types';
+import { persist } from 'zustand/middleware';
 
 interface useChatUIStoreProps {
   isTyping: { userName: string | null; chatId: number; isTyping: boolean };
@@ -7,8 +8,6 @@ interface useChatUIStoreProps {
   menuForMessage: Message | null;
   setMenuForMessage: (message: Message) => void;
 }
-
-import { persist } from 'zustand/middleware';
 
 const useChatUIStore = create<useChatUIStoreProps>()(
   persist(
