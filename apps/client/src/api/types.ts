@@ -13,27 +13,25 @@ export interface ChangePassword {
   oldPassword: string;
   newPassword: string;
 }
-export interface Member {
-  userId: number;
-  username: string;
-  isOnline: boolean;
-  lastseen: string;
-}
 
 export interface User {
   id: number;
   email: string;
   username: string;
   password: string;
-  createdAt: Date;
-  updatedAt: Date;
-  lastseen: Date;
+  createdAt: string;
+  updatedAt: string;
+  lastseen: string;
+}
+
+export interface Member extends User {
+  isOnline: boolean;
 }
 
 export interface Session {
   user: User;
   accessToken: string;
-  expiresAt: Date;
+  expiresAt: string;
 }
 
 export interface Chat {
@@ -43,29 +41,52 @@ export interface Chat {
   members: Member[];
 }
 
+export interface PinnedMessage {
+  chatId: number;
+  isPinned: boolean;
+  message: Message;
+  messageId: number;
+  pinnedAt: Date;
+}
+
 export interface Message {
   id: number;
   userId: number;
+  username: string;
   chatId: number;
   text: string;
   reactions: Record<string, number[]>;
+  reply_id: number | null;
+  isPinned: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export type FormMode = 'create' | 'edit' | 'search';
+export type FormMode = 'create' | 'edit' | 'search' | 'reply';
 
 export type WSEvent =
   | { type: 'add'; payload: Message }
   | { type: 'update'; payload: Message }
-  | { type: 'delete'; payload: { messageId: number; chatId: number } };
+  | { type: 'pin'; payload: PinPayload }
+  | { type: 'unpin'; payload: DeletePayload }
+  | { type: 'delete'; payload: DeletePayload };
 
 export type Action = WSEvent['type'];
 
-export interface Payload {
-  createdAt: string;
+type UserStatusPayload = {
   userId: number;
-  isActive: boolean;
-  lastSeen: string;
-  onlineIds: number[];
-}
+  isOnline: boolean;
+  lastseen?: string;
+};
+
+export type DeletePayload = {
+  messageId: number;
+  chatId: number;
+};
+
+export type Payload = Message | UserStatusPayload | UserStatusPayload[] | DeletePayload;
+
+type PinPayload = {
+  messageId: number;
+  isPinned: boolean;
+};

@@ -6,7 +6,17 @@ import { selectByChatId, updateReactions } from './sql';
 
 class MessageRepository extends EntityRepo<Message> {
   constructor(pool: TypedPool) {
-    super(pool, 'message', ['id', 'text', 'reactions', 'userId', 'chatId', 'createdAt', 'updatedAt', 'reactions']);
+    super(pool, 'message', [
+      'id',
+      'text',
+      'read',
+      'userId',
+      'chatId',
+      'createdAt',
+      'updatedAt',
+      'reactions',
+      'reply_id',
+    ]);
   }
 
   async findByChatId(chatId: number, page: number = 1, limit: number = 30): Promise<Message[]> {

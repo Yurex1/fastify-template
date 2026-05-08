@@ -1,6 +1,6 @@
 import ky from 'ky';
 import { ERROR_STATUSES } from '../utils/consts/errorStatus';
-import useUserStore from '../stores/user';
+import { useAuthStore } from '../stores/auth';
 const userAgent = navigator.userAgent;
 
 const api = ky.create({
@@ -9,7 +9,7 @@ const api = ky.create({
   hooks: {
     beforeRequest: [
       ({ request }) => {
-        const token = useUserStore.getState().accessToken;
+        const token = useAuthStore.getState().accessToken;
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
@@ -27,7 +27,7 @@ const api = ky.create({
                 headers: { 'x-device-id': userAgent },
               })
               .json<{ accessToken: string }>();
-            useUserStore.getState().setAccessToken(refreshRes.accessToken);
+            useAuthStore.getState().setAccessToken(refreshRes.accessToken);
 
             return ky(request, {
               headers: {
@@ -38,7 +38,7 @@ const api = ky.create({
           } catch (refreshError) {
             console.error('Refresh failed, logging out...');
 
-            useUserStore.getState().clearAccessToken();
+            useAuthStore.getState().clearAccessToken();
             window.location.href = '/login';
             throw refreshError;
           }

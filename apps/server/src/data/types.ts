@@ -4,6 +4,7 @@ import { ChatRepo } from './chat/types';
 import { ChatMemberRepo } from './chatMember/types';
 import { MessageRepo } from './message/types';
 import { SessionRepo } from './session/types';
+import { PinnedMessagesRepo } from './pinnedMessages/types';
 
 export interface Repos {
   user: UserRepo;
@@ -12,4 +13,5 @@ export interface Repos {
   chatMember: ChatMemberRepo;
   message: MessageRepo;
   sessions: SessionRepo;
+  pinnedMessages: PinnedMessagesRepo;
 }

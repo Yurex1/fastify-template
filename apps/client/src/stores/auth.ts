@@ -2,43 +2,44 @@ import type { SignIn, SignUp, User } from '../api/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import authService from '../api/auth/auth';
-import useUserStore from './user';
 
 interface AuthState {
-  user: User | null;
+  currentUser: User | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  setCurrentUser: (user: User) => void;
+  setAccessToken: (token: string | null) => void;
+  clearAccessToken: () => void;
   login: (data: SignIn) => Promise<void>;
   register: (data: SignUp) => Promise<void>;
   logout: () => Promise<void>;
+  clear: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
+      currentUser: null,
+      accessToken: null,
       isAuthenticated: false,
-      isLoading: false,
 
       login: async (data) => {
-        set({ isLoading: true });
         try {
           const res = await authService.signIn(data);
-          useUserStore.getState().setAccessToken(res.accessToken);
-          set({ user: res.user, isAuthenticated: true });
-        } finally {
-          set({ isLoading: false });
+          useAuthStore.getState().setAccessToken(res.accessToken);
+          set({ currentUser: res.user, isAuthenticated: true });
+        } catch (error) {
+          console.log(error);
         }
       },
 
       register: async (data) => {
-        set({ isLoading: true });
         try {
           const res = await authService.signUp(data);
-          useUserStore.getState().setAccessToken(res.accessToken);
-          set({ user: res.user, isAuthenticated: true });
-        } finally {
-          set({ isLoading: false });
+          useAuthStore.getState().setAccessToken(res.accessToken);
+          set({ currentUser: res.user, isAuthenticated: true });
+        } catch (error) {
+          console.log(error);
         }
       },
 
@@ -46,16 +47,23 @@ export const useAuthStore = create<AuthState>()(
         try {
           await authService.signOut();
         } finally {
-          useUserStore.getState().clearAccessToken();
-          set({ user: null, isAuthenticated: false });
+          useAuthStore.getState().clearAccessToken();
+          set({ currentUser: null, isAuthenticated: false });
         }
       },
+
+      setCurrentUser: (user) => set({ currentUser: user }),
+      setAccessToken: (token) => set({ accessToken: token }),
+      clearAccessToken: () => set({ accessToken: null }),
+      clear: () => set({ currentUser: null }),
     }),
+
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        user: state.user,
+        currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
+        accessToken: state.accessToken,
       }),
     },
   ),

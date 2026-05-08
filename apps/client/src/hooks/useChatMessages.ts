@@ -37,16 +37,30 @@ export function useChatMessages({ currentChatId }: useChatMessagesProps) {
         return {
           ...old,
           pages: old.pages.map((page) => {
-            if (WSEvent.type === 'update') {
-              return page.map((message) =>
-                message.id === WSEvent.payload.id ? { ...message, ...WSEvent.payload } : message,
-              );
-            }
-            if (WSEvent.type === 'delete') {
-              return page.filter((message) => message.id !== WSEvent.payload.messageId);
-            }
+            switch (WSEvent.type) {
+              case 'update':
+                return page.map((message) =>
+                  message.id === WSEvent.payload.id ? { ...message, ...WSEvent.payload } : message,
+                );
 
-            return page;
+              case 'pin':
+                return page.map((message) =>
+                  message.id === WSEvent.payload.messageId
+                    ? { ...message, isPinned: WSEvent.payload.isPinned }
+                    : message,
+                );
+
+              case 'unpin':
+                return page.map((message) =>
+                  message.id === WSEvent.payload.messageId ? { ...message, isPinned: false } : message,
+                );
+
+              case 'delete':
+                return page.filter((message) => message.id !== WSEvent.payload.messageId);
+
+              default:
+                return page;
+            }
           }),
         };
       });

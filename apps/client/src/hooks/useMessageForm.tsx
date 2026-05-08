@@ -1,40 +1,41 @@
-import type { FormMode, Message } from '../api/types';
+import type { Message } from '../api/types';
 import { FORM_MODE } from '../utils/consts/formModes';
-import { SendHorizonal, Check, Search } from 'lucide-react';
+import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
+import { useMessageActions } from './useMessageActions';
+import useChatUIStore from '../stores/chatUI';
 
 interface useMessageFormProps {
   currentChatId: number | null;
-  text: string;
-  setText: (text: string) => void;
-  formMode: FormMode;
-  setFormMode: (text: FormMode) => void;
-  messageToEdit: Message | null;
-  setMessageToEdit: (message: Message | null) => void;
-  updateMessage: (id: number, text: string) => void;
-  sendMessage: (ChatId: number, text: string) => void;
-  handleSearch: () => void;
+  messages: Message[];
+  updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
+  sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
+  deleteMessage: (id: number) => void;
 }
 
 export function useMessageForm({
-  currentChatId,
-  text,
-  formMode,
-  messageToEdit,
-  setText,
-  setFormMode,
-  setMessageToEdit,
-  updateMessage,
   sendMessage,
-  handleSearch,
+  messages,
+  currentChatId,
+  updateMessage,
+  deleteMessage,
 }: useMessageFormProps) {
+  const { formMode, text, setText, setReplyTo, setFormMode, handleSearch } = useMessageActions({
+    messages,
+    deleteMessage,
+  });
+
+  const messageToEdit = useChatUIStore((s) => s.menuForMessage);
+  const setMessageToEdit = useChatUIStore((s) => s.setMenuForMessage);
+
   const clearForm = () => {
     setMessageToEdit(null);
     setFormMode('create');
+    setReplyTo(null);
     setText('');
     return;
   };
 
-  const handleSend = (e: React.SubmitEvent) => {
+  const handleSend = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
     if (text.trim().length <= 0) return;
     switch (formMode) {
@@ -54,9 +55,16 @@ export function useMessageForm({
           clearForm();
           break;
         }
-        updateMessage(messageToEdit.id, text);
-        setMessageToEdit(null);
+        updateMessage(messageToEdit.id, { type: 'text', content: text });
         setFormMode('create');
+        clearForm();
+        break;
+
+      case FORM_MODE.REPLY:
+        if (!messageToEdit || !currentChatId) break;
+
+        sendMessage(currentChatId, text, messageToEdit.id);
+
         clearForm();
         break;
 
@@ -76,6 +84,9 @@ export function useMessageForm({
 
       case 'edit':
         return <Check />;
+
+      case 'reply':
+        return <Reply />;
 
       default:
         break;

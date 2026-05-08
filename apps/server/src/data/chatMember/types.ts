@@ -1,15 +1,10 @@
 import type { Chat, ChatPreview } from '../../entities/chat';
+import type { ChatMember } from '../../entities/chatMember';
 
 export enum ChatMemberStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-}
-export interface ChatMember {
-  userId: number;
-  username: string;
-  isOnline: boolean;
-  lastseen: Date;
 }
 
 export interface ChatMemberRepo {

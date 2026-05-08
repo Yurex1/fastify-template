@@ -1,19 +1,11 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteChat } from '../services/chats';
-import { useAuthStore } from '../stores/auth';
 import { setLastChatId } from '../utils/lastOpenChatId';
 import { CreateChat } from './CreateChat';
-import ChatMenu from './ContextMenu';
-import { cn } from '../lib/utils';
-import { ContextMenuTrigger, ContextMenu } from './ui/context-menu';
-import { useState } from 'react';
-import type { Chat } from '../api/types';
-import { QueryKeys } from '../lib/queries';
+
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { EmptyBlock } from './EmptyBlock';
 import { useChats } from '../hooks/useChats';
-import { Dot } from 'lucide-react';
-import Time from './Time';
+
+import { ChatBlock } from './ChatBlock';
 
 interface ChatListProps {
   currentChatId: number | null;
@@ -21,11 +13,6 @@ interface ChatListProps {
 }
 
 const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
-  const queryClient = useQueryClient();
-  const user = useAuthStore((s) => s.user);
-
-  const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
-
   const query = useChats();
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
@@ -34,30 +21,9 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
     rootMargin: '300px',
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (chatId: number) => deleteChat(chatId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.chats] });
-    },
-  });
-
-  const handleDelete = () => {
-    if (menuForChat) {
-      deleteMutation.mutate(menuForChat.id);
-    }
-  };
-
   const handleChangeChatId = (chatId: number) => {
     setCurrentChatId(chatId);
     setLastChatId(chatId);
-  };
-
-  const isOnline = (chat: Chat) => {
-    return chat.members.find((m) => m.userId !== user?.id)?.isOnline;
-  };
-
-  const member = (chat: Chat) => {
-    return chat.members.find((m) => m.userId !== user?.id);
   };
 
   const chats = query.data?.pages.flat() || [];
@@ -70,34 +36,7 @@ const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
 
       <div className="flex-1 w-full overflow-y-auto p-2">
         {chats.map((chat) => (
-          <ContextMenu key={chat.id}>
-            <ContextMenuTrigger onContextMenu={() => setMenuForChat(chat)}>
-              <div
-                onClick={() => handleChangeChatId(chat.id)}
-                className={cn(
-                  'p-4 cursor-pointer rounded-xl relative',
-                  currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-800',
-                )}
-              >
-                <p className="font-medium">{member(chat)?.username || 'Unknown Chat'}</p>
-                <Time date={chat.updatedAt} />
-
-                {!!isOnline(chat) && (
-                  <div className="absolute top-0 right-0 text-green-800">
-                    <Dot size={60} />
-                  </div>
-                )}
-                {!isOnline(chat) && (
-                  <Time
-                    date={member(chat)?.lastseen || ''}
-                    text="Last seen:"
-                    additionalStyles="opacity-[0.4] absolute bottom-0 right-0"
-                  />
-                )}
-              </div>
-            </ContextMenuTrigger>
-            <ChatMenu onDelete={handleDelete} />
-          </ContextMenu>
+          <ChatBlock key={chat.id} chat={chat} currentChatId={currentChatId} handleChangeChatId={handleChangeChatId} />
         ))}
         <div ref={sentinelRef} className="h-1 w-full" />
 
