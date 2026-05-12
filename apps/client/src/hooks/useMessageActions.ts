@@ -2,18 +2,14 @@ import { toast } from 'react-toastify';
 import useMessageFormStore from '../stores/messageForm';
 import useChatUIStore from '../stores/chatUI';
 import { searchMessagesByChatId } from '../services/chats';
-import chatsApi from '../api/chats/chats';
-import { useState } from 'react';
 
 interface useMessageActionsProps {
   deleteMessage: (messageId: number) => void;
-  fetchNextPage?: () => Promise<unknown>;
-  loadedPages?: number;
 }
 
-export function useMessageActions({ deleteMessage, fetchNextPage, loadedPages }: useMessageActionsProps) {
-  const { formMode, setFormMode, text, setText, replyTo, setReplyTo } = useMessageFormStore();
-  const [isFetching, setIsFetching] = useState(false);
+export function useMessageActions({ deleteMessage }: useMessageActionsProps) {
+  const { setFormMode, text, setText, setReplyTo } = useMessageFormStore();
+
   const menuForMessage = useChatUIStore((s) => s.menuForMessage);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
@@ -22,26 +18,54 @@ export function useMessageActions({ deleteMessage, fetchNextPage, loadedPages }:
     return res;
   };
 
-  const scrollToMessage = async (messageId: number) => {
-    const el = document.getElementById(`message-${messageId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
+  // const scrollToMessage = async (messageId: number) => {
+  //   const applyHighlight = (element: HTMLElement) => {
+  //     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  //     element.classList.add('highlight-message');
 
-    const { page } = await chatsApi.getMessagePage(currentChatId, messageId);
-    const pagesToLoad = page - loadedPages;
-    setIsFetching(true);
+  //     setTimeout(() => {
+  //       element.classList.remove('highlight-message');
+  //     }, 2000);
+  //   };
 
-    for (let i = 0; i < pagesToLoad; i++) {
-      await fetchNextPage();
-    }
+  //   const el = document.getElementById(`message-${messageId}`);
 
-    setTimeout(() => {
-      const el = document.getElementById(`message-${messageId}`);
-      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setIsFetching(false);
-    }, 100);
+  //   if (el) {
+  //     applyHighlight(el);
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsFetching(true);
+  //     const { page } = await chatsApi.getMessagePage(currentChatId, messageId);
+
+  //     const pagesToLoad = page - loadedPages;
+
+  //     if (pagesToLoad > 0) {
+  //       for (let i = 0; i < pagesToLoad; i++) {
+  //         await fetchNextPage();
+  //       }
+  //     }
+
+  //     setTimeout(() => {
+  //       const newEl = document.getElementById(`message-${messageId}`);
+  //       if (newEl) {
+  //         applyHighlight(newEl);
+  //       }
+  //       setIsFetching(false);
+  //     }, 300);
+  //   } catch (error) {
+  //     console.error('Failed to jump to message:', error);
+  //     setIsFetching(false);
+  //   }
+  // };
+
+  // scrollToMessage в useMessageActions больше не нужен — логика переехала в MessageWindow.
+  // Если где-то в других компонентах нужен scrollToMessage без прыжка — оставь только DOM-часть:
+  const highlightMessage = (el: HTMLElement) => {
+    el.scrollIntoView({ behavior: 'instant', block: 'center' });
+    el.classList.add('highlight-message');
+    setTimeout(() => el.classList.remove('highlight-message'), 2000);
   };
 
   const handleEdit = () => {
@@ -72,18 +96,11 @@ export function useMessageActions({ deleteMessage, fetchNextPage, loadedPages }:
   };
 
   return {
-    formMode,
-    replyTo,
-    text,
-    isFetching,
-    setText,
-    setFormMode,
-    setReplyTo,
     handleSearch,
     handleEdit,
     handleCopy,
     handleReply,
     handleDelete,
-    scrollToMessage,
+    highlightMessage,
   };
 }

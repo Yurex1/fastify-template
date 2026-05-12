@@ -35,6 +35,7 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: Props) => {
         <span className="text-xs text-gray-400">
           <LucideArrowLeftCircle onClick={() => setPinnedMode(false)} />
         </span>
+        <span className="text-xs text-gray-400">{count > 1 ? `${count} messages` : `${count} message`}</span>
       </div>
     );
   }

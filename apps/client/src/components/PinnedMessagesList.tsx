@@ -16,10 +16,10 @@ const PinnedMessagesList = ({ updateReaction, handleDelete }: PinnedMessagesList
     rootMargin: '300px',
   });
 
-  const pinnedMessages = query.data?.pages.flat().reverse() || [];
+  const pinnedMessages = query.data?.pages.flat() || [];
 
   return (
-    <div>
+    <div className="flex-1 flex flex-col-reverse">
       <div ref={sentinelRef} className="h-1 w-full" />
 
       {pinnedMessages.map((message) => (

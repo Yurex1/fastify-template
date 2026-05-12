@@ -12,7 +12,7 @@ export const useIntersectionObserver = ({
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
-  threshold = 0.1,
+  threshold = 0.3,
   rootMargin = '0px',
 }: UseIntersectionObserverProps) => {
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -20,6 +20,7 @@ export const useIntersectionObserver = ({
   useEffect(() => {
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       const [entry] = entries;
+      console.log(entry);
       if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }

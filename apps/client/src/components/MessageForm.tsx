@@ -1,23 +1,23 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { getLastChatId } from '../utils/lastOpenChatId';
 import useDebounce from '../hooks/useDebounce';
 import { FORM_MODE } from '../utils/consts/formModes';
-import type { FormMode } from '../api/types';
 import { searchMessagesByChatId } from '../services/chats';
+import useMessageFormStore from '../stores/messageForm';
 
 interface MessageForm {
-  text: string;
-  formMode: FormMode;
-  setText: (text: string) => void;
   formButton: () => React.ReactNode;
   handleSend: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-  typing: (currentChatId: number) => void;
   scrollToMessage: (id: number) => void;
+  typing: (id: number) => void;
 }
-const MessageForm = ({ text, formMode, setText, handleSend, formButton, typing, scrollToMessage }: MessageForm) => {
+const MessageForm = ({ handleSend, formButton, scrollToMessage, typing }: MessageForm) => {
+  const { text, setText, formMode, setFormMode } = useMessageFormStore();
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const currentChatId = getLastChatId();
+  const [resultCount, setResultCount] = useState(0);
 
   const debouncedTyping = useDebounce((chatId: number) => {
     typing(chatId);
@@ -25,12 +25,22 @@ const MessageForm = ({ text, formMode, setText, handleSend, formButton, typing, 
 
   const debouncedSearch = useDebounce(async (value: string) => {
     const res = await searchMessagesByChatId(currentChatId, value);
-    scrollToMessage(res[0].id);
+    if (res.length > 0) scrollToMessage(res[0].id);
+    setResultCount(res.length);
   }, 300);
 
   useEffect(() => {
     if (textareaRef) textareaRef?.current?.focus();
   }, [handleSend]);
+
+  useEffect(() => {
+    setResultCount(0);
+  }, [formMode]);
+
+  useEffect(() => {
+    setFormMode('create');
+    setText('');
+  }, [currentChatId]);
 
   function handleTyping(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;
@@ -60,6 +70,26 @@ const MessageForm = ({ text, formMode, setText, handleSend, formButton, typing, 
 
   return (
     <form className="p-4 bg-gray-950 border-t border-gray-800 flex gap-2 items-center">
+      {formMode === 'search' && resultCount > 0 && (
+        <div className="fixed top-2">
+          <div className="backdrop-blur-md bg-zinc-900/80 border border-zinc-700 shadow-2xl rounded-2xl px-4 py-2 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-sm text-zinc-300">Found</span>
+            <span className="text-sm font-semibold text-white">{resultCount}</span>
+            <span className="text-sm text-zinc-400">{resultCount === 1 ? 'result' : 'results'}</span>
+          </div>
+        </div>
+      )}
+
+      {formMode === 'search' && resultCount <= 0 && (
+        <div className="fixed top-2">
+          <div className="backdrop-blur-md bg-zinc-900/80 border border-red-500/20 shadow-2xl rounded-2xl px-4 py-2 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="w-2 h-2 rounded-full bg-red-400" />
+            <span className="text-sm font-medium text-zinc-300">No results found</span>
+          </div>
+        </div>
+      )}
+
       <TextareaAutosize
         ref={textareaRef}
         value={text}

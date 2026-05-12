@@ -69,11 +69,13 @@ export function useWebSocket() {
           case MESSAGE_TYPES.updated:
           case MESSAGE_TYPES.updatedRection:
             updateMessageCache(chatId, { type: 'update', payload: data.payload });
+            updatePinnedMessagesCache('pin', data.payload);
             break;
 
           case MESSAGE_TYPES.deleted:
             updateMessageCache(chatId, { type: 'delete', payload: data.payload });
             updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
+
             break;
 
           case USER_TYPES.getInitialStatus:
