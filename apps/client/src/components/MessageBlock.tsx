@@ -14,23 +14,21 @@ import useChatUIStore from '../stores/chatUI';
 
 interface MessageBlockProps {
   message: Message;
-  messages: Message[];
   updateReaction: (id: number, userId: number, reaction: string) => void;
   deleteMessage: (id: number) => void;
+  scrollToMessage?: (id: number) => void;
 }
 
-export const MessageBlock = ({ message, messages, updateReaction, deleteMessage }: MessageBlockProps) => {
+export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToMessage }: MessageBlockProps) => {
   const currentUser = useAuthStore((state) => state.currentUser);
   const setMenuForMessage = useChatUIStore((s) => s.setMenuForMessage);
 
   const { handleEdit, handleCopy, handleReply, handleDelete } = useMessageActions({
-    messages,
     deleteMessage,
   });
 
   const isOwn = isOwnMessage(message.userId, currentUser.id);
 
-  const replyMessage = messages.find((mes) => mes.id === message.reply_id);
   function togglePin() {
     if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
     else chatsApi.pinMessage(message.chatId, message.id);
@@ -39,7 +37,10 @@ export const MessageBlock = ({ message, messages, updateReaction, deleteMessage 
   if (!message) return null;
 
   return (
-    <div className={cn('flex mb-1 whitespace-pre-wrap break-words', isOwn ? 'justify-end' : 'justify-start')}>
+    <div
+      id={`message-${message.id}`}
+      className={cn('flex mb-1 whitespace-pre-wrap break-words', isOwn ? 'justify-end' : 'justify-start')}
+    >
       <ContextMenu>
         <ContextMenuTrigger
           onContextMenu={() => {
@@ -54,16 +55,18 @@ export const MessageBlock = ({ message, messages, updateReaction, deleteMessage 
               isOwn ? 'bg-violet-700 text-white rounded-tr-none' : 'bg-gray-800 text-white rounded-tl-none',
             )}
           >
-            {message.reply_id && (
+            {message.reply && (
               <div
-                onClick={(e) => console.log(e.currentTarget.id)}
+                onClick={(e) => scrollToMessage(Number(e.currentTarget.id))}
                 id={`${message.reply_id}`}
-                className="bg-gray-900/50 border-l-2 border-violet-100 p-2 mb-1 text-xs text-gray-300 rounded-r-lg"
+                className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col"
               >
-                {replyMessage?.text || 'Original message deleted'}
+                <span className="font-bold">{message.reply.username || 'User not founded'}</span>
+                <span>{message.reply.text || 'Original message deleted'}</span>
               </div>
             )}
-            <p className="text-sm break-words leading-[20px]">{message.text}</p>
+
+            <p className="text-sm break-words leading-[20px]">{message?.text}</p>
 
             <div className="flex justify-between gap-2">
               <ReactionList message={message} updateReaction={updateReaction} />

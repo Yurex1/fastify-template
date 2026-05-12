@@ -12,23 +12,19 @@ import useChatUIStore from '../stores/chatUI';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
-interface UseWebSocketProps {
-  currentChatId: number | null;
-}
-
-export function useWebSocket({ currentChatId }: UseWebSocketProps) {
+export function useWebSocket() {
   const token = useAuthStore((s) => s.accessToken);
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+
   const setIsTyping = useChatUIStore((s) => s.setIsTyping);
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
-  const { updateMessageCache } = useChatMessages({
-    currentChatId,
-  });
+  const { updateMessageCache } = useChatMessages();
   const { updateChatsCache } = useChats();
-  const { updatePinnedMessagesCache } = usePinnedMessages({ currentChatId });
+  const { updatePinnedMessagesCache } = usePinnedMessages();
 
   const currentChatIdRef = useRef(currentChatId);
   currentChatIdRef.current = currentChatId;

@@ -1,19 +1,25 @@
 import { LucideArrowLeftCircle, Pin } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { usePinnedMessages } from '../hooks/usePinnedMessages';
-import type { SetStateAction } from 'react';
+import { useEffect, type SetStateAction } from 'react';
+import useChatUIStore from '../stores/chatUI';
 
 interface Props {
-  currentChatId: number;
   pinnedMode: boolean;
   setPinnedMode: React.Dispatch<SetStateAction<boolean>>;
 }
 
-export const OpenPinnedMessages = ({ currentChatId, pinnedMode, setPinnedMode }: Props) => {
-  const { data } = usePinnedMessages({ currentChatId });
+export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: Props) => {
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+
+  useEffect(() => {
+    setPinnedMode(false);
+  }, [currentChatId]);
+
+  const { data } = usePinnedMessages();
 
   const count = data?.pages.flat().length || 0;
-  const pinned = data?.pages?.[0]?.[0];
+  const pinned = data?.pages?.[0][0];
 
   if (!pinned) return null;
 

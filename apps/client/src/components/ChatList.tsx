@@ -6,14 +6,12 @@ import { EmptyBlock } from './EmptyBlock';
 import { useChats } from '../hooks/useChats';
 
 import { ChatBlock } from './ChatBlock';
+import useChatUIStore from '../stores/chatUI';
 
-interface ChatListProps {
-  currentChatId: number | null;
-  setCurrentChatId: (id: number) => void;
-}
-
-const ChatList = ({ currentChatId, setCurrentChatId }: ChatListProps) => {
+const ChatList = () => {
   const query = useChats();
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+  const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,

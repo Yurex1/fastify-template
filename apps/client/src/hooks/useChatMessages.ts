@@ -4,13 +4,12 @@ import type { Message } from '../api/types';
 import type { WSEvent } from '../api/types';
 import { QueryKeys } from '../lib/queries';
 import { useCallback } from 'react';
+import useChatUIStore from '../stores/chatUI';
 
-interface useChatMessagesProps {
-  currentChatId: number;
-}
-
-export function useChatMessages({ currentChatId }: useChatMessagesProps) {
+export function useChatMessages() {
   const queryClient = useQueryClient();
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+
   const queryKey = [QueryKeys.messages, currentChatId];
 
   const query = useInfiniteQuery({

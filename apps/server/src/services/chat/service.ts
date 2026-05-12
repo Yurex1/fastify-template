@@ -57,7 +57,7 @@ export const init = (deps: Deps): ChatService => {
       return chatMemberRepo.getAllMembersByChatId(chatId);
     },
 
-    getAllPinnedMessages: async (chatId, page = 1, limit = 20) => {
+    getAllPinnedMessages: async (chatId, page = 1, limit = 30) => {
       return pinnedMessagesRepo.findByChatId(chatId, page, limit);
     },
 
@@ -86,6 +86,13 @@ export const init = (deps: Deps): ChatService => {
       return await messageRepo.findByChatId(chatId, page, limit);
     },
 
+    searchMessagesByChatId: async (userId, chatId, text) => {
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+
+      return await messageRepo.findAllByChatId(chatId, text);
+    },
+
     updateMessage: async (id, definition) => {
       const existing = await messageRepo.findOne({ id });
       if (!existing) throw exception.notFound('MESSAGE_NOT_FOUND');
@@ -101,6 +108,11 @@ export const init = (deps: Deps): ChatService => {
       }
 
       return messageRepo.updateReactions(id, userId, reaction);
+    },
+
+    getMessagePage: async (chatId, messageId, limit) => {
+      const page = await messageRepo.getMessagePage(chatId, messageId, limit);
+      return { page };
     },
 
     pinMessage: async (userId, chatId, messageId) => {

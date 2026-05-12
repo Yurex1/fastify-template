@@ -31,7 +31,7 @@ export const init = async ({ services, apis }: Deps) => {
     for (const [route, endpoint] of Object.entries(api)) {
       const { access, method, params, schema, handler } = endpoint;
 
-      const urlParams = params?.length ? `/:${params.join(':/')}` : '';
+      const urlParams = params?.length ? `/${params.map((param) => `:${param}`).join('/')}` : '';
       const path = `/${service}/${route}${urlParams}`;
       const security: Array<Record<string, string[]>> = [];
       if (access === 'access') {

@@ -57,6 +57,7 @@ export interface Message {
   text: string;
   reactions: Record<string, number[]>;
   reply_id: number | null;
+  reply?: { id: number; text: string; userId: number; username: string; createdAt: string } | null;
   isPinned: boolean;
   createdAt: string;
   updatedAt: string;

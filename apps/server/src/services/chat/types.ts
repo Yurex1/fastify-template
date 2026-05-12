@@ -17,9 +17,11 @@ export interface ChatService {
   removeMessage: (id: number) => Promise<{ removed: boolean }>;
   sendMessage: (userId: number, chatId: number, text: string, reply_id?: number) => Promise<Message>;
   getMessagesByChatId: (userId: number, chatId: number, page: number, limit: number) => Promise<Message[]>;
+  searchMessagesByChatId: (userId: number, chatId: number, text: string) => Promise<Message[]>;
   getAllPinnedMessages: (chatId: number, page: number, limit: number) => Promise<PinnedMessage[]>;
   updateMessage: (id: number, definition: UpdateMessage) => Promise<Message>;
   updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;
+  getMessagePage: (chatId: number, messageId: number, limit: number) => Promise<{ page: number }>;
   pinMessage: (userId: number, chatId: number, messageId: number) => Promise<PinnedMessage>;
   unpinMessage: (userId: number, chatId: number, messageId: number) => Promise<{ chatId: number; messageId: number }>;
   removeChat: (userId: number, chatId: number) => Promise<{ removed: boolean }>;

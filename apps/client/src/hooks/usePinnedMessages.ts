@@ -2,17 +2,11 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';
 import type { PinnedMessage } from '../api/types';
+import useChatUIStore from '../stores/chatUI';
 
-interface usePinnedMessagesProps {
-  currentChatId: number;
-}
-
-interface usePinnedMessagesProps {
-  currentChatId: number;
-}
-
-export function usePinnedMessages({ currentChatId }: usePinnedMessagesProps) {
+export function usePinnedMessages() {
   const queryClient = useQueryClient();
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const query = useInfiniteQuery({
     queryKey: [QueryKeys.pinnedMessages, currentChatId],

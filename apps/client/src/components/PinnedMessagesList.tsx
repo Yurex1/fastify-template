@@ -1,17 +1,14 @@
 import { useIntersectionObserver } from '../hooks/useIntersectionObserver';
 import { usePinnedMessages } from '../hooks/usePinnedMessages';
 import { MessageBlock } from './MessageBlock';
-import type { Message } from '../api/types';
 
 interface PinnedMessagesListProps {
-  currentChatId: number | null;
-  messages: Message[];
   updateReaction: (id: number, userId: number, reaction: string) => void;
   handleDelete: (id: number) => void;
 }
 
-const PinnedMessagesList = ({ currentChatId, messages, updateReaction, handleDelete }: PinnedMessagesListProps) => {
-  const query = usePinnedMessages({ currentChatId });
+const PinnedMessagesList = ({ updateReaction, handleDelete }: PinnedMessagesListProps) => {
+  const query = usePinnedMessages();
   const { sentinelRef } = useIntersectionObserver({
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
@@ -19,8 +16,8 @@ const PinnedMessagesList = ({ currentChatId, messages, updateReaction, handleDel
     rootMargin: '300px',
   });
 
-  const pinnedMessages = query.data?.pages.flat() || [];
-  if (!currentChatId) return;
+  const pinnedMessages = query.data?.pages.flat().reverse() || [];
+
   return (
     <div>
       <div ref={sentinelRef} className="h-1 w-full" />
@@ -32,7 +29,6 @@ const PinnedMessagesList = ({ currentChatId, messages, updateReaction, handleDel
             ...message.message,
             isPinned: true,
           }}
-          messages={messages}
           updateReaction={updateReaction}
           deleteMessage={handleDelete}
         />
