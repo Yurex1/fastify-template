@@ -115,6 +115,11 @@ export const init = (deps: Deps): ChatService => {
       return { page };
     },
 
+    getPinnedStats: async (chatId) => {
+      const count = await pinnedMessagesRepo.getPinnedStats(chatId);
+      return count;
+    },
+
     pinMessage: async (userId, chatId, messageId) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');

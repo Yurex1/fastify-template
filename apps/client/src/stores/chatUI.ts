@@ -10,6 +10,8 @@ interface useChatUIStoreProps {
   setIsTyping: (userName: string, chatId: number, isTyping: boolean) => void;
   menuForMessage: Message | null;
   setMenuForMessage: (message: Message) => void;
+  pinnedMode: boolean;
+  setPinnedMode: (val: boolean) => void;
 }
 
 const useChatUIStore = create<useChatUIStoreProps>()(
@@ -18,7 +20,9 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       currentChatId: getLastChatId(),
       isTyping: { userName: null, chatId: null, isTyping: false },
       menuForMessage: null,
+      pinnedMode: false,
 
+      setPinnedMode: (val) => set({ pinnedMode: val }),
       setCurrentChatId: (id) => set({ currentChatId: id }),
       setIsTyping: (userName, chatId, isTyping) => {
         set({

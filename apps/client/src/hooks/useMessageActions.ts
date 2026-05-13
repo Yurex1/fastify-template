@@ -18,56 +18,6 @@ export function useMessageActions({ deleteMessage }: useMessageActionsProps) {
     return res;
   };
 
-  // const scrollToMessage = async (messageId: number) => {
-  //   const applyHighlight = (element: HTMLElement) => {
-  //     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  //     element.classList.add('highlight-message');
-
-  //     setTimeout(() => {
-  //       element.classList.remove('highlight-message');
-  //     }, 2000);
-  //   };
-
-  //   const el = document.getElementById(`message-${messageId}`);
-
-  //   if (el) {
-  //     applyHighlight(el);
-  //     return;
-  //   }
-
-  //   try {
-  //     setIsFetching(true);
-  //     const { page } = await chatsApi.getMessagePage(currentChatId, messageId);
-
-  //     const pagesToLoad = page - loadedPages;
-
-  //     if (pagesToLoad > 0) {
-  //       for (let i = 0; i < pagesToLoad; i++) {
-  //         await fetchNextPage();
-  //       }
-  //     }
-
-  //     setTimeout(() => {
-  //       const newEl = document.getElementById(`message-${messageId}`);
-  //       if (newEl) {
-  //         applyHighlight(newEl);
-  //       }
-  //       setIsFetching(false);
-  //     }, 300);
-  //   } catch (error) {
-  //     console.error('Failed to jump to message:', error);
-  //     setIsFetching(false);
-  //   }
-  // };
-
-  // scrollToMessage в useMessageActions больше не нужен — логика переехала в MessageWindow.
-  // Если где-то в других компонентах нужен scrollToMessage без прыжка — оставь только DOM-часть:
-  const highlightMessage = (el: HTMLElement) => {
-    el.scrollIntoView({ behavior: 'instant', block: 'center' });
-    el.classList.add('highlight-message');
-    setTimeout(() => el.classList.remove('highlight-message'), 2000);
-  };
-
   const handleEdit = () => {
     if (menuForMessage) {
       setFormMode('edit');
@@ -101,6 +51,5 @@ export function useMessageActions({ deleteMessage }: useMessageActionsProps) {
     handleCopy,
     handleReply,
     handleDelete,
-    highlightMessage,
   };
 }

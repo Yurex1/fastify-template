@@ -1,7 +1,7 @@
-import { CreatePinnedMessage, PinnedMessage } from '../../entities/pinnedMessages';
+import { CreatePinnedMessage, LastPinnedMessageStats, PinnedMessage } from '../../entities/pinnedMessages';
 import type { TypedPool } from '../../infra/pg';
 import { EntityRepo } from '../EntityRepo';
-import { deleteByChatAndMessage, selectByChatId } from './sql';
+import { deleteByChatAndMessage, selectPinnedStats, selectByChatId } from './sql';
 import type { PinnedMessagesRepo } from './types';
 
 class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
@@ -30,6 +30,12 @@ class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
       messageId: result.message_id,
     };
   }
+
+  async getPinnedStats(chatId: number): Promise<LastPinnedMessageStats | null> {
+    const { query, params } = selectPinnedStats(chatId);
+    const result = await this.pool.queryOne<LastPinnedMessageStats | null>(query, params);
+    return result;
+  }
 }
 
 export const init = (pool: TypedPool): PinnedMessagesRepo => {
@@ -38,6 +44,7 @@ export const init = (pool: TypedPool): PinnedMessagesRepo => {
   return {
     create: (message: CreatePinnedMessage) => pinnedMessagesRepo.create(message),
     findByChatId: (chatId: number, page: number, limit: number) => pinnedMessagesRepo.findByChatId(chatId, page, limit),
+    getPinnedStats: (chatId: number) => pinnedMessagesRepo.getPinnedStats(chatId),
     findOne: (definition: Partial<PinnedMessage>) => pinnedMessagesRepo.findOne(definition),
     removeByMessageId: (chatId: number, messageId: number) => pinnedMessagesRepo.removeByMessageId(chatId, messageId),
   };

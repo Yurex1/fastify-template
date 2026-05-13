@@ -6,7 +6,7 @@ import { Message, UpdateMessage } from '../../entities/message';
 import { MessageRepo } from '../../data/message/types';
 import { ChatMember } from '../../entities/chatMember';
 import { PinnedMessagesRepo } from '../../data/pinnedMessages/types';
-import { PinnedMessage } from '../../entities/pinnedMessages';
+import { LastPinnedMessageStats, PinnedMessage } from '../../entities/pinnedMessages';
 
 export interface ChatService {
   create: (userId: number, memberId: number) => Promise<ChatPreview>;
@@ -18,6 +18,7 @@ export interface ChatService {
   sendMessage: (userId: number, chatId: number, text: string, reply_id?: number) => Promise<Message>;
   getMessagesByChatId: (userId: number, chatId: number, page: number, limit: number) => Promise<Message[]>;
   searchMessagesByChatId: (userId: number, chatId: number, text: string) => Promise<Message[]>;
+  getPinnedStats: (chatId: number) => Promise<LastPinnedMessageStats | null>;
   getAllPinnedMessages: (chatId: number, page: number, limit: number) => Promise<PinnedMessage[]>;
   updateMessage: (id: number, definition: UpdateMessage) => Promise<Message>;
   updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;

@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';
-import type { PinnedMessage } from '../api/types';
+import type { PinnedMessage, Message, DeletePayload } from '../api/types';
 import useChatUIStore from '../stores/chatUI';
 
 export function usePinnedMessages() {
@@ -17,10 +17,14 @@ export function usePinnedMessages() {
     enabled: !!currentChatId,
   });
 
-  const updatePinnedMessagesCache = (_action: 'pin' | 'unpin', _data: PinnedMessage) => {
+  const updatePinnedMessagesCache = (
+    _type: 'pin' | 'unpin' | 'reaction',
+    _data: PinnedMessage | Message | DeletePayload,
+  ) => {
     queryClient.invalidateQueries({
       queryKey: [QueryKeys.pinnedMessages, currentChatId],
     });
   };
+
   return { ...query, updatePinnedMessagesCache };
 }

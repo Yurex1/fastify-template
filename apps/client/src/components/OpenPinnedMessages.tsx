@@ -1,8 +1,8 @@
 import { LucideArrowLeftCircle, Pin } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { usePinnedMessages } from '../hooks/usePinnedMessages';
 import { useEffect, type SetStateAction } from 'react';
 import useChatUIStore from '../stores/chatUI';
+import { useLastPinnedMessage } from '../hooks/useLastPinnedMessage';
 
 interface Props {
   pinnedMode: boolean;
@@ -16,10 +16,10 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: Props) => {
     setPinnedMode(false);
   }, [currentChatId]);
 
-  const { data } = usePinnedMessages();
+  const { data } = useLastPinnedMessage();
 
-  const count = data?.pages.flat().length || 0;
-  const pinned = data?.pages?.[0][0];
+  const count = data?.total_count;
+  const pinned = data?.text;
 
   if (!pinned) return null;
 
@@ -54,7 +54,7 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: Props) => {
       <div className="flex flex-col overflow-hidden">
         <span className="text-xs text-gray-400">Pinned message{count > 1 ? `s (${count})` : ''}</span>
 
-        <span className="text-sm text-white truncate">{pinned.message.text}</span>
+        <span className="text-sm text-white truncate">{pinned}</span>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import ky from 'ky';
 import { ERROR_STATUSES } from '../utils/consts/errorStatus';
 import { useAuthStore } from '../stores/auth';
+import type { User } from './types';
 const userAgent = navigator.userAgent;
 
 const api = ky.create({
@@ -22,13 +23,12 @@ const api = ky.create({
         if (response.status === ERROR_STATUSES.UNAUTHORIZED && !request.url.includes('auth/refresh')) {
           try {
             const refreshRes = await ky
-              .post(`${import.meta.env.VITE_API_UR}/auth/refresh`, {
+              .post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
                 credentials: 'include',
                 headers: { 'x-device-id': userAgent },
               })
-              .json<{ accessToken: string }>();
+              .json<{ accessToken: string; user: User; expiresAt: string }>();
             useAuthStore.getState().setAccessToken(refreshRes.accessToken);
-
             return ky(request, {
               headers: {
                 ...request.headers,
@@ -37,7 +37,6 @@ const api = ky.create({
             });
           } catch (refreshError) {
             console.error('Refresh failed, logging out...');
-
             useAuthStore.getState().clearAccessToken();
             window.location.href = '/login';
             throw refreshError;

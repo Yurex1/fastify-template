@@ -91,3 +91,11 @@ type PinPayload = {
   messageId: number;
   isPinned: boolean;
 };
+
+export interface LastPinnedMessageStats {
+  chat_id: number;
+  message_id: number;
+  pinned_at: Date;
+  text: string;
+  total_count: number;
+}

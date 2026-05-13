@@ -40,11 +40,26 @@ export const selectByChatId = (chatId: number, offset: number = 0, limit: number
   params: [chatId, limit, offset],
 });
 
-export const deleteByChatAndMessage = (chatId: number, messageId: number) => ({
+export const deleteByChatAndMessage = (chatId: number, messageId: number): RowSqlResult => ({
   query: `
     DELETE FROM "chat_pinned_message"
     WHERE chat_id = $1 AND message_id = $2
     RETURNING chat_id, message_id
   `,
   params: [chatId, messageId],
+});
+
+export const selectPinnedStats = (chatId: number): RowSqlResult => ({
+  query: `
+    SELECT 
+      COUNT(*) OVER()::int AS total_count,
+      m."text",
+      p.* 
+    FROM "public"."chat_pinned_message" p
+    INNER JOIN "public"."message" m ON m."id" = p."message_id"
+    WHERE p."chat_id" = $1
+    ORDER BY m."createdAt" DESC
+    LIMIT 1
+  `,
+  params: [chatId],
 });

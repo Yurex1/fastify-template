@@ -21,7 +21,7 @@ export function useChatMessages(startPage = 1) {
       return { messages, page } satisfies PageData;
     },
     initialPageParam: startPage,
-    getNextPageParam: (lastPage: PageData) => (lastPage.messages.length < 0 ? undefined : lastPage.page + 1),
+    getNextPageParam: (lastPage: PageData) => (lastPage.messages.length < 30 ? undefined : lastPage.page + 1),
     getPreviousPageParam: (firstPage: PageData) => (firstPage.page > 1 ? firstPage.page - 1 : undefined),
     enabled: !!currentChatId,
     staleTime: Infinity,
@@ -31,56 +31,55 @@ export function useChatMessages(startPage = 1) {
 
   const clearAndReset = useCallback(
     (chatId: number) => {
-      queryClient.removeQueries({ queryKey: [QueryKeys.messages, chatId], exact: false });
+      queryClient.removeQueries({ queryKey: [QueryKeys.messages, chatId] });
     },
     [queryClient],
   );
 
   const updateMessageCache = useCallback(
     (chatId: number, WSEvent: WSEvent) => {
-      queryClient.setQueryData<InfiniteData<Message[], number>>([QueryKeys.messages, chatId], (old) => {
-        if (!old) return old;
+      queryClient.setQueriesData<InfiniteData<PageData, number>>(
+        { queryKey: [QueryKeys.messages, chatId], exact: false },
+        (old) => {
+          if (!old) return old;
 
-        if (WSEvent.type === 'add') {
+          if (WSEvent.type === 'add') {
+            return {
+              ...old,
+              pages: old.pages.map((page, i) =>
+                i === 0 ? { ...page, messages: [WSEvent.payload, ...page.messages] } : page,
+              ),
+            };
+          }
+
           return {
             ...old,
-            pages: old.pages.map((page, index) => (index === 0 ? [WSEvent.payload, ...page] : page)),
+            pages: old.pages.map((page) => ({
+              ...page,
+              messages: (() => {
+                switch (WSEvent.type) {
+                  case 'update':
+                    return page.messages.map((m) => (m.id === WSEvent.payload.id ? { ...m, ...WSEvent.payload } : m));
+                  case 'pin':
+                    return page.messages.map((m) =>
+                      m.id === WSEvent.payload.messageId ? { ...m, isPinned: WSEvent.payload.isPinned } : m,
+                    );
+                  case 'unpin':
+                    return page.messages.map((m) =>
+                      m.id === WSEvent.payload.messageId ? { ...m, isPinned: false } : m,
+                    );
+                  case 'delete':
+                    return page.messages.filter((m) => m.id !== WSEvent.payload.messageId);
+                  default:
+                    return page.messages;
+                }
+              })(),
+            })),
           };
-        }
-
-        return {
-          ...old,
-          pages: old.pages.map((page) => {
-            switch (WSEvent.type) {
-              case 'update':
-                return page.map((message) =>
-                  message.id === WSEvent.payload.id ? { ...message, ...WSEvent.payload } : message,
-                );
-
-              case 'pin':
-                return page.map((message) =>
-                  message.id === WSEvent.payload.messageId
-                    ? { ...message, isPinned: WSEvent.payload.isPinned }
-                    : message,
-                );
-
-              case 'unpin':
-                return page.map((message) =>
-                  message.id === WSEvent.payload.messageId ? { ...message, isPinned: false } : message,
-                );
-
-              case 'delete':
-                return page.filter((message) => message.id !== WSEvent.payload.messageId);
-
-              default:
-                return page;
-            }
-          }),
-        };
-      });
+        },
+      );
     },
     [queryClient],
   );
-
   return { ...query, messages, updateMessageCache, clearAndReset };
 }
