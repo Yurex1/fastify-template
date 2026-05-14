@@ -12,7 +12,7 @@ export interface Message extends BaseEntity {
     text: string;
     userId: number;
     username: string;
-    createdAt: Date;
+    createdAt: string;
   } | null;
 }
 
@@ -23,3 +23,5 @@ export type UpdateMessage = Partial<{
   reactions: {};
   read: boolean;
 }>;
+
+export type MessageSearchResult = Pick<Message, 'id' | 'text' | 'createdAt' | 'chatId'>;

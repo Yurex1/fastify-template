@@ -6,10 +6,10 @@ import { getLastChatId } from '../utils/lastOpenChatId';
 interface useChatUIStoreProps {
   currentChatId: number | null;
   setCurrentChatId: (id: number | null) => void;
-  isTyping: { userName: string | null; chatId: number; isTyping: boolean };
+  isTyping: { userName: string | null; chatId: number | null; isTyping: boolean };
   setIsTyping: (userName: string, chatId: number, isTyping: boolean) => void;
   menuForMessage: Message | null;
-  setMenuForMessage: (message: Message) => void;
+  setMenuForMessage: (message: Message | null) => void;
   pinnedMode: boolean;
   setPinnedMode: (val: boolean) => void;
 }

@@ -14,6 +14,10 @@ export function useMessageActions({ deleteMessage }: useMessageActionsProps) {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const handleSearch = async () => {
+    if (currentChatId === null) {
+      return;
+    }
+
     const res = await searchMessagesByChatId(currentChatId, text);
     return res;
   };

@@ -1,4 +1,4 @@
-import type { CreateMessage, Message, UpdateMessage } from '../../entities/message';
+import type { CreateMessage, Message, MessageSearchResult, UpdateMessage } from '../../entities/message';
 import type { TypedPool } from '../../infra/pg';
 import { EntityRepo, SqlBuilder } from '../EntityRepo';
 import type { MessageRepo } from './types';
@@ -23,8 +23,14 @@ class MessageRepository extends EntityRepo<Message> {
     const { query, params } = SqlBuilder.buildCreateQuery(this.tableName, ['id'], data);
     const row = await this.pool.queryOne<{ id: number }>(query, params);
 
-    const { query: q, params: p } = selectOneById(row!.id);
-    return (await this.pool.queryOne<Message>(q, p))!;
+    if (!row) throw new Error('Failed to create message: insert returned no result');
+
+    const { query: q, params: p } = selectOneById(row.id);
+    const message = await this.pool.queryOne<Message>(q, p);
+
+    if (!message) throw new Error(`Failed to fetch created message with id: ${row.id}`);
+
+    return message;
   }
 
   async findByChatId(chatId: number, page: number = 1, limit: number = 30): Promise<Message[]> {
@@ -34,9 +40,9 @@ class MessageRepository extends EntityRepo<Message> {
     return await this.pool.queryAll<Message>(query, params);
   }
 
-  async findAllByChatId(chatId: number, text: string): Promise<Message[]> {
+  async findAllByChatId(chatId: number, text: string): Promise<MessageSearchResult[]> {
     const { query, params } = searchInChat(chatId, text);
-    return await this.pool.queryAll<Message>(query, params);
+    return await this.pool.queryAll<MessageSearchResult>(query, params);
   }
 
   async updateReactions(id: number, userId: number, reaction: string): Promise<Message | null> {

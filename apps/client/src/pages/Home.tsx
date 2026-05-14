@@ -1,14 +1,8 @@
-// import { useState } from 'react';
 import ChatList from '../components/ChatList';
 import MessageWindow from '../components/MessageWindow';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
-// import { getLastChatId } from '../utils/lastOpenChatId';
 
 export default function HomePage() {
-  // const lastChatId = getLastChatId();
-
-  // const [currentChatId, setCurrentChatId] = useState<number | null>(lastChatId);
-
   return (
     <ResizablePanelGroup orientation="horizontal" className="max-w-full rounded-lg border md:min-w-[450px]">
       <ResizablePanel defaultSize="25%" maxSize="25%">

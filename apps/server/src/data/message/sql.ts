@@ -67,7 +67,7 @@ export const selectOneById = (id: number): RowSqlResult => ({
   params: [id],
 });
 
-export const searchInChat = (chatId: number, text: string) => ({
+export const searchInChat = (chatId: number, text: string): RowSqlResult => ({
   query: ` 
     SELECT 
       m."id",
@@ -118,7 +118,7 @@ export const getMessagePage = (chatId: number, messageId: number, limit: number)
     FROM "public"."message"
     WHERE "chatId" = $1
       AND "createdAt" >= (
-        SELECT "createdAt" FROM "public"."message" WHERE id = $2
+        SELECT "createdAt" FROM "public"."message" WHERE id = $2 AND "chatId" = $1
       )
   `,
   params: [chatId, messageId, limit],

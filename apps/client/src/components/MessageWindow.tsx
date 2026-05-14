@@ -14,9 +14,9 @@ import useChatUIStore from '../stores/chatUI';
 import { ScrollToBottom } from './ScrollToBottom';
 import useMessageFormStore from '../stores/messageForm';
 import { useScroll } from '../hooks/useScroll';
+import TypingBlock from './TypingBlock';
 
 const PinnedMessagesList = lazy(() => import('./PinnedMessagesList'));
-const TypingBlock = lazy(() => import('./TypingBlock'));
 
 const MessageWindow = () => {
   const currentUser = useAuthStore((state) => state.currentUser);
@@ -24,7 +24,7 @@ const MessageWindow = () => {
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
 
-  const [startPage, setStartPage] = useState(1);
+  const [startPage, setStartPage] = useState<number>(1);
 
   useEffect(() => {
     setPinnedMode(false);
@@ -80,83 +80,103 @@ const MessageWindow = () => {
     setStartPage,
   });
 
-  const { formMode, replyTo, setFormMode, setText, setReplyTo } = useMessageFormStore();
+  const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
 
-  const { handleSend, formButton } = useMessageForm({
+  const {
+    formButton,
+    resultCounter,
+    results,
+    navigateResult,
+    switchFormMode,
+    textareaRef,
+    handleOnChange,
+    handleKeyDown,
+  } = useMessageForm({
     sendMessage,
     updateMessage,
     deleteMessage,
+    typing,
+    scrollToMessage,
   });
 
-  if (!currentChatId || !currentUser) {
-    return <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-950 h-full">Select chat</div>;
-  }
+  const renderContent = () => {
+    if (!currentChatId || !currentUser) {
+      return (
+        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-950 h-full">Select chat</div>
+      );
+    }
+
+    if (pinnedMode) {
+      return (
+        <Suspense fallback={<Loader />}>
+          <PinnedMessagesList updateReaction={updateReaction} handleDelete={deleteMessage} />
+        </Suspense>
+      );
+    }
+
+    return (
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
+        <div ref={bottomSentinelRef} className="h-1 w-full" />
+        <div ref={bottomRef} className="h-px w-full" />
+
+        {(!isAtBottom || startPage > 1) && (
+          <ScrollToBottom
+            targetRef={bottomRef}
+            onClick={() => {
+              if (startPage > 1) {
+                clearAndReset(currentChatId);
+                setStartPage(1);
+                setIsJumping(false);
+              }
+            }}
+          />
+        )}
+
+        {messages.map((message) => (
+          <MessageBlock
+            key={message.id}
+            message={message}
+            updateReaction={updateReaction}
+            deleteMessage={deleteMessage}
+            scrollToMessage={scrollToMessage}
+          />
+        ))}
+
+        <div ref={topSentinelRef} className="h-1 w-full" />
+        {!isLoading && messages.length === 0 && <EmptyBlock />}
+      </div>
+    );
+  };
 
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-screen">
       {formMode !== 'search' && <OpenPinnedMessages pinnedMode={pinnedMode} setPinnedMode={setPinnedMode} />}
-      {pinnedMode && (
-        <Suspense fallback={<Loader />}>
-          <PinnedMessagesList updateReaction={updateReaction} handleDelete={deleteMessage} />
-        </Suspense>
-      )}
+
       {(isLoading || isFetchingNextPage) && (
         <div className="text-center py-2 text-gray-500 text-xs">
           <Loader />
         </div>
       )}
 
-      {!pinnedMode && (
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 flex flex-col-reverse">
-          <div ref={bottomSentinelRef} className="h-1 w-full" />
-          <div ref={bottomRef} className="h-px w-full" />
+      <button onClick={() => switchFormMode(formMode === 'search' ? 'create' : 'search')}>
+        {formMode === 'search' ? <X /> : <LucideSearch />}
+      </button>
 
-          <button
-            className="fixed z-[999]"
-            onClick={() => {
-              setFormMode(formMode === 'search' ? 'create' : 'search');
-              setText('');
-            }}
-          >
-            {formMode === 'search' ? <X /> : <LucideSearch />}
-          </button>
-
-          {(!isAtBottom || startPage > 1) && (
-            <ScrollToBottom
-              targetRef={bottomRef}
-              onClick={() => {
-                if (startPage > 1) {
-                  clearAndReset(currentChatId);
-                  setStartPage(1);
-                  setIsJumping(false);
-                }
-              }}
-            />
-          )}
-
-          {messages.map((message) => (
-            <MessageBlock
-              key={message.id}
-              message={message}
-              updateReaction={updateReaction}
-              deleteMessage={deleteMessage}
-              scrollToMessage={scrollToMessage}
-            />
-          ))}
-          <div ref={topSentinelRef} className="h-1 w-full" />
-          {!isLoading && messages.length === 0 && <EmptyBlock />}
-        </div>
-      )}
+      {renderContent()}
 
       {replyTo && <ReplyBlock message={replyTo} userName={replyTo.username} onClose={() => setReplyTo(null)} />}
 
       <TypingBlock />
+
       {!pinnedMode && (
         <MessageForm
-          handleSend={handleSend}
+          resultCounter={resultCounter}
+          results={results}
+          navigateResult={navigateResult}
+          textareaRef={textareaRef}
+          handleOnChange={handleOnChange}
+          handleKeyDown={handleKeyDown}
           formButton={formButton}
-          typing={typing}
-          scrollToMessage={scrollToMessage}
         />
       )}
     </div>

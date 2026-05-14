@@ -1,9 +1,9 @@
-import type { CreateMessage, Message, UpdateMessage } from '../../entities/message';
+import type { CreateMessage, Message, MessageSearchResult, UpdateMessage } from '../../entities/message';
 
 export interface MessageRepo {
   create: (data: CreateMessage) => Promise<Message>;
   findByChatId: (chatId: number, page: number, limit: number) => Promise<Message[]>;
-  findAllByChatId: (chatId: number, text: string) => Promise<Message[]>;
+  findAllByChatId: (chatId: number, text: string) => Promise<MessageSearchResult[]>;
   findOne: (definition: Partial<Message>) => Promise<Message | null>;
   updateMessage: (id: number, definition: Partial<UpdateMessage>) => Promise<Message>;
   updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;

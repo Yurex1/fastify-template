@@ -63,7 +63,7 @@ export const searchMessagesByChatId = {
     query: {
       type: 'object',
       properties: {
-        text: { type: 'string', minimum: 1 },
+        text: { type: 'string', minLength: 1 },
       },
       required: ['text'],
     },

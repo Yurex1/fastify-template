@@ -1,3 +1,5 @@
+import type { PINNED_MESSAGES_ACTION } from '../utils/consts/pinned';
+
 export interface SignUp {
   email: string;
   username: string;
@@ -94,3 +96,11 @@ type PinPayload = {
   messageId: number;
   isPinned: boolean;
 };
+
+export type PinnedPage = { data: PinnedMessage[]; totalCount: number };
+export type PinnedMessagesPayload =
+  | { type: typeof PINNED_MESSAGES_ACTION.PIN }
+  | { type: typeof PINNED_MESSAGES_ACTION.UNPIN; data: DeletePayload }
+  | { type: typeof PINNED_MESSAGES_ACTION.EDIT; data: Partial<Message> & { id: number } };
+
+export type PageData = { messages: Message[]; page: number };

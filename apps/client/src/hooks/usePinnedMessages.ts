@@ -1,10 +1,9 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';
-import type { PinnedMessage, Message, DeletePayload } from '../api/types';
 import useChatUIStore from '../stores/chatUI';
-
-type PinnedPage = { data: PinnedMessage[]; totalCount: number };
+import { PINNED_MESSAGES_ACTION } from '../utils/consts/pinned';
+import type { PinnedMessagesPayload, PinnedPage } from '../api/types';
 
 export function usePinnedMessages() {
   const queryClient = useQueryClient();
@@ -23,8 +22,8 @@ export function usePinnedMessages() {
     enabled: !!currentChatId,
   });
 
-  const updatePinnedMessagesCache = (type: 'pin' | 'unpin' | 'edit', data: any) => {
-    if (type === 'pin') {
+  const updatePinnedMessagesCache = (action: PinnedMessagesPayload) => {
+    if (action.type === PINNED_MESSAGES_ACTION.PIN) {
       queryClient.invalidateQueries({
         queryKey: [QueryKeys.pinnedMessages, currentChatId],
       });
@@ -34,9 +33,9 @@ export function usePinnedMessages() {
     queryClient.setQueryData<InfiniteData<PinnedPage>>([QueryKeys.pinnedMessages, currentChatId], (old) => {
       if (!old) return old;
 
-      switch (type) {
-        case 'unpin': {
-          const { messageId } = data as DeletePayload;
+      switch (action.type) {
+        case PINNED_MESSAGES_ACTION.UNPIN: {
+          const { messageId } = action.data;
           return {
             ...old,
             pages: old.pages.map((page) => {
@@ -51,10 +50,8 @@ export function usePinnedMessages() {
           };
         }
 
-        case 'edit': {
-          const updated = data as Partial<Message> & { id: number };
-
-          if (!updated.id) return old;
+        case PINNED_MESSAGES_ACTION.EDIT: {
+          const updated = action.data;
 
           return {
             ...old,

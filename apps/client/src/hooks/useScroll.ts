@@ -2,6 +2,34 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import useChatUIStore from '../stores/chatUI';
 import { useIntersectionObserver } from './useIntersectionObserver';
 import chatsApi from '../api/chats/chats';
+import type { Message, PageData } from '../api/types';
+import type {
+  FetchNextPageOptions,
+  FetchPreviousPageOptions,
+  InfiniteData,
+  InfiniteQueryObserverResult,
+} from '@tanstack/react-query';
+import { SCROLL_CONFIG } from '../utils/consts/scroll';
+import { highlightMessage } from '../utils/hightlight';
+
+interface useScrollProps {
+  fetchNextPage: (
+    options?: FetchNextPageOptions,
+  ) => Promise<InfiniteQueryObserverResult<InfiniteData<PageData, unknown>, Error>>;
+  fetchPreviousPage: (
+    options?: FetchPreviousPageOptions,
+  ) => Promise<InfiniteQueryObserverResult<InfiniteData<PageData, unknown>, Error>>;
+  isFetchingPreviousPage: boolean;
+  isFetchingNextPage: boolean;
+  messages: Message[];
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  clearAndReset: (chatId: number) => void;
+  isLoading: boolean;
+  data: InfiniteData<PageData, unknown>;
+  startPage: number;
+  setStartPage: React.Dispatch<React.SetStateAction<number>>;
+}
 
 export function useScroll({
   fetchNextPage,
@@ -16,7 +44,7 @@ export function useScroll({
   data,
   startPage,
   setStartPage,
-}) {
+}: useScrollProps) {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -31,7 +59,7 @@ export function useScroll({
       ([entry]) => {
         setIsAtBottom(entry.isIntersecting);
       },
-      { threshold: 0.1 },
+      { threshold: SCROLL_CONFIG.INTERSECTION_THRESHOLD },
     );
 
     if (bottomRef.current) {
@@ -96,21 +124,15 @@ export function useScroll({
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage: fetchNextPageWithPreserve,
-    rootMargin: '300px',
+    rootMargin: SCROLL_CONFIG.TOP_SENTINEL_ROOT_MARGIN,
   });
 
   const { sentinelRef: bottomSentinelRef } = useIntersectionObserver({
     hasNextPage: hasPreviousPage && !isJumping,
     isFetchingNextPage: isFetchingPreviousPage,
     fetchNextPage: fetchPreviousPageWithPreserve,
-    rootMargin: '0px',
+    rootMargin: SCROLL_CONFIG.BOTTOM_SENTINEL_ROOT_MARGIN,
   });
-
-  const highlightMessage = (el: HTMLElement) => {
-    el.scrollIntoView({ behavior: 'instant', block: 'center' });
-    el.classList.add('highlight-message');
-    setTimeout(() => el.classList.remove('highlight-message'), 2000);
-  };
 
   const scrollToMessage = async (messageId: number) => {
     const el = document.getElementById(`message-${messageId}`);
@@ -118,6 +140,7 @@ export function useScroll({
       highlightMessage(el);
       return;
     }
+    if (!currentChatId) return;
 
     try {
       const { page } = await chatsApi.getMessagePage(currentChatId, messageId);
@@ -131,31 +154,28 @@ export function useScroll({
     }
   };
 
+  const tryScrollWithRetry = useCallback((messageId: number) => {
+    const attempt = (attemptsLeft: number) => {
+      const el = document.getElementById(`message-${messageId}`);
+      if (el) {
+        highlightMessage(el);
+        setPendingScrollId(null);
+        setTimeout(() => setIsJumping(false), SCROLL_CONFIG.JUMP_RESET_DELAY_MS);
+        return;
+      }
+      if (attemptsLeft > 0) {
+        requestAnimationFrame(() => attempt(attemptsLeft - 1));
+      } else {
+        setIsJumping(false);
+      }
+    };
+    attempt(2);
+  }, []);
+
   useEffect(() => {
     if (!pendingScrollId || isLoading) return;
-
-    const tryScroll = (): boolean => {
-      const el = document.getElementById(`message-${pendingScrollId}`);
-      if (!el) return false;
-
-      highlightMessage(el);
-      setPendingScrollId(null);
-
-      setTimeout(() => setIsJumping(false), 400);
-      return true;
-    };
-
-    if (!tryScroll()) {
-      requestAnimationFrame(() => {
-        if (!tryScroll()) {
-          setTimeout(() => {
-            tryScroll();
-            setIsJumping(false);
-          }, 400);
-        }
-      });
-    }
-  }, [pendingScrollId, isLoading, data]);
+    tryScrollWithRetry(pendingScrollId);
+  }, [pendingScrollId, isLoading, data?.pages?.length]);
 
   return {
     isAtBottom,

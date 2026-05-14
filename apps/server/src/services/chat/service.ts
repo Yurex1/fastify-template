@@ -110,7 +110,10 @@ export const init = (deps: Deps): ChatService => {
       return messageRepo.updateReactions(id, userId, reaction);
     },
 
-    getMessagePage: async (chatId, messageId, limit) => {
+    getMessagePage: async (userId, chatId, messageId, limit) => {
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+
       const page = await messageRepo.getMessagePage(chatId, messageId, limit);
       return { page };
     },

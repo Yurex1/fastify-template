@@ -56,10 +56,10 @@ export const init = ({ chatService }: Deps): ChatApi => {
       access: 'access',
       schema: schemas.getMessagePage,
       params: ['chatId', 'messageId'],
-      handler: (_user, request) => {
+      handler: (user, request) => {
         const { chatId, messageId } = request.params;
         const { limit } = request.query;
-        return chatService.getMessagePage(chatId, messageId, limit);
+        return chatService.getMessagePage(user.id, chatId, messageId, limit);
       },
     },
 

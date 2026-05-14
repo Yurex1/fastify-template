@@ -57,11 +57,11 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
           >
             {message.reply && (
               <div
-                onClick={(e) => scrollToMessage(Number(e.currentTarget.id))}
+                onClick={(e) => scrollToMessage?.(Number(e.currentTarget.id))}
                 id={`${message.reply_id}`}
                 className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col"
               >
-                <span className="font-bold">{message.reply.username || 'User not founded'}</span>
+                <span className="font-bold">{message.reply.username || 'User not found'}</span>
                 <span>{message.reply.text || 'Original message deleted'}</span>
               </div>
             )}

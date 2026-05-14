@@ -1,11 +1,9 @@
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
-import type { Message, WSEvent } from '../api/types';
+import type { PageData, WSEvent } from '../api/types';
 import { QueryKeys } from '../lib/queries';
 import { useCallback } from 'react';
 import useChatUIStore from '../stores/chatUI';
-
-type PageData = { messages: Message[]; page: number };
 
 export function useChatMessages(startPage = 1) {
   const queryClient = useQueryClient();
@@ -15,10 +13,9 @@ export function useChatMessages(startPage = 1) {
 
   const query = useInfiniteQuery({
     queryKey,
-    queryFn: async ({ pageParam }) => {
-      const page = (pageParam as number) ?? startPage;
-      const messages = await chatsApi.getMessagesByChatId(currentChatId, page);
-      return { messages, page } satisfies PageData;
+    queryFn: async ({ pageParam = startPage }: { pageParam: number }) => {
+      const messages = await chatsApi.getMessagesByChatId(currentChatId, pageParam);
+      return { messages, page: pageParam };
     },
     initialPageParam: startPage,
     getNextPageParam: (lastPage: PageData) => (lastPage.messages.length < 30 ? undefined : lastPage.page + 1),
@@ -42,8 +39,9 @@ export function useChatMessages(startPage = 1) {
         { queryKey: [QueryKeys.messages, chatId], exact: false },
         (old) => {
           if (!old) return old;
+          const type = WSEvent.type;
 
-          if (WSEvent.type === 'add') {
+          if (type === 'add') {
             return {
               ...old,
               pages: old.pages.map((page, i) =>
@@ -57,7 +55,7 @@ export function useChatMessages(startPage = 1) {
             pages: old.pages.map((page) => ({
               ...page,
               messages: (() => {
-                switch (WSEvent.type) {
+                switch (type) {
                   case 'update':
                     return page.messages.map((m) => (m.id === WSEvent.payload.id ? { ...m, ...WSEvent.payload } : m));
                   case 'pin':

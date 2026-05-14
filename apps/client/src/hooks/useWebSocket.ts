@@ -69,7 +69,7 @@ export function useWebSocket() {
           case MESSAGE_TYPES.updated:
           case MESSAGE_TYPES.updatedRection:
             updateMessageCache(chatId, { type: 'update', payload: data.payload });
-            updatePinnedMessagesCache('edit', data.payload);
+            updatePinnedMessagesCache({ type: 'edit', data: data.payload });
 
             break;
 
@@ -77,7 +77,7 @@ export function useWebSocket() {
             updateMessageCache(chatId, { type: 'delete', payload: data.payload });
             updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
 
-            updatePinnedMessagesCache('unpin', data.payload);
+            updatePinnedMessagesCache({ type: 'unpin', data: data.payload });
             break;
 
           case USER_TYPES.getInitialStatus:
@@ -108,7 +108,8 @@ export function useWebSocket() {
               payload: { messageId, isPinned },
             });
 
-            updatePinnedMessagesCache('pin', data.payload);
+            updatePinnedMessagesCache({ type: 'pin' });
+
             break;
           }
 
@@ -118,7 +119,7 @@ export function useWebSocket() {
               type: 'unpin',
               payload: { chatId: payloadChatId, messageId },
             });
-            updatePinnedMessagesCache('unpin', data.payload);
+            updatePinnedMessagesCache({ type: 'unpin', data: data.payload });
 
             break;
           }
