@@ -40,13 +40,16 @@ export interface Chat {
   updatedAt: string;
   members: Member[];
 }
-
 export interface PinnedMessage {
-  chatId: number;
-  isPinned: boolean;
+  id: number;
+  chat_id: number;
   message: Message;
-  messageId: number;
-  pinnedAt: Date;
+  message_id: number;
+  pinned_at: Date;
+}
+export interface PinnedMessageList {
+  totalCount: number;
+  data: PinnedMessage[];
 }
 
 export interface Message {
@@ -91,11 +94,3 @@ type PinPayload = {
   messageId: number;
   isPinned: boolean;
 };
-
-export interface LastPinnedMessageStats {
-  chat_id: number;
-  message_id: number;
-  pinned_at: Date;
-  text: string;
-  total_count: number;
-}

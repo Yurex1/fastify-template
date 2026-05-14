@@ -7,6 +7,7 @@ import { useChats } from '../hooks/useChats';
 
 import { ChatBlock } from './ChatBlock';
 import useChatUIStore from '../stores/chatUI';
+import { Loader } from './Loader';
 
 const ChatList = () => {
   const query = useChats();
@@ -42,7 +43,11 @@ const ChatList = () => {
           <div className="text-center py-2 text-gray-500 text-xs italic">Loading old messages...</div>
         )}
 
-        {query.isLoading && <div className="text-center py-2 text-gray-500 text-xs">Loading...</div>}
+        {query.isLoading && (
+          <div className="text-center py-2 text-gray-500 text-xs">
+            <Loader />
+          </div>
+        )}
         {!query.isLoading && chats.length === 0 && <EmptyBlock />}
       </div>
     </div>

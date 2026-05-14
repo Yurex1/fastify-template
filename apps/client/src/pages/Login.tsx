@@ -51,6 +51,7 @@ export default function LoginPage() {
               <Input
                 name="usernameOrEmail"
                 placeholder="Username or Email"
+                autoComplete="username"
                 value={form.usernameOrEmail}
                 onChange={handleChange}
                 required
@@ -64,6 +65,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={form.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 required
               />
               <button

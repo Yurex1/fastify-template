@@ -63,17 +63,6 @@ export const init = ({ chatService }: Deps): ChatApi => {
       },
     },
 
-    getPinnedStats: {
-      method: 'get',
-      access: 'access',
-      schema: schemas.getPinnedStats,
-      params: ['chatId'],
-      handler: (_user, request) => {
-        const { chatId } = request.params;
-        return chatService.getPinnedStats(chatId);
-      },
-    },
-
     pinMessage: {
       method: 'post',
       access: 'access',

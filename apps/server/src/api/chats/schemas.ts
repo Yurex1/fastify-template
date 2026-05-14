@@ -93,20 +93,6 @@ export const getMessagePage = {
   required: ['params', 'query'],
 } as const;
 
-export const getPinnedStats = {
-  type: 'object',
-  properties: {
-    params: {
-      type: 'object',
-      properties: {
-        chatId: { type: 'number' },
-      },
-      required: ['chatId'],
-    },
-  },
-  required: ['params'],
-} as const;
-
 export const pinMessage = {
   type: 'object',
   properties: {

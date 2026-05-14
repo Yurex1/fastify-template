@@ -1,5 +1,5 @@
 import api from '../api';
-import type { Chat, LastPinnedMessageStats, Message, PinnedMessage } from '../types';
+import type { Chat, Message, PinnedMessage, PinnedMessageList } from '../types';
 import { ENDPOINTS } from './consts';
 
 const chatsApi = {
@@ -30,11 +30,6 @@ const chatsApi = {
     return response;
   },
 
-  getPinnedStats: async (chatId: number) => {
-    const response = await api.get(`${ENDPOINTS.CHAT_GET_PINNED_STATS}/${chatId}`).json<LastPinnedMessageStats>();
-    return response;
-  },
-
   searchMessagesByChatId: async (chatId: number, text: string) => {
     const response = await api.get(`${ENDPOINTS.CHAT_SEARCH_MESSAGES}/${chatId}?text=${text}`).json<Message[]>();
     return response;
@@ -43,7 +38,7 @@ const chatsApi = {
   getAllPinnedMessages: async (chatId: number, page: number = 1, limit: number = 30) => {
     const response = await api
       .get(`${ENDPOINTS.CHAT_GET_PINNED_MESSAGES}/${chatId}?page=${page}&limit=${limit}`)
-      .json<PinnedMessage[]>();
+      .json<PinnedMessageList>();
     return response;
   },
 

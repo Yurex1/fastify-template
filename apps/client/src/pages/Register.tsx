@@ -38,8 +38,24 @@ export default function RegisterPage() {
   };
 
   const inputs = [
-    { id: 1, name: 'email', placeholder: 'Email', value: form.email, onChange: handleChange, required: true },
-    { id: 2, name: 'username', placeholder: 'Username', value: form.username, onChange: handleChange, required: true },
+    {
+      id: 1,
+      name: 'email',
+      placeholder: 'Email',
+      value: form.email,
+      onChange: handleChange,
+      required: true,
+      autoComplete: 'email',
+    },
+    {
+      id: 2,
+      name: 'username',
+      placeholder: 'Username',
+      value: form.username,
+      onChange: handleChange,
+      required: true,
+      autoComplete: 'username',
+    },
   ];
 
   return (
@@ -58,6 +74,7 @@ export default function RegisterPage() {
                 name={input.name}
                 placeholder={input.placeholder}
                 value={input.value}
+                autoComplete={input.autoComplete}
                 onChange={input.onChange}
                 required={input.required}
               />
@@ -67,6 +84,7 @@ export default function RegisterPage() {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
+                autoComplete="current-password"
                 value={form.password}
                 onChange={handleChange}
                 required

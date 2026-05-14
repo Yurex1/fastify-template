@@ -9,7 +9,6 @@ import { usePinnedMessages } from './usePinnedMessages';
 import { useUserStatus } from '../stores/userStatus';
 import { useAuthStore } from '../stores/auth';
 import useChatUIStore from '../stores/chatUI';
-import { useLastPinnedMessage } from './useLastPinnedMessage';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
@@ -25,7 +24,6 @@ export function useWebSocket() {
 
   const { updateMessageCache } = useChatMessages();
   const { updateChatsCache } = useChats();
-  const { updateLastPinnedMessageCache } = useLastPinnedMessage();
   const { updatePinnedMessagesCache } = usePinnedMessages();
 
   const currentChatIdRef = useRef(currentChatId);
@@ -71,16 +69,14 @@ export function useWebSocket() {
           case MESSAGE_TYPES.updated:
           case MESSAGE_TYPES.updatedRection:
             updateMessageCache(chatId, { type: 'update', payload: data.payload });
-
-            updateLastPinnedMessageCache('edit', data.payload);
-            updatePinnedMessagesCache('reaction', data.payload);
+            updatePinnedMessagesCache('edit', data.payload);
 
             break;
 
           case MESSAGE_TYPES.deleted:
             updateMessageCache(chatId, { type: 'delete', payload: data.payload });
             updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
-            // updateLastPinnedMessageCache(data.payload);
+
             updatePinnedMessagesCache('unpin', data.payload);
             break;
 
@@ -111,7 +107,7 @@ export function useWebSocket() {
               type: 'pin',
               payload: { messageId, isPinned },
             });
-            updateLastPinnedMessageCache('pin', data.payload);
+
             updatePinnedMessagesCache('pin', data.payload);
             break;
           }
@@ -122,7 +118,6 @@ export function useWebSocket() {
               type: 'unpin',
               payload: { chatId: payloadChatId, messageId },
             });
-            updateLastPinnedMessageCache('unpin', data.payload);
             updatePinnedMessagesCache('unpin', data.payload);
 
             break;
