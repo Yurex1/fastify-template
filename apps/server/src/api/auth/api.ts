@@ -61,6 +61,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
       return {
         accessToken: session.accessToken,
         user: session.user,
+        expiresAt: session.expiresAt.toISOString(),
       };
     },
   },

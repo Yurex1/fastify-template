@@ -1,7 +1,7 @@
 import useChatUIStore from '../stores/chatUI';
 import { getLastChatId } from '../utils/lastOpenChatId';
 
-export const TypingBlock = () => {
+const TypingBlock = () => {
   const isTyping = useChatUIStore((s) => s.isTyping);
   const currentChatId = getLastChatId();
 
@@ -21,3 +21,5 @@ export const TypingBlock = () => {
     </div>
   );
 };
+
+export default TypingBlock;

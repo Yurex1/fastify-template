@@ -9,11 +9,16 @@ class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
     super(pool, 'chat_pinned_message', ['id', 'chat_id', 'message_id', 'pinned_at']);
   }
 
-  async findByChatId(chatId: number, page: number = 1, limit: number = 30): Promise<PinnedMessage[]> {
+  async findByChatId(
+    chatId: number,
+    page: number = 1,
+    limit: number = 30,
+  ): Promise<{ totalCount: number; data: PinnedMessage[] }> {
     const offset = (page - 1) * limit;
 
     const { query, params } = selectByChatId(chatId, offset, limit);
-    return await this.pool.queryAll<PinnedMessage>(query, params);
+    const result = await this.pool.queryOne<{ totalCount: number; data: PinnedMessage[] }>(query, params);
+    return result ?? { totalCount: 0, data: [] };
   }
 
   async removeByMessageId(chatId: number, messageId: number): Promise<{ chatId: number; messageId: number }> {

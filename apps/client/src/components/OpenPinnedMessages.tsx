@@ -1,19 +1,19 @@
 import { LucideArrowLeftCircle, Pin } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { usePinnedMessages } from '../hooks/usePinnedMessages';
-import type { SetStateAction } from 'react';
+import { type SetStateAction } from 'react';
 
-interface Props {
-  currentChatId: number;
+import { usePinnedMessages } from '../hooks/usePinnedMessages';
+
+interface OpenPinnedMessagesProps {
   pinnedMode: boolean;
   setPinnedMode: React.Dispatch<SetStateAction<boolean>>;
 }
 
-export const OpenPinnedMessages = ({ currentChatId, pinnedMode, setPinnedMode }: Props) => {
-  const { data } = usePinnedMessages({ currentChatId });
+export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMessagesProps) => {
+  const { data } = usePinnedMessages();
 
-  const count = data?.pages.flat().length || 0;
-  const pinned = data?.pages?.[0]?.[0];
+  const count = data?.pages?.[0]?.totalCount ?? 0;
+  const pinned = data?.pages?.[0]?.data?.[0]?.message?.text;
 
   if (!pinned) return null;
 
@@ -29,6 +29,7 @@ export const OpenPinnedMessages = ({ currentChatId, pinnedMode, setPinnedMode }:
         <span className="text-xs text-gray-400">
           <LucideArrowLeftCircle onClick={() => setPinnedMode(false)} />
         </span>
+        <span className="text-xs text-gray-400">{count > 1 ? `${count} messages` : `${count} message`}</span>
       </div>
     );
   }
@@ -47,7 +48,7 @@ export const OpenPinnedMessages = ({ currentChatId, pinnedMode, setPinnedMode }:
       <div className="flex flex-col overflow-hidden">
         <span className="text-xs text-gray-400">Pinned message{count > 1 ? `s (${count})` : ''}</span>
 
-        <span className="text-sm text-white truncate">{pinned.message.text}</span>
+        <span className="text-sm text-white truncate">{pinned}</span>
       </div>
     </div>
   );

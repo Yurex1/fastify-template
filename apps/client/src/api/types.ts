@@ -1,3 +1,5 @@
+import type { PINNED_MESSAGES_ACTION } from '../utils/consts/pinned';
+
 export interface SignUp {
   email: string;
   username: string;
@@ -40,13 +42,16 @@ export interface Chat {
   updatedAt: string;
   members: Member[];
 }
-
 export interface PinnedMessage {
-  chatId: number;
-  isPinned: boolean;
+  id: number;
+  chat_id: number;
   message: Message;
-  messageId: number;
-  pinnedAt: Date;
+  message_id: number;
+  pinned_at: Date;
+}
+export interface PinnedMessageList {
+  totalCount: number;
+  data: PinnedMessage[];
 }
 
 export interface Message {
@@ -57,6 +62,7 @@ export interface Message {
   text: string;
   reactions: Record<string, number[]>;
   reply_id: number | null;
+  reply?: { id: number; text: string; userId: number; username: string; createdAt: string } | null;
   isPinned: boolean;
   createdAt: string;
   updatedAt: string;
@@ -90,3 +96,11 @@ type PinPayload = {
   messageId: number;
   isPinned: boolean;
 };
+
+export type PinnedPage = { data: PinnedMessage[]; totalCount: number };
+export type PinnedMessagesPayload =
+  | { type: typeof PINNED_MESSAGES_ACTION.PIN }
+  | { type: typeof PINNED_MESSAGES_ACTION.UNPIN; data: DeletePayload }
+  | { type: typeof PINNED_MESSAGES_ACTION.EDIT; data: Partial<Message> & { id: number } };
+
+export type PageData = { messages: Message[]; page: number };

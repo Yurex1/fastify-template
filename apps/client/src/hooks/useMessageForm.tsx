@@ -1,51 +1,76 @@
-import type { Message } from '../api/types';
 import { FORM_MODE } from '../utils/consts/formModes';
 import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
 import { useMessageActions } from './useMessageActions';
 import useChatUIStore from '../stores/chatUI';
+import useMessageFormStore from '../stores/messageForm';
+import { useEffect, useRef, useState } from 'react';
+import useDebounce from './useDebounce';
+import { searchMessagesByChatId } from '../services/chats';
+import type { FormMode } from '../api/types';
 
 interface useMessageFormProps {
-  currentChatId: number | null;
-  messages: Message[];
   updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
   sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
   deleteMessage: (id: number) => void;
+  typing: (id: number) => void;
+  scrollToMessage: (id: number) => void;
 }
 
 export function useMessageForm({
   sendMessage,
-  messages,
-  currentChatId,
   updateMessage,
   deleteMessage,
+  typing,
+  scrollToMessage,
 }: useMessageFormProps) {
-  const { formMode, text, setText, setReplyTo, setFormMode, handleSearch } = useMessageActions({
-    messages,
-    deleteMessage,
-  });
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+  const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
+  const [resultCounter, setResultCounter] = useState(0);
 
-  const messageToEdit = useChatUIStore((s) => s.menuForMessage);
-  const setMessageToEdit = useChatUIStore((s) => s.setMenuForMessage);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const clearForm = () => {
-    setMessageToEdit(null);
-    setFormMode('create');
-    setReplyTo(null);
-    setText('');
-    return;
+  const debouncedTyping = useDebounce((chatId: number) => {
+    typing(chatId);
+  }, 500);
+
+  const [results, setResults] = useState<{ id: number }[]>([]);
+
+  const debouncedSearch = useDebounce(async (value: string) => {
+    const res = await searchMessagesByChatId(currentChatId, value);
+    setResults(res);
+    setResultCounter(0);
+    if (res.length > 0) scrollToMessage(res[0].id);
+  }, 300);
+
+  const navigateResult = (direction: 1 | -1) => {
+    const newCounter = resultCounter + direction;
+    const index = ((newCounter % results.length) + results.length) % results.length;
+    setResultCounter(newCounter);
+    scrollToMessage(results[index].id);
   };
 
-  const handleSend = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const switchFormMode = (mode: FormMode) => {
+    setFormMode(mode);
+    setResults([]);
+    setText('');
+    setResultCounter(0);
+  };
+
+  const handleSend = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     e.preventDefault();
+
     if (text.trim().length <= 0) return;
     switch (formMode) {
       case FORM_MODE.CREATE:
         if (currentChatId) sendMessage(currentChatId, text);
         clearForm();
+        textareaRef.current?.focus();
         break;
 
       case FORM_MODE.SEARCH:
-        handleSearch();
+        if (currentChatId) {
+          await handleSearch();
+        }
         clearForm();
         break;
 
@@ -74,6 +99,48 @@ export function useMessageForm({
     }
   };
 
+  useEffect(() => {
+    setFormMode('create');
+    setText('');
+  }, [currentChatId]);
+
+  async function handleOnChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const value = e.target.value;
+
+    setText(value);
+    if (formMode === FORM_MODE.SEARCH && value.trim().length > 0) {
+      debouncedSearch(value);
+    } else {
+      const value = e.target.value;
+      setText(value);
+      debouncedTyping(currentChatId);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+
+      if (!text.trim()) return;
+
+      handleSend(e);
+    }
+  }
+  const { handleSearch } = useMessageActions({
+    deleteMessage,
+  });
+
+  const messageToEdit = useChatUIStore((s) => s.menuForMessage);
+  const setMessageToEdit = useChatUIStore((s) => s.setMenuForMessage);
+
+  const clearForm = () => {
+    setMessageToEdit(null);
+    setFormMode('create');
+    setReplyTo(null);
+    setText('');
+    return;
+  };
+
   const formButton = () => {
     switch (formMode) {
       case 'create':
@@ -92,5 +159,16 @@ export function useMessageForm({
         break;
     }
   };
-  return { clearForm, handleSend, formButton };
+  return {
+    resultCounter,
+    results,
+    textareaRef,
+    clearForm,
+    handleSend,
+    formButton,
+    handleKeyDown,
+    handleOnChange,
+    navigateResult,
+    switchFormMode,
+  };
 }

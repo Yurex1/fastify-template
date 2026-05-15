@@ -1,18 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
-const useDebounce = (value: any, delayMs: number = 300) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+export default function useDebounce<T extends (...args: any[]) => void>(callback: T, delay: number) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedCallback = useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay],
+  );
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delayMs);
-
     return () => {
-      clearTimeout(t);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [value, delayMs]);
-  return debouncedValue;
-};
+  }, []);
 
-export default useDebounce;
+  return debouncedCallback;
+}

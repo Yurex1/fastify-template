@@ -12,23 +12,19 @@ import useChatUIStore from '../stores/chatUI';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
 
-interface UseWebSocketProps {
-  currentChatId: number | null;
-}
-
-export function useWebSocket({ currentChatId }: UseWebSocketProps) {
+export function useWebSocket() {
   const token = useAuthStore((s) => s.accessToken);
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+
   const setIsTyping = useChatUIStore((s) => s.setIsTyping);
 
   const [ws, setWs] = useState<WebSocket | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
 
-  const { updateMessageCache } = useChatMessages({
-    currentChatId,
-  });
+  const { updateMessageCache } = useChatMessages();
   const { updateChatsCache } = useChats();
-  const { updatePinnedMessagesCache } = usePinnedMessages({ currentChatId });
+  const { updatePinnedMessagesCache } = usePinnedMessages();
 
   const currentChatIdRef = useRef(currentChatId);
   currentChatIdRef.current = currentChatId;
@@ -73,11 +69,15 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
           case MESSAGE_TYPES.updated:
           case MESSAGE_TYPES.updatedRection:
             updateMessageCache(chatId, { type: 'update', payload: data.payload });
+            updatePinnedMessagesCache({ type: 'edit', data: data.payload });
+
             break;
 
           case MESSAGE_TYPES.deleted:
             updateMessageCache(chatId, { type: 'delete', payload: data.payload });
             updateChatsCache(CHAT_TYPES.delete, chatId, data.payload);
+
+            updatePinnedMessagesCache({ type: 'unpin', data: data.payload });
             break;
 
           case USER_TYPES.getInitialStatus:
@@ -107,7 +107,9 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
               type: 'pin',
               payload: { messageId, isPinned },
             });
-            updatePinnedMessagesCache('pin', data.payload);
+
+            updatePinnedMessagesCache({ type: 'pin' });
+
             break;
           }
 
@@ -117,7 +119,8 @@ export function useWebSocket({ currentChatId }: UseWebSocketProps) {
               type: 'unpin',
               payload: { chatId: payloadChatId, messageId },
             });
-            updatePinnedMessagesCache('unpin', data.payload);
+            updatePinnedMessagesCache({ type: 'unpin', data: data.payload });
+
             break;
           }
 

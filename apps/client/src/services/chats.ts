@@ -15,6 +15,16 @@ export async function fetchChats({ page, limit }: fetchChats) {
   }
 }
 
+export async function searchMessagesByChatId(chatId: number, text: string) {
+  try {
+    const response = await chatsApi.searchMessagesByChatId(chatId, text);
+    return response;
+  } catch (error) {
+    toast.error('Failed to search message');
+    return [];
+  }
+}
+
 export async function createChat(memberId: number) {
   if (!memberId) return;
 

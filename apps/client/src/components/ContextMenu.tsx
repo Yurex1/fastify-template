@@ -6,6 +6,7 @@ import {
   ContextMenuLabel,
   ContextMenuSeparator,
 } from './ui/context-menu';
+import useChatUIStore from '../stores/chatUI';
 
 interface ContextMenuProps {
   onDelete: () => void;
@@ -30,11 +31,12 @@ export default function ContextMenu({
   children,
   title = 'Actions',
 }: ContextMenuProps) {
+  const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const items = [
-    onEdit && isOwn && { id: 'edit', text: 'Edit', icon: <PencilIcon size={16} />, onClick: onEdit },
+    onEdit && !pinnedMode && isOwn && { id: 'edit', text: 'Edit', icon: <PencilIcon size={16} />, onClick: onEdit },
     onCopy && { id: 'copy', text: 'Copy', icon: <Copy size={16} />, onClick: onCopy },
     onPin && { id: 'pin', text: isPinned ? 'Unpin' : 'Pin', icon: <Pin size={16} />, onClick: onPin },
-    onReply && { id: 'reply', text: 'Reply', icon: <Reply size={16} />, onClick: onReply },
+    onReply && !pinnedMode && { id: 'reply', text: 'Reply', icon: <Reply size={16} />, onClick: onReply },
   ].filter(Boolean);
 
   return (

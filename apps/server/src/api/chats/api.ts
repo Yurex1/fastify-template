@@ -39,6 +39,30 @@ export const init = ({ chatService }: Deps): ChatApi => {
       },
     },
 
+    searchMessagesByChatId: {
+      method: 'get',
+      access: 'access',
+      schema: schemas.searchMessagesByChatId,
+      params: ['chatId'],
+      handler: (user, request) => {
+        const { chatId } = request.params;
+        const { text } = request.query;
+        return chatService.searchMessagesByChatId(user.id, chatId, text);
+      },
+    },
+
+    getMessagePage: {
+      method: 'get',
+      access: 'access',
+      schema: schemas.getMessagePage,
+      params: ['chatId', 'messageId'],
+      handler: (user, request) => {
+        const { chatId, messageId } = request.params;
+        const { limit } = request.query;
+        return chatService.getMessagePage(user.id, chatId, messageId, limit);
+      },
+    },
+
     pinMessage: {
       method: 'post',
       access: 'access',

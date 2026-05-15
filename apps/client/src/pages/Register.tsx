@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
 import { Eye, EyeOff } from 'lucide-react';
+import { REGISTER_INPUT_CONFIGS } from '../utils/consts/inputs';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -37,11 +38,6 @@ export default function RegisterPage() {
     mutate(form);
   };
 
-  const inputs = [
-    { id: 1, name: 'email', placeholder: 'Email', value: form.email, onChange: handleChange, required: true },
-    { id: 2, name: 'username', placeholder: 'Username', value: form.username, onChange: handleChange, required: true },
-  ];
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-4">
       <div className="p-6 space-y-4">
@@ -52,14 +48,15 @@ export default function RegisterPage() {
             <h3 className="text-sm text-neutral-400">Sign up to get started</h3>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {inputs.map((input) => (
+            {REGISTER_INPUT_CONFIGS.map((input) => (
               <Input
                 key={input.id}
                 name={input.name}
                 placeholder={input.placeholder}
-                value={input.value}
-                onChange={input.onChange}
-                required={input.required}
+                autoComplete={input.autoComplete}
+                value={form[input.name]}
+                onChange={handleChange}
+                required
               />
             ))}
             <div className="relative">
@@ -67,6 +64,7 @@ export default function RegisterPage() {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
+                autoComplete="current-password"
                 value={form.password}
                 onChange={handleChange}
                 required
