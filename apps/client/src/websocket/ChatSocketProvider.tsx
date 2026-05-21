@@ -18,13 +18,10 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     let active = true;
 
     const connect = () => {
-      // const socket = new WebSocket(`${WS_URL}/ws?token=${token}`)
-
       const socket = new WebSocket(`${WS_URL}/ws`, token);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        console.log('WebSocket connected');
         if (reconnectRef.current) clearTimeout(reconnectRef.current);
       };
 
