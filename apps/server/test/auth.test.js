@@ -20,7 +20,13 @@ describe('Auth Tests', () => {
   });
 
   after(async () => {
-    await app.cleanup();
+    try {
+      if (userId) {
+        await app.services.user.remove(userId);
+      }
+    } finally {
+      await app.cleanup();
+    }
   });
 
   describe('Sign Up Test', () => {

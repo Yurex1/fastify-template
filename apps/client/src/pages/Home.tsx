@@ -1,5 +1,5 @@
-import ChatList from '../components/ChatList';
-import MessageWindow from '../components/MessageWindow';
+import ChatList from '../message/ChatList';
+import MessageWindow from '../message/MessageWindow';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
 
 export default function HomePage() {

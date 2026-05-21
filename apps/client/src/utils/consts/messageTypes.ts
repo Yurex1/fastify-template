@@ -1,7 +1,7 @@
 export const MESSAGE_TYPES = {
   new: 'NEW_MESSAGE',
   updated: 'MESSAGE_UPDATED',
-  updatedRection: 'MESSAGE_REACTIONS_UPDATED',
+  updatedReaction: 'MESSAGE_REACTIONS_UPDATED',
   deleted: 'MESSAGE_DELETED',
   pinned: 'PINNED_MESSAGE',
   unpinnedMessage: 'UNPINNED_MESSAGE',

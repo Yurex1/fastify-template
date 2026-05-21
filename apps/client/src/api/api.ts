@@ -1,7 +1,8 @@
 import ky from 'ky';
 import { ERROR_STATUSES } from '../utils/consts/errorStatus';
 import { useAuthStore } from '../stores/auth';
-import type { User } from './types';
+import type { User } from './user/types';
+
 const userAgent = navigator.userAgent;
 
 const api = ky.create({

@@ -1,4 +1,5 @@
 import { RowSqlResult } from '../../utils/rowSql/types';
+import { ChatCursor } from './types';
 
 export const selectAllMembersByChatId = (chatId: number): RowSqlResult => ({
   query: `
@@ -28,32 +29,36 @@ export const selectAllMembers = (userId: number): RowSqlResult => ({
   params: [userId],
 });
 
-export const selectChatsForUser = (userId: number, status: string, page: number, limit: number): RowSqlResult => {
-  const offset = (page - 1) * limit;
-
-  return {
-    query: `
-      SELECT
-        c.id,
-        c."createdAt",
-        c."updatedAt",
-        json_agg(to_jsonb(u) ORDER BY u.id) AS members
-      FROM "public"."chats" c
-      INNER JOIN "public"."chatMember" m
-        ON m."chatId" = c.id
-        AND m."userId" = $1
-        AND m.status = $2::chat_member_status
-      INNER JOIN "public"."chatMember" m2
-        ON m2."chatId" = c.id
-      INNER JOIN "public"."users" u
-        ON u.id = m2."userId"
-      GROUP BY c.id
-      ORDER BY c."updatedAt" DESC
-      LIMIT $3 OFFSET $4
-    `,
-    params: [userId, status, limit, offset],
-  };
-};
+export const selectChatsForUser = (
+  userId: number,
+  status: string,
+  cursor: ChatCursor | null,
+  limit: number,
+): RowSqlResult => ({
+  query: `
+    SELECT
+      c.id,
+      c."createdAt",
+      c."updatedAt",
+      json_agg(to_jsonb(u) ORDER BY u.id) AS members
+    FROM "public"."chats" c
+    INNER JOIN "public"."chatMember" m
+      ON  m."chatId" = c.id
+      AND m."userId" = $1
+      AND m."status" = $2
+    INNER JOIN "public"."chatMember" cm
+      ON  cm."chatId" = c.id
+    INNER JOIN "public"."users" u
+      ON  u.id = cm."userId"
+    WHERE
+      $3::timestamptz IS NULL
+      OR (c."updatedAt", c.id) < ($3::timestamptz, $4::int)
+    GROUP BY c.id
+    ORDER BY c."updatedAt" DESC, c.id DESC
+    LIMIT $5
+  `,
+  params: [userId, status, cursor?.updatedAt ?? null, cursor?.id ?? null, limit + 1],
+});
 
 export const checkMember = (chatId: number, userId: number): RowSqlResult => ({
   query: `

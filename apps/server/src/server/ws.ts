@@ -18,7 +18,9 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   const eventHandlers: Array<(uid: number, data: any) => void> = [];
   const PING_INTERVAL_MS = 25000;
 
-  const cleanupConnection = (uid: number) => {
+  const cleanupConnection = (uid: number, socket: WebSocket) => {
+    if (connections.get(uid) !== socket) return;
+
     const heartbeat = heartbeatStates.get(uid);
     if (heartbeat) {
       clearInterval(heartbeat.timer);
@@ -33,7 +35,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
   fastify.get<{ Querystring: { token: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
-      const { token } = req.query;
+      const token = req.headers['sec-websocket-protocol'];
 
       if (!token) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');
@@ -107,18 +109,15 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       });
 
       socket.on('close', () => {
-        services.user.updateLastSeen(uid).catch(console.error);
-        cleanupConnection(uid);
-        if (typingTimers.has(uid)) {
-          clearTimeout(typingTimers.get(uid)!);
-          typingTimers.delete(uid);
+        if (connections.get(uid) === socket) {
+          services.user.updateLastSeen(uid).catch(console.error);
+          handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, {
+            userId: uid,
+            isOnline: false,
+            lastseen: new Date(),
+          });
         }
-
-        handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, {
-          userId: uid,
-          isOnline: false,
-          lastseen: new Date(),
-        });
+        cleanupConnection(uid, socket);
       });
     } catch (e: any) {
       console.error('WS Auth Error:', e.message);

@@ -1,4 +1,4 @@
-import type { Message } from '../api/types';
+import type { Message } from '../api/chats/types';
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/auth';
 
@@ -14,7 +14,7 @@ export const ReactionList = ({ message, updateReaction }: ReactionListProps) => 
     return null;
   }
 
-  const result = Object.entries(message.reactions);
+  const result = Object.entries(message.reactions) as [string, number[]][];
 
   return (
     <div className="flex flex-wrap gap-1 mt-1">

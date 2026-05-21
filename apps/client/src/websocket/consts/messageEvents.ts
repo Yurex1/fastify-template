@@ -1,0 +1,27 @@
+// utils/consts/wsEvents.ts — ALL websocket type strings, split by direction
+
+// Server → Client
+export const WS_IN = {
+  NEW_MESSAGE: 'NEW_MESSAGE',
+  MESSAGE_UPDATED: 'MESSAGE_UPDATED',
+  MESSAGE_REACTIONS_UPDATED: 'MESSAGE_REACTIONS_UPDATED',
+  MESSAGE_DELETED: 'MESSAGE_DELETED',
+  PINNED_MESSAGE: 'PINNED_MESSAGE',
+  UNPINNED_MESSAGE: 'UNPINNED_MESSAGE',
+  NEW_CHAT_CREATED: 'NEW_CHAT_CREATED',
+  INITIAL_STATUSES: 'INITIAL_STATUSES',
+  STATUS: 'STATUS',
+  IS_TYPING: 'IS_TYPING',
+  STOP_TYPING: 'STOP_TYPING',
+} as const;
+
+export const WS_OUT = {
+  SEND_MESSAGE: 'SEND_MESSAGE',
+  UPDATE_MESSAGE: 'UPDATE_MESSAGE',
+  UPDATE_REACTION: 'UPDATE_REACTION',
+  DELETE_MESSAGE: 'DELETE_MESSAGE',
+  IS_TYPING: 'IS_TYPING',
+} as const;
+
+export type WsInType = (typeof WS_IN)[keyof typeof WS_IN];
+export type WsOutType = (typeof WS_OUT)[keyof typeof WS_OUT];

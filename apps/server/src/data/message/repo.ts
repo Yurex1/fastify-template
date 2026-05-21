@@ -1,8 +1,8 @@
 import type { CreateMessage, Message, MessageSearchResult, UpdateMessage } from '../../entities/message';
 import type { TypedPool } from '../../infra/pg';
 import { EntityRepo, SqlBuilder } from '../EntityRepo';
-import type { MessageRepo } from './types';
-import { getMessagePage, searchInChat, selectByChatId, selectOneById, updateReactions } from './sql';
+import type { CursorResult, FindByChatIdProps, MessageRepo } from './types';
+import { searchInChat, selectOneById, updateReactions, selectBefore, selectAfter, selectMessageContext } from './sql';
 
 class MessageRepository extends EntityRepo<Message> {
   constructor(pool: TypedPool) {
@@ -33,11 +33,31 @@ class MessageRepository extends EntityRepo<Message> {
     return message;
   }
 
-  async findByChatId(chatId: number, page: number = 1, limit: number = 30): Promise<Message[]> {
-    const offset = (page - 1) * limit;
+  async findByChatId(chatId: number, { before, after, limit = 50 }: FindByChatIdProps): Promise<CursorResult> {
+    if (after !== undefined) {
+      const { query, params } = selectAfter(chatId, after, limit);
+      const res = await this.pool.queryAll<Message>(query, params);
+      const hasMore = res.length > limit;
+      const page = res.slice(0, limit);
 
-    const { query, params } = selectByChatId(chatId, offset, limit);
-    return await this.pool.queryAll<Message>(query, params);
+      return {
+        messages: [...page].reverse(),
+        olderCursor: page.length > 0 ? page[0].id : null,
+        newerCursor: hasMore ? page[page.length - 1].id : null,
+      };
+    }
+
+    const { query, params } = selectBefore(chatId, before ?? null, limit);
+    const res = await this.pool.queryAll<Message>(query, params);
+
+    const hasOlder = res.length > limit;
+    const page = res.slice(0, limit);
+
+    return {
+      messages: page,
+      olderCursor: hasOlder ? (page[page.length - 1]?.id ?? null) : null,
+      newerCursor: before ? (page[0]?.id ?? null) : null,
+    };
   }
 
   async findAllByChatId(chatId: number, text: string): Promise<MessageSearchResult[]> {
@@ -50,10 +70,30 @@ class MessageRepository extends EntityRepo<Message> {
     return await this.pool.queryOne<Message | null>(query, params);
   }
 
-  async getMessagePage(chatId: number, messageId: number, limit: number = 30): Promise<number> {
-    const { query, params } = getMessagePage(chatId, messageId, limit);
-    const result = await this.pool.queryOne<{ page: number }>(query, params);
-    return result?.page ?? 1;
+  async getMessageContext(chatId: number, messageId: number, limit = 50): Promise<CursorResult> {
+    const half = Math.ceil(limit / 2);
+
+    const { query, params } = selectMessageContext(chatId, messageId, half + 1);
+    const messages = await this.pool.queryAll<Message>(query, params);
+
+    if (!messages || messages.length === 0) {
+      return { messages: [], olderCursor: null, newerCursor: null };
+    }
+
+    const olderGroup = messages.filter((m) => m.id <= messageId);
+    const newerGroup = messages.filter((m) => m.id > messageId);
+
+    const hasOlder = olderGroup.length > 1;
+    const hasNewer = newerGroup.length > 1;
+
+    const trimmedOlder = hasOlder ? olderGroup.slice(1) : olderGroup;
+    const trimmedNewer = hasNewer ? newerGroup.slice(0, -1) : newerGroup;
+
+    return {
+      messages: [...trimmedOlder, ...trimmedNewer].reverse(),
+      olderCursor: hasOlder ? trimmedOlder[0].id : null,
+      newerCursor: hasNewer ? trimmedNewer[trimmedNewer.length - 1].id : null,
+    };
   }
 }
 
@@ -62,14 +102,15 @@ export const init = (pool: TypedPool): MessageRepo => {
 
   return {
     create: (message: CreateMessage) => messageRepo.create(message),
-    findByChatId: (chatId: number, page: number, limit: number) => messageRepo.findByChatId(chatId, page, limit),
+    findByChatId: (chatId: number, { before, after, limit }: FindByChatIdProps) =>
+      messageRepo.findByChatId(chatId, { before, after, limit }),
     findAllByChatId: (chatId: number, text: string) => messageRepo.findAllByChatId(chatId, text),
     findOne: (definition: Partial<Message>) => messageRepo.findOne(definition),
     updateMessage: (id: number, definition: Partial<UpdateMessage>) => messageRepo.update(id, definition),
     updateReactions: (id: number, userId: number, reaction: string) =>
       messageRepo.updateReactions(id, userId, reaction),
-    getMessagePage: (chatId: number, messageId: number, limit: number) =>
-      messageRepo.getMessagePage(chatId, messageId, limit),
+    getMessageContext: (chatId: number, messageId: number, limit: number) =>
+      messageRepo.getMessageContext(chatId, messageId, limit),
     remove: (id: number) => messageRepo.remove(id),
   };
 };

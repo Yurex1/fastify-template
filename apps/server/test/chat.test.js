@@ -11,19 +11,20 @@ describe('Chat & Message Tests', () => {
   before(async () => {
     app = await start();
 
+    const TEST_PASSWORD = 'd902dko24>Iiik2ikx2podxki2';
     const deviceId = 'test-device-123';
     const suffix = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
     const session1 = await app.services.auth.signUp(
       `user1-${suffix}@test.com`,
       `user1-${suffix}`,
-      'password123',
+      TEST_PASSWORD,
       deviceId,
     );
     const session2 = await app.services.auth.signUp(
       `user2-${suffix}@test.com`,
       `user2-${suffix}`,
-      'password123',
+      TEST_PASSWORD,
       deviceId,
     );
 
@@ -72,7 +73,7 @@ describe('Chat & Message Tests', () => {
     });
 
     test('should get messages for a specific chat', async () => {
-      const messages = await app.services.chat.getMessagesByChatId(user1.id, chat.id);
+      const { messages } = await app.services.chat.getMessagesByChatId(user1.id, chat.id, {});
 
       assert(Array.isArray(messages), 'Should return an array');
       assert(messages.length > 0, 'Should contain at least one message');
@@ -90,7 +91,7 @@ describe('Chat & Message Tests', () => {
 
   describe('Chat List', () => {
     test('should return list of chats for user', async () => {
-      const chats = await app.services.chat.list(user1.id, 'approved', 1, 10);
+      const { chats } = await app.services.chat.list(user1.id, 'approved', null, 10);
 
       assert(Array.isArray(chats));
       assert(

@@ -7,7 +7,7 @@ interface MessageForm {
   resultCounter: number;
   results: { id: number }[];
   navigateResult: (direction: 1 | -1) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   handleOnChange: React.ChangeEventHandler<HTMLTextAreaElement, HTMLTextAreaElement>;
   handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement>;
 }

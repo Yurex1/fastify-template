@@ -1,4 +1,4 @@
-import type { Message } from '../api/types';
+import type { Message } from '../api/chats/types';
 
 export const userPressedEmojis = (message: Message, currentUserId: number) => {
   return Object.entries(message.reactions || {})

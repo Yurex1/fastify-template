@@ -1,5 +1,5 @@
-import type { ChangePassword, SignIn, SignUp } from '../types';
-import type { Session } from '../types';
+import type { ChangePassword, SignIn, SignUp } from './types';
+import type { Session } from '../user/types';
 import api from '../api';
 
 const auth = {

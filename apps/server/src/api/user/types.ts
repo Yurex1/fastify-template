@@ -1,4 +1,4 @@
-import type { User } from '../../entities/user';
+import type { User, UserResult } from '../../entities/user';
 import type { UserService } from '../../services/user/types';
 import type { ProtectedEndpoint, API } from '../types';
 import * as SchemaType from 'json-schema-to-ts';
@@ -10,7 +10,7 @@ type UpdateParam = SchemaType.FromSchema<typeof schemas.update>;
 type RemoveParam = SchemaType.FromSchema<typeof schemas.remove>;
 
 export interface UserApi extends API {
-  id: ProtectedEndpoint<GetByIdParam, User>;
+  id: ProtectedEndpoint<GetByIdParam, UserResult>;
   'get-all': ProtectedEndpoint<unknown, User[]>;
   'update-email': ProtectedEndpoint<UpdateEmailParam, User>;
   update: ProtectedEndpoint<UpdateParam, User>;

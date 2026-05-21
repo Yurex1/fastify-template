@@ -1,7 +1,8 @@
-import type { SignIn, SignUp, User } from '../api/types';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import authService from '../api/auth/auth';
+import type { User } from '../api/user/types';
+import type { SignIn, SignUp } from '../api/auth/types';
 
 interface AuthState {
   currentUser: User | null;

@@ -1,15 +1,15 @@
 import { Dot } from 'lucide-react';
 import { cn } from '../lib/utils';
-import Time from './Time';
-import { ContextMenuTrigger, ContextMenu } from './ui/context-menu';
-import ChatMenu from './ContextMenu';
+import Time from '../components/Time';
+import ChatMenu from '../components/ContextMenu';
 import { deleteChat } from '../services/chats';
 import { QueryKeys } from '../lib/queries';
-import type { Chat } from '../api/types';
 import { useState } from 'react';
 import { useUserStatus } from '../stores/userStatus';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/auth';
+import type { Chat } from '../api/chats/types';
+import { ContextMenu, ContextMenuTrigger } from '../components/ui/context-menu';
 
 interface ChatBlockProps {
   chat: Chat;
@@ -23,7 +23,7 @@ export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlock
   const member = (chat: Chat) => {
     return chat.members.find((m) => m.id !== user?.id);
   };
-  const chatMember = member(chat);
+
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
   const stats = useUserStatus((s) => s.statuses);
   const lastseen = useUserStatus((s) => s.lastSeenMap);
@@ -43,6 +43,9 @@ export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlock
       }
     }
   };
+
+  const chatMember = member(chat);
+  if (!chatMember) return;
 
   return (
     <ContextMenu key={chat.id}>

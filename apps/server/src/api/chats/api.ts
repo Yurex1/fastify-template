@@ -21,9 +21,10 @@ export const init = ({ chatService }: Deps): ChatApi => {
       access: 'access',
       schema: schemas.list,
       handler: (user, request) => {
-        const { status, page, limit } = request.query;
+        const { status, updatedAt, limit } = request.query;
+        const cursor = updatedAt ? { updatedAt: updatedAt, id: user.id } : null;
 
-        return chatService.list(user.id, status as ChatMemberStatus, page, limit);
+        return chatService.list(user.id, status as ChatMemberStatus, cursor, limit);
       },
     },
 
@@ -34,8 +35,8 @@ export const init = ({ chatService }: Deps): ChatApi => {
       params: ['chatId'],
       handler: (user, request) => {
         const { chatId } = request.params;
-        const { page, limit } = request.query;
-        return chatService.getMessagesByChatId(user.id, chatId, page, limit);
+        const { after, before, limit } = request.query;
+        return chatService.getMessagesByChatId(user.id, chatId, { after, before, limit });
       },
     },
 
@@ -51,7 +52,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       },
     },
 
-    getMessagePage: {
+    getMessageContext: {
       method: 'get',
       access: 'access',
       schema: schemas.getMessagePage,
@@ -59,7 +60,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       handler: (user, request) => {
         const { chatId, messageId } = request.params;
         const { limit } = request.query;
-        return chatService.getMessagePage(user.id, chatId, messageId, limit);
+        return chatService.getMessageContext(user.id, chatId, messageId, limit);
       },
     },
 
@@ -90,11 +91,11 @@ export const init = ({ chatService }: Deps): ChatApi => {
       access: 'access',
       schema: schemas.getAllPinnedMessages,
       params: ['chatId'],
-      handler: (_user, request) => {
+      handler: (user, request) => {
         const { chatId } = request.params;
-        const { page, limit } = request.query;
+        const { createdAt, limit } = request.query;
 
-        return chatService.getAllPinnedMessages(chatId, page, limit);
+        return chatService.getAllPinnedMessages(chatId, { createdAt, id: user.id }, limit);
       },
     },
 

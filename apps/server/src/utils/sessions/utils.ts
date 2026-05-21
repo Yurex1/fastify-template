@@ -4,12 +4,21 @@ import { config } from '../../config';
 import type { UserResult } from '../../entities/user';
 import { exception } from '../exception/util';
 import { jwt } from './jwt';
-import type { Session, SessionResponse } from './types';
+import type { Session } from './types';
 
 export const sessions = {
   generate: (user: UserResult): Session => {
     const { id } = user;
     const accessToken = jwt.sign({ id, type: 'access' }, config.jwt.expiration.access as SignOptions['expiresIn']);
+
+    const sanitizedUser: UserResult = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      lastseen: user.lastseen,
+    };
 
     const refreshToken = jwt.sign({ id, type: 'refresh' }, config.jwt.expiration.refresh as SignOptions['expiresIn']);
     const decoded = jsonwebtoken.decode(refreshToken) as { exp: number };
@@ -19,7 +28,7 @@ export const sessions = {
 
     const expiresAt = new Date(decoded.exp * 1000);
     return {
-      user,
+      user: sanitizedUser,
       accessToken,
       refreshToken,
       expiresAt,
@@ -36,8 +45,11 @@ export const sessions = {
 
     return { id: payload.id };
   },
-  toSessionResponse: (session: Session): SessionResponse => {
-    const { ...response } = session;
-    return response;
+  toSessionResponse: (session: Session): Partial<Session> => {
+    return {
+      user: session.user,
+      accessToken: session.accessToken,
+      expiresAt: session.expiresAt,
+    };
   },
 };

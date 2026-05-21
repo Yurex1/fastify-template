@@ -32,9 +32,19 @@ export const init = (pool: TypedPool): ChatMemberRepo => ({
     return await pool.queryAll<ChatMember>(query, params);
   },
 
-  async listChatsForUser(userId, status, page, limit) {
-    const { query, params } = selectChatsForUser(userId, status, page, limit);
-    return await pool.queryAll<ChatPreview>(query, params);
+  async listChatsForUser(userId, status, cursor, limit) {
+    const { query, params } = selectChatsForUser(userId, status, cursor, limit);
+
+    const chats = await pool.queryAll<ChatPreview>(query, params);
+    const hasOlder = chats.length > limit;
+    const page = chats.slice(0, limit);
+
+    const nextCursor = {
+      updatedAt: hasOlder ? page[page.length - 1].updatedAt.toISOString() : null,
+      id: hasOlder ? page[page.length - 1].id : null,
+    };
+
+    return { chats: page, nextCursor };
   },
 
   async isMember(userId, chatId) {

@@ -2,13 +2,13 @@ import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
 import { WsServer } from './types';
-import { User } from '../entities/user';
+import { UserResult } from '../entities/user';
 
 interface MessageHandlersDeps {
   services: Services;
   fastifyWs: WsServer;
   uid: number;
-  user: User;
+  user: UserResult;
 }
 
 export const createMessageHandlers = ({ services, fastifyWs, uid, user }: MessageHandlersDeps) => {
