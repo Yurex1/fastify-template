@@ -1,16 +1,16 @@
-import { cn } from '../lib/utils';
-import { EmojiMenu } from '../components/EmojiMenu';
-import { ReactionList, userPressedEmojis } from '../components/ReactionList';
-import Time from '../components/Time';
-import MessageMenu from '../components/ContextMenu';
-import { ContextMenu, ContextMenuTrigger } from '../components/ui/context-menu';
-import { useAuthStore } from '../stores/auth';
+import { cn } from '../../lib/utils';
+import { EmojiMenu } from '../EmojiMenu';
+import { ReactionList, userPressedEmojis } from '../ReactionList';
+import Time from '../Time';
+import MessageMenu from '../ContextMenu';
+import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
+import { useAuthStore } from '../../stores/auth';
 import { Pin } from 'lucide-react';
-import chatsApi from '../api/chats/chats';
-import { isOwnMessage } from '../utils/isOwnMessage';
-import { useMessageActions } from '../hooks/useMessageActions';
-import useChatUIStore from '../stores/chatUI';
-import type { Message } from '../api/chats/types';
+import chatsApi from '../../api/chats/chats';
+import { isOwnMessage } from '../../utils/isOwnMessage';
+import { useMessageActions } from '../../hooks/useMessageActions';
+import useChatUIStore from '../../stores/chatUI';
+import type { Message } from '../../api/chats/types';
 
 interface MessageBlockProps {
   message: Message;
@@ -30,7 +30,7 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
   if (!currentUser) return null;
   const isOwn = isOwnMessage(message.userId, currentUser.id);
 
-  function togglePin() {
+  const togglePin = () => {
     if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
     else chatsApi.pinMessage(message.chatId, message.id);
   }

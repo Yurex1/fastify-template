@@ -1,9 +1,9 @@
 import { LucideArrowLeftCircle, Pin } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn } from '../../lib/utils';
 import { useEffect } from 'react';
 
-import { usePinnedMessages } from '../hooks/usePinnedMessages';
-import useChatUIStore from '../stores/chatUI';
+import { usePinnedMessages } from '../../hooks/usePinnedMessages';
+import useChatUIStore from '../../stores/chatUI';
 
 interface OpenPinnedMessagesProps {
   pinnedMode: boolean;

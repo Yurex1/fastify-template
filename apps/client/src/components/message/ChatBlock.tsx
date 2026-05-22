@@ -1,21 +1,22 @@
 import { Dot } from 'lucide-react';
-import { cn } from '../lib/utils';
-import Time from '../components/Time';
-import ChatMenu from '../components/ContextMenu';
-import { deleteChat } from '../services/chats';
-import { QueryKeys } from '../lib/queries';
+import { cn } from '../../lib/utils';
+import Time from '../Time';
+import ChatMenu from '../ContextMenu';
+import { deleteChat } from '../../services/chats';
+import { QueryKeys } from '../../lib/queries';
 import { useState } from 'react';
-import { useUserStatus } from '../stores/userStatus';
+import { useUserStatus } from '../../stores/userStatus';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../stores/auth';
-import type { Chat } from '../api/chats/types';
-import { ContextMenu, ContextMenuTrigger } from '../components/ui/context-menu';
+import { useAuthStore } from '../../stores/auth';
+import type { Chat } from '../../api/chats/types';
+import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 
 interface ChatBlockProps {
   chat: Chat;
   currentChatId: number | null;
   handleChangeChatId: (id: number | null) => void;
 }
+
 export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlockProps) => {
   const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.currentUser);
@@ -69,7 +70,7 @@ export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlock
             <Time
               date={lastseen[chatMember.id] || chatMember.lastseen || ''}
               text="Last seen:"
-              additionalStyles="opacity-[0.4] absolute bottom-0 right-0"
+              additionalStyles="opacity-[0.4] absolute bottom-2 right-2"
             />
           )}
         </div>

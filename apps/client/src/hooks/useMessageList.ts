@@ -7,7 +7,6 @@ const START_INDEX = 1_000_000;
 
 export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | null>) {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
-
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
   const setIsAtBottom = useChatUIStore((s) => s.setIsAtBottom);
@@ -23,14 +22,21 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     isLoading,
   } = useChatMessages(anchorMessageId);
 
+  const chatKey = `${currentChatId}-${anchorMessageId ?? ''}`;
+
   const firstItemIndexRef = useRef<number>(START_INDEX);
-  const [firstItemIndex, setFirstItemIndex] = useState(START_INDEX);
   const prevOldestIdRef = useRef<number | null>(null);
+
+  const [firstItemState, setFirstItemState] = useState<{ key: string; value: number }>({
+    key: chatKey,
+    value: START_INDEX,
+  });
+  const firstItemIndex = firstItemState.key === chatKey ? firstItemState.value : START_INDEX;
 
   useEffect(() => {
     firstItemIndexRef.current = START_INDEX;
-    setFirstItemIndex(START_INDEX);
     prevOldestIdRef.current = null;
+    setFirstItemState({ key: chatKey, value: START_INDEX });
   }, [currentChatId, anchorMessageId]);
 
   useEffect(() => {
@@ -48,7 +54,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
 
       if (addedBefore > 0) {
         firstItemIndexRef.current -= addedBefore;
-        setFirstItemIndex(firstItemIndexRef.current);
+        setFirstItemState({ key: chatKey, value: firstItemIndexRef.current });
       }
     }
 
@@ -70,9 +76,12 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const atBottomStateChange = (atBottom: boolean) => setIsAtBottom(atBottom);
 
   const initialTopMostItemIndex = () => {
-    if (anchorMessageId === null || messages.length === 0) return messages.length - 1;
+    if (anchorMessageId === null || messages.length === 0) {
+      return { index: Math.max(0, messages.length - 1), align: 'end' as const };
+    }
     const idx = messages.findIndex((m) => m.id === anchorMessageId);
-    return idx === -1 ? messages.length - 1 : messages.length - 1 - idx;
+    const index = idx === -1 ? messages.length - 1 : messages.length - 1 - idx;
+    return { index, align: 'center' as const };
   };
 
   const scrollToMessage = (messageId: number) => {

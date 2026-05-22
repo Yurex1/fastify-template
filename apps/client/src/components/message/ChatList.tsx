@@ -1,10 +1,10 @@
-import { setLastChatId } from '../utils/lastOpenChatId';
-import { CreateChat } from '../components/CreateChat';
-import { EmptyBlock } from '../components/EmptyBlock';
-import { useChats } from '../hooks/useChats';
+import { setLastChatId } from '../../utils/lastOpenChatId';
+import { CreateChat } from '../CreateChat';
+import { EmptyBlock } from '../EmptyBlock';
+import { useChats } from '../../hooks/useChats';
 
 import { ChatBlock } from './ChatBlock';
-import useChatUIStore from '../stores/chatUI';
+import useChatUIStore from '../../stores/chatUI';
 import { Loader } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 

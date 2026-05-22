@@ -1,5 +1,5 @@
 import TextareaAutosize from 'react-textarea-autosize';
-import useMessageFormStore from '../stores/messageForm';
+import useMessageFormStore from '../../stores/messageForm';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MessageForm {
@@ -11,6 +11,7 @@ interface MessageForm {
   handleOnChange: React.ChangeEventHandler<HTMLTextAreaElement, HTMLTextAreaElement>;
   handleKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement>;
 }
+
 const MessageForm = ({
   formButton,
   resultCounter,

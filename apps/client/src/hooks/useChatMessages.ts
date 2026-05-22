@@ -1,4 +1,5 @@
 import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import chatsApi from '../api/chats/chats';
 import { QueryKeys } from '../lib/queries';
 import useChatUIStore from '../stores/chatUI';
@@ -41,7 +42,10 @@ export function useChatMessages(anchorMessageId: number | null = null) {
     staleTime: Infinity,
   });
 
-  const messages = query.data?.pages.flatMap((p) => p.messages) ?? [];
+  const messages = useMemo(
+    () => query.data?.pages.flatMap((p) => p.messages) ?? [],
+    [query.data],
+  );
 
   return {
     ...query,

@@ -1,8 +1,8 @@
 import { Virtuoso } from 'react-virtuoso';
-import { usePinnedMessages } from '../hooks/usePinnedMessages';
-import { MessageBlock } from '../message/MessageBlock';
+import { usePinnedMessages } from '../../hooks/usePinnedMessages';
+import { MessageBlock } from './MessageBlock';
 import { Loader } from 'lucide-react';
-import { EmptyBlock } from '../components/EmptyBlock';
+import { EmptyBlock } from '../EmptyBlock';
 
 interface PinnedMessagesListProps {
   updateReaction: (id: number, userId: number, reaction: string) => void;
