@@ -6,34 +6,32 @@ import { Input } from '../components/Input';
 import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
 import { useMutation } from '@tanstack/react-query';
+import { getErrorMessage } from '../utils/handleErrors';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.login);
 
-  const [form, setForm] = useState({
-    usernameOrEmail: '',
-    password: '',
-  });
-
+  const [form, setForm] = useState({ usernameOrEmail: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const { mutate, isPending, error } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: (loginData: { usernameOrEmail: string; password: string }) => signIn(loginData),
-    onSuccess: () => {
-      navigate(ROUTES.HOME);
+    onSuccess: () => navigate(ROUTES.HOME),
+    onError: async (error) => {
+      const message = await getErrorMessage(error);
+      setErrorMessage(message);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
     mutate(form);
   };
 
@@ -77,10 +75,6 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500 text-center">{(error as Error).message || 'Registration failed'}</p>
-            )}
-
             <Button type="submit" loading={isPending}>
               Sign in
             </Button>
@@ -92,6 +86,49 @@ export default function LoginPage() {
             </span>
           </div>
         </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            name="usernameOrEmail"
+            placeholder="Username or Email"
+            autoComplete="username"
+            value={form.usernameOrEmail}
+            onChange={handleChange}
+            required
+          />
+
+          <div className="relative">
+            <Input
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {errorMessage && <p className="text-sm text-red-500 text-center">{errorMessage}</p>}
+
+          <Button type="submit" loading={isPending}>
+            Sign in
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-neutral-400">
+          Don't have an account?{' '}
+          <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
+            Sign up
+          </span>
+        </p>
       </div>
     </div>
   );

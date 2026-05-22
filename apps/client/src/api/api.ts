@@ -29,7 +29,9 @@ const api = ky.create({
                 headers: { 'x-device-id': userAgent },
               })
               .json<{ accessToken: string; user: User; expiresAt: string }>();
+
             useAuthStore.getState().setAccessToken(refreshRes.accessToken);
+
             return ky(request, {
               headers: {
                 ...request.headers,
@@ -37,9 +39,11 @@ const api = ky.create({
               },
             });
           } catch (refreshError) {
-            console.error('Refresh failed, logging out...');
+            const wasAuthenticated = !!useAuthStore.getState().accessToken;
             useAuthStore.getState().clearAccessToken();
-            window.location.href = '/login';
+            if (wasAuthenticated) {
+              window.location.href = '/login';
+            }
             throw refreshError;
           }
         }

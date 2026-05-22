@@ -18,7 +18,6 @@ export const validatePassword = (password: string, email: string, username: stri
   if (!isValid) {
     throw exception.badRequest('PASSWORD_MUST_CONTAIN_UPPERCASE_LOWERCASE_NUMBER_AND_SYMBOL');
   }
-
   const passwordStrength = zxcvbn(password);
 
   if (passwordStrength.score < 3) {
