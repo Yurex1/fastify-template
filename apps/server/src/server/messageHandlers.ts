@@ -1,6 +1,8 @@
 import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
+import { CALL_ACTIONS } from '../services/livekit/consts';
+
 import { WsServer } from './types';
 import { UserResult } from '../entities/user';
 
@@ -92,6 +94,11 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     }
   };
 
+  const handleCreateRoom = async (data: { payload: { chatId: number; roomName: string } }) => {
+    const { chatId, roomName } = data.payload;
+    await broadcastForChatMembers(chatId, CALL_ACTIONS.incoming, { chatId, roomName });
+  };
+
   const handleDeleteMessage = async (data: { payload: { messageId: number } }) => {
     const { messageId } = data.payload;
     const msg = await services.chat.findMessage({ id: messageId });
@@ -130,6 +137,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     handleUpdateReaction,
     handleDeleteMessage,
     handleInitialStatuses,
+    handleCreateRoom,
     broadcastStatus,
   };
 };

@@ -5,6 +5,7 @@ import { AuthService } from './auth/types';
 import { PostService } from './post/types';
 import { NotificationService } from '../firebase/notification/service';
 import { S3Service } from './s3/types';
+import { LiveKitService } from './livekit/types';
 
 export interface Services {
   chat: ChatService;
@@ -14,4 +15,5 @@ export interface Services {
   post: PostService;
   notification: NotificationService;
   s3: S3Service;
+  livekit: LiveKitService;
 }

@@ -34,6 +34,11 @@ export const config = {
     accessKeyId: env.requireEnv('AWS_ACCESS_KEY_ID'),
     secretAccessKey: env.requireEnv('AWS_SECRET_ACCESS_KEY'),
   },
+  livekit: {
+    url: env.requireEnv('LIVEKIT_URL'),
+    apiKey: env.requireEnv('LIVEKIT_API_KEY'),
+    apiSecret: env.requireEnv('LIVEKIT_API_SECRET'),
+  },
   cors: {
     allowedOrigins: env.requireEnv('CORS_ALLOWED_ORIGINS').split(',') || [],
   },

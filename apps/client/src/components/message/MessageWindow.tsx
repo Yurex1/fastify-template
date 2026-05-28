@@ -2,7 +2,7 @@ import { lazy, useEffect, useRef, Suspense, useState } from 'react';
 import { Loader } from '../Loader';
 import MessageForm from './MessageForm';
 import { EmptyBlock } from '../EmptyBlock';
-import { LucideSearch, X } from 'lucide-react';
+import { LucideSearch, PhoneCall, X } from 'lucide-react';
 import { useMessageForm } from '../../hooks/useMessageForm';
 import { ReplyBlock } from '../ReplyBlock';
 import { MessageBlock } from './MessageBlock';
@@ -15,6 +15,7 @@ import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
 import { useChatSocket } from '../../websocket/ChatSocketContext';
 import type { Message } from '../../api/chats/types';
+import { CallRoom } from '../CallRoom';
 
 const ANCHOR_READY_FALLBACK_MS = 300;
 const CHAT_SCROLL_WINDOW_MS = 500;
@@ -25,6 +26,8 @@ const MessageWindow = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
+  const incomingCall = useChatUIStore((s) => s.incomingCall);
+  const setIsIncomingCall = useChatUIStore((s) => s.setIsIncomingCall);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
   const isAtBottom = useChatUIStore((s) => s.isAtBottom);
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
@@ -35,7 +38,9 @@ const MessageWindow = () => {
   const anchorReadyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatScrollActiveRef = useRef(false);
 
-  const { deleteMessage, updateMessage, updateReaction, sendMessage, typing } = useChatSocket();
+  const { deleteMessage, updateMessage, updateReaction, sendMessage, typing, createRoom } = useChatSocket();
+
+  const [callmode, setCallmode] = useState(false);
 
   const {
     messages,
@@ -157,6 +162,42 @@ const MessageWindow = () => {
       );
     }
 
+    if (callmode) {
+      return <CallRoom roomName={`chat-${currentChatId}`} />;
+    }
+
+    if (incomingCall.chatId && incomingCall.roomName) {
+      return (
+        <div className="flex-1 flex items-center justify-center bg-gray-950">
+          <div className="bg-gray-900 p-6 rounded-xl flex flex-col gap-4 items-center">
+            <p className="text-white text-lg">Incoming call...</p>
+            <div className="flex gap-3">
+              <button
+                className="bg-green-500 px-6 py-2 rounded-lg text-white"
+                onClick={() => {
+                  setCallmode(true);
+                  setIsIncomingCall(null, null);
+                }}
+              >
+                Accept
+              </button>
+              <button
+                className="bg-red-500 px-6 py-2 rounded-lg text-white"
+                onClick={() => setIsIncomingCall(null, null)}
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (callmode) {
+      const roomName = incomingCall.roomName ?? `chat-${currentChatId}`;
+      return <CallRoom roomName={roomName} />;
+    }
+
     if (!isLoading && messages.length <= 0) {
       return <EmptyBlock />;
     }
@@ -216,6 +257,19 @@ const MessageWindow = () => {
         aria-label={formMode === 'search' ? 'Close search' : 'Search messages'}
       >
         {formMode === 'search' ? <X /> : <LucideSearch />}
+      </button>
+
+      <button
+        className="self-end p-2"
+        onClick={() => {
+          if (currentChatId) {
+            setCallmode(true);
+            createRoom(currentChatId, `chat-${currentChatId}`);
+          }
+        }}
+        aria-label={formMode === 'search' ? 'Close search' : 'Search messages'}
+      >
+        <PhoneCall />
       </button>
 
       {renderContent()}

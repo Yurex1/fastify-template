@@ -99,6 +99,8 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       deleteMessage: (messageId) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.DELETE_MESSAGE, payload: { messageId } })),
       typing: (chatId) => socketRef.current?.send(JSON.stringify({ type: WS_OUT.IS_TYPING, payload: { chatId } })),
+      createRoom: (chatId, roomName) =>
+        socketRef.current?.send(JSON.stringify({ type: WS_OUT.OUTGOING_CALL, payload: { chatId, roomName } })),
     }),
     [],
   );

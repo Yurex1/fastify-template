@@ -9,6 +9,8 @@ import {
   handleUpdatedMessage,
 } from './handlers/message.handlers';
 import { handleInitialStatuses, handleStopTyping, handleTyping, handleUserStatus } from './handlers/user.handlers';
+import { handleIncomingCall } from './handlers/chat.handlers';
+
 import { WS_IN } from './consts/messageEvents';
 
 export function handleSocketMessage(event: MessageEvent, queryClient: QueryClient) {
@@ -64,6 +66,11 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
 
     case WS_IN.UNPINNED_MESSAGE: {
       handleUnpinMessage(data, queryClient);
+      break;
+    }
+
+    case WS_IN.INCOMING_CALL: {
+      handleIncomingCall(data);
       break;
     }
 

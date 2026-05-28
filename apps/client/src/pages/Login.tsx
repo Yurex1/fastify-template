@@ -86,49 +86,6 @@ export default function LoginPage() {
             </span>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            name="usernameOrEmail"
-            placeholder="Username or Email"
-            autoComplete="username"
-            value={form.usernameOrEmail}
-            onChange={handleChange}
-            required
-          />
-
-          <div className="relative">
-            <Input
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              autoComplete="current-password"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {errorMessage && <p className="text-sm text-red-500 text-center">{errorMessage}</p>}
-
-          <Button type="submit" loading={isPending}>
-            Sign in
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-neutral-400">
-          Don't have an account?{' '}
-          <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
-            Sign up
-          </span>
-        </p>
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ export const WS_IN = {
   STATUS: 'STATUS',
   IS_TYPING: 'IS_TYPING',
   STOP_TYPING: 'STOP_TYPING',
+  INCOMING_CALL: 'INCOMING_CALL',
 } as const;
 
 export const WS_OUT = {
@@ -21,6 +22,7 @@ export const WS_OUT = {
   UPDATE_REACTION: 'UPDATE_REACTION',
   DELETE_MESSAGE: 'DELETE_MESSAGE',
   IS_TYPING: 'IS_TYPING',
+  OUTGOING_CALL: 'OUTGOING_CALL',
 } as const;
 
 export type WsInType = (typeof WS_IN)[keyof typeof WS_IN];
