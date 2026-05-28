@@ -19,13 +19,13 @@ export const list = {
       type: 'object',
       properties: {
         status: { type: 'string', enum: ['pending', 'approved', 'rejected'] },
-        page: { type: 'number' },
+        updatedAt: { type: 'string' },
         limit: { type: 'number' },
       },
-      required: ['page', 'limit'],
+      required: ['status', 'limit'],
     },
   },
-  required: ['query', 'headers'],
+  required: ['query'],
 } as const;
 
 export const getMessagesByChatId = {
@@ -41,10 +41,11 @@ export const getMessagesByChatId = {
     query: {
       type: 'object',
       properties: {
-        page: { type: 'number', minimum: 1 },
+        before: { type: 'number' },
+        after: { type: 'number' },
         limit: { type: 'number', minimum: 1, maximum: 100 },
       },
-      required: ['page', 'limit'],
+      required: ['limit'],
     },
   },
   required: ['params', 'query'],
@@ -138,10 +139,11 @@ export const getAllPinnedMessages = {
     query: {
       type: 'object',
       properties: {
-        page: { type: 'number', minimum: 1 },
+        createdAt: { type: 'string', format: 'date-time' },
+        id: { type: 'number' },
         limit: { type: 'number', minimum: 1, maximum: 100 },
       },
-      required: ['page', 'limit'],
+      required: ['limit'],
     },
   },
   required: ['params', 'query'],

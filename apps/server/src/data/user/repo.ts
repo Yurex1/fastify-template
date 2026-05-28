@@ -1,5 +1,5 @@
 import type { TypedPool } from '../../infra/pg';
-import type { User, CreateUser, UpdateUser, UserResult } from '../../entities/user';
+import type { User, CreateUser, UpdateUser } from '../../entities/user';
 import type { UserRepo } from './types';
 import { EntityRepo } from '../EntityRepo';
 import { updateUserEmail, selectByUsernameOrEmail, updateLastSeenDate, updateUserPassword } from './sql';
@@ -9,15 +9,15 @@ class UserRepository extends EntityRepo<User> {
     super(pool, 'users', ['id', 'email', 'username', 'password', 'createdAt', 'updatedAt', 'lastseen']);
   }
 
-  async findOne(definition: Partial<User>, includePassword = false): Promise<UserResult> {
+  async findOne(definition: Partial<User>, includePassword = false): Promise<User> {
     if (includePassword) {
       const { query, params } = this.buildSelectOneWithPasswordQuery(definition);
-      const result = await this.pool.queryOne<UserResult>(query, params);
+      const result = await this.pool.queryOne<User>(query, params);
       return result!;
     }
 
     const result = await super.findOne(definition);
-    return result as UserResult;
+    return result as User;
   }
 
   async findOneByUsernameOrEmail(value: string, includePassword = false): Promise<User | null> {

@@ -1,4 +1,5 @@
 import { exception } from '../../utils/exception/util';
+import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
@@ -28,6 +29,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       refreshToken: hashedToken,
       expiresAt: session.expiresAt,
     });
+
     return session;
   },
 
@@ -41,7 +43,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     if (existingUsername) {
       throw exception.badRequest('USERNAME_UNAVAILABLE');
     }
-
+    validatePassword(password, email, username);
     const hashedPassword = passwords.hash(password);
 
     const user = await userRepo.create({
@@ -59,6 +61,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       refreshToken: hashedToken,
       expiresAt: session.expiresAt,
     });
+
     return session;
   },
 
@@ -140,6 +143,8 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     if (isSamePassword) {
       throw exception.badRequest('NEW_PASSWORD_SAME_AS_OLD');
     }
+
+    validatePassword(newPassword, user.email, user.username);
 
     const hash = passwords.hash(newPassword);
 

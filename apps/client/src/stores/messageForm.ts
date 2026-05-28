@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { FormMode, Message } from '../api/types';
+import type { FormMode, Message } from '../api/chats/types';
 
 interface useMessageFormProps {
   formMode: FormMode;

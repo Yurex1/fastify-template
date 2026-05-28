@@ -1,8 +1,8 @@
-import { CreatePinnedMessage, PinnedMessage } from '../../entities/pinnedMessages';
+import { CreatePinnedMessage, PinnedMessage, PinnedMessageList } from '../../entities/pinnedMessages';
 import type { TypedPool } from '../../infra/pg';
 import { EntityRepo } from '../EntityRepo';
 import { deleteByChatAndMessage, selectByChatId } from './sql';
-import type { PinnedMessagesRepo } from './types';
+import type { PinnedMessagesRepo, PinnedMessagesCursor } from './types';
 
 class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
   constructor(pool: TypedPool) {
@@ -11,14 +11,40 @@ class PinnedMessagesRepository extends EntityRepo<PinnedMessage> {
 
   async findByChatId(
     chatId: number,
-    page: number = 1,
+    cursor: PinnedMessagesCursor | null = null,
     limit: number = 30,
-  ): Promise<{ totalCount: number; data: PinnedMessage[] }> {
-    const offset = (page - 1) * limit;
+  ): Promise<PinnedMessageList> {
+    const { query, params } = selectByChatId(chatId, cursor, limit);
 
-    const { query, params } = selectByChatId(chatId, offset, limit);
-    const result = await this.pool.queryOne<{ totalCount: number; data: PinnedMessage[] }>(query, params);
-    return result ?? { totalCount: 0, data: [] };
+    const rows = await this.pool.queryOne<{
+      totalCount: number;
+      data: PinnedMessage[];
+    }>(query, params);
+
+    if (!rows) {
+      return { totalCount: 0, data: [], nextCursor: null };
+    }
+
+    const hasMore = rows.data.length > limit;
+    const page = rows.data.slice(0, limit);
+
+    let nextCursor: PinnedMessagesCursor | null = null;
+    if (hasMore && page.length > 0) {
+      const lastItem = page[page.length - 1];
+
+      if (lastItem?.message?.createdAt != null) {
+        nextCursor = {
+          createdAt: lastItem.message.createdAt,
+          id: lastItem.id,
+        };
+      }
+    }
+
+    return {
+      data: page,
+      totalCount: rows.totalCount,
+      nextCursor,
+    };
   }
 
   async removeByMessageId(chatId: number, messageId: number): Promise<{ chatId: number; messageId: number }> {
@@ -42,7 +68,8 @@ export const init = (pool: TypedPool): PinnedMessagesRepo => {
 
   return {
     create: (message: CreatePinnedMessage) => pinnedMessagesRepo.create(message),
-    findByChatId: (chatId: number, page: number, limit: number) => pinnedMessagesRepo.findByChatId(chatId, page, limit),
+    findByChatId: (chatId: number, cursor: PinnedMessagesCursor, limit: number) =>
+      pinnedMessagesRepo.findByChatId(chatId, cursor, limit),
     findOne: (definition: Partial<PinnedMessage>) => pinnedMessagesRepo.findOne(definition),
     removeByMessageId: (chatId: number, messageId: number) => pinnedMessagesRepo.removeByMessageId(chatId, messageId),
   };

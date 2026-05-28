@@ -1,5 +1,5 @@
 import { X } from 'lucide-react';
-import type { Message } from '../api/types';
+import type { Message } from '../api/chats/types';
 
 interface Props {
   message: Message;

@@ -45,8 +45,8 @@ export const init = (deps: Deps): ChatService => {
       };
     },
 
-    list: async (userId, status, page = 1, limit = 20) => {
-      return chatMemberRepo.listChatsForUser(userId, status, page, limit);
+    list: async (userId, status, cursor, limit = 50) => {
+      return chatMemberRepo.listChatsForUser(userId, status, cursor, limit);
     },
 
     getAllMembers: async (userId) => {
@@ -57,8 +57,8 @@ export const init = (deps: Deps): ChatService => {
       return chatMemberRepo.getAllMembersByChatId(chatId);
     },
 
-    getAllPinnedMessages: async (chatId, page = 1, limit = 30) => {
-      return pinnedMessagesRepo.findByChatId(chatId, page, limit);
+    getAllPinnedMessages: async (chatId, cursor, limit = 50) => {
+      return pinnedMessagesRepo.findByChatId(chatId, cursor, limit);
     },
 
     findMessage: async (definition) => {
@@ -79,11 +79,11 @@ export const init = (deps: Deps): ChatService => {
       return message;
     },
 
-    getMessagesByChatId: async (userId, chatId, page = 1, limit = 30) => {
+    getMessagesByChatId: async (userId, chatId, { before, after, limit }) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
-      return await messageRepo.findByChatId(chatId, page, limit);
+      return await messageRepo.findByChatId(chatId, { before, after, limit });
     },
 
     searchMessagesByChatId: async (userId, chatId, text) => {
@@ -110,12 +110,11 @@ export const init = (deps: Deps): ChatService => {
       return messageRepo.updateReactions(id, userId, reaction);
     },
 
-    getMessagePage: async (userId, chatId, messageId, limit) => {
+    getMessageContext: async (userId, chatId, messageId, limit) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
-      const page = await messageRepo.getMessagePage(chatId, messageId, limit);
-      return { page };
+      return await messageRepo.getMessageContext(chatId, messageId, limit);
     },
 
     pinMessage: async (userId, chatId, messageId) => {

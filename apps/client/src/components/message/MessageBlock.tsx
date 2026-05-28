@@ -1,16 +1,16 @@
-import type { Message } from '../api/types';
-import { cn } from '../lib/utils';
-import { EmojiMenu } from './EmojiMenu';
-import { ReactionList, userPressedEmojis } from './ReactionList';
-import Time from './Time';
-import MessageMenu from './ContextMenu';
-import { ContextMenu, ContextMenuTrigger } from './ui/context-menu';
-import { useAuthStore } from '../stores/auth';
+import { cn } from '../../lib/utils';
+import { EmojiMenu } from '../EmojiMenu';
+import { ReactionList, userPressedEmojis } from '../ReactionList';
+import Time from '../Time';
+import MessageMenu from '../ContextMenu';
+import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
+import { useAuthStore } from '../../stores/auth';
 import { Pin } from 'lucide-react';
-import chatsApi from '../api/chats/chats';
-import { isOwnMessage } from '../utils/isOwnMessage';
-import { useMessageActions } from '../hooks/useMessageActions';
-import useChatUIStore from '../stores/chatUI';
+import chatsApi from '../../api/chats/chats';
+import { isOwnMessage } from '../../utils/isOwnMessage';
+import { useMessageActions } from '../../hooks/useMessageActions';
+import useChatUIStore from '../../stores/chatUI';
+import type { Message } from '../../api/chats/types';
 
 interface MessageBlockProps {
   message: Message;
@@ -27,9 +27,10 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
     deleteMessage,
   });
 
+  if (!currentUser) return null;
   const isOwn = isOwnMessage(message.userId, currentUser.id);
 
-  function togglePin() {
+  const togglePin = () => {
     if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
     else chatsApi.pinMessage(message.chatId, message.id);
   }
@@ -39,7 +40,7 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
   return (
     <div
       id={`message-${message.id}`}
-      className={cn('flex mb-1 whitespace-pre-wrap break-words', isOwn ? 'justify-end' : 'justify-start')}
+      className={cn('flex mb-1 whitespace-pre-wrap break-words px-4', isOwn ? 'justify-end' : 'justify-start')}
     >
       <ContextMenu>
         <ContextMenuTrigger

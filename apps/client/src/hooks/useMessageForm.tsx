@@ -6,7 +6,7 @@ import useMessageFormStore from '../stores/messageForm';
 import { useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
-import type { FormMode } from '../api/types';
+import type { FormMode } from '../api/chats/types';
 
 interface useMessageFormProps {
   updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
@@ -24,6 +24,7 @@ export function useMessageForm({
   scrollToMessage,
 }: useMessageFormProps) {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
+
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
   const [resultCounter, setResultCounter] = useState(0);
 
@@ -36,10 +37,12 @@ export function useMessageForm({
   const [results, setResults] = useState<{ id: number }[]>([]);
 
   const debouncedSearch = useDebounce(async (value: string) => {
-    const res = await searchMessagesByChatId(currentChatId, value);
-    setResults(res);
-    setResultCounter(0);
-    if (res.length > 0) scrollToMessage(res[0].id);
+    if (currentChatId) {
+      const res = await searchMessagesByChatId(currentChatId, value);
+      setResults(res);
+      setResultCounter(0);
+      if (res.length > 0) scrollToMessage(res[0].id);
+    }
   }, 300);
 
   const navigateResult = (direction: 1 | -1) => {
@@ -106,13 +109,11 @@ export function useMessageForm({
 
   async function handleOnChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;
-
     setText(value);
+
     if (formMode === FORM_MODE.SEARCH && value.trim().length > 0) {
       debouncedSearch(value);
-    } else {
-      const value = e.target.value;
-      setText(value);
+    } else if (currentChatId) {
       debouncedTyping(currentChatId);
     }
   }

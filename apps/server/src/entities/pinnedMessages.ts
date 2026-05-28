@@ -1,9 +1,11 @@
 import { Message } from './message';
 import { BaseEntity } from '../data/EntityRepo';
+import { PinnedMessagesCursor } from '../data/pinnedMessages/types';
 
 export interface PinnedMessageList {
-  totalCount: number;
   data: PinnedMessage[];
+  totalCount: number;
+  nextCursor: PinnedMessagesCursor | null;
 }
 export interface PinnedMessage extends BaseEntity {
   message?: Message;

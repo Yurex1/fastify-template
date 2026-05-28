@@ -85,8 +85,8 @@ export default function LoginPage() {
               Sign in
             </Button>
           </form>
-          <div className="text-center text-sm text-neutral-400">
-            Don’t have an account?{' '}
+          <div className="text-center text-sm text-neutral-400 mt-1">
+            Don&apos;t have an account?{' '}
             <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
               Sign up
             </span>

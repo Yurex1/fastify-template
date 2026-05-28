@@ -1,32 +1,48 @@
 import api from '../api';
-import type { Chat, Message, PinnedMessage, PinnedMessageList } from '../types';
+
 import { ENDPOINTS } from './consts';
+import type { Chat, ChatList, Message, MessageList, PinnedMessage, PinnedMessageList } from './types';
 
 const chatsApi = {
   createChat: async (memberId: number) => {
     const response = await api.post(`${ENDPOINTS.CHAT_CREATE}/${memberId}`).json<Chat>();
     return response;
   },
-  getChatList: async (page: number = 1, limit: number = 30) => {
-    const response = await api.get(`${ENDPOINTS.CHAT_GET_LIST}&page=${page}&limit=${limit}`).json<Chat[]>();
+
+  getChatList: async (updatedAt?: string, limit: number = 50) => {
+    const params = new URLSearchParams();
+    if (updatedAt) {
+      params.append('updatedAt', updatedAt);
+    }
+    params.append('limit', limit.toString());
+
+    const response = await api.get(`${ENDPOINTS.CHAT_GET_LIST}&${params.toString()}`).json<ChatList>();
     return response;
   },
   getPendingChatList: async () => {
-    const response = await api.get(`${ENDPOINTS.CHAT_GET_PENDING_LIST}&page=1&limit=30`).json<Chat[]>();
+    const response = await api.get(`${ENDPOINTS.CHAT_GET_PENDING_LIST}&page=1&limit=30`).json<ChatList>();
     return response;
   },
 
-  getMessagesByChatId: async (chatId: number, page: number = 1, limit: number = 30) => {
+  getMessagesByChatId: async (chatId: number, params: { before?: number; after?: number } = {}, limit: number = 50) => {
+    const urlParams = new URLSearchParams();
+
+    if (params.before !== undefined) urlParams.append('before', params.before.toString());
+    if (params.after !== undefined) urlParams.append('after', params.after.toString());
+
+    urlParams.append('limit', limit.toString());
+
     const response = await api
-      .get(`${ENDPOINTS.CHAT_GET_MESSAGES}/${chatId}?page=${page}&limit=${limit}`)
-      .json<Message[]>();
+      .get(`${ENDPOINTS.CHAT_GET_MESSAGES}/${chatId}?${urlParams.toString()}`)
+      .json<MessageList>();
+
     return response;
   },
 
-  getMessagePage: async (chatId: number, messageId: number, limit: number = 30) => {
+  getMessageContext: async (chatId: number, messageId: number, limit: number = 50) => {
     const response = await api
-      .get(`${ENDPOINTS.CHAT_GET_MESSAGE_PAGE}/${chatId}/${messageId}?limit=${limit}`)
-      .json<{ page: number }>();
+      .get(`${ENDPOINTS.CHAT_GET_MESSAGE_CONTEXT}/${chatId}/${messageId}?limit=${limit}`)
+      .json<MessageList>();
     return response;
   },
 
@@ -35,9 +51,16 @@ const chatsApi = {
     return response;
   },
 
-  getAllPinnedMessages: async (chatId: number, page: number = 1, limit: number = 30) => {
+  getAllPinnedMessages: async (chatId: number, createdAt?: string, limit: number = 100) => {
+    const params = new URLSearchParams();
+    if (createdAt) {
+      params.append('createdAt', createdAt);
+    }
+
+    params.append('limit', limit.toString());
+
     const response = await api
-      .get(`${ENDPOINTS.CHAT_GET_PINNED_MESSAGES}/${chatId}?page=${page}&limit=${limit}`)
+      .get(`${ENDPOINTS.CHAT_GET_PINNED_MESSAGES}/${chatId}?${params.toString()}`)
       .json<PinnedMessageList>();
     return response;
   },

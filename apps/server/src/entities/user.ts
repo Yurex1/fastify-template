@@ -18,6 +18,6 @@ export interface CreateUser {
 
 export interface UpdateUser extends Partial<CreateUser> {}
 
-export type UserResult = User;
+export interface UserResult extends Omit<User, 'password'> {}
 
 export type ListUser = Pick<User, 'id' | 'username'>;

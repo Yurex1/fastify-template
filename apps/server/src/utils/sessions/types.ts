@@ -6,9 +6,3 @@ export interface Session {
   refreshToken: string;
   expiresAt: Date;
 }
-
-export interface SessionResponse {
-  user: UserResult;
-  accessToken: string;
-  expiresAt: Date;
-}

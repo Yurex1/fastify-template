@@ -1,13 +1,10 @@
 import chatsApi from '../api/chats/chats';
 import { clearLastChatId } from '../utils/lastOpenChatId';
 import { toast } from 'react-toastify';
-interface fetchChats {
-  page?: number;
-  limit?: number;
-}
-export async function fetchChats({ page, limit }: fetchChats) {
+
+export async function fetchChats() {
   try {
-    const response = await chatsApi.getChatList(page, limit);
+    const response = await chatsApi.getChatList();
     return response;
   } catch (error) {
     toast.error('Failed to fetch chats');
