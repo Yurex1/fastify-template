@@ -32,7 +32,12 @@ export const init = (deps: Deps): ChatService => {
         if (server.ws.hasConnection(member.userId)) {
           server.ws.send(member.userId, {
             type: CHAT_ACTIONS.created,
-            payload: chat,
+            payload: {
+              id: chat.id,
+              createdAt: chat.createdAt,
+              updatedAt: chat.updatedAt,
+              members,
+            },
           });
         }
       }

@@ -5,8 +5,6 @@ import type { Message } from '../api/chats/types';
 
 interface useChatUIStoreProps {
   currentChatId: number | null;
-  incomingCall: { chatId: number | null; roomName: string | null };
-  setIsIncomingCall: (chatId: number | null, roomName: string | null) => void;
   isAtBottom: boolean;
   setIsAtBottom: (val: boolean) => void;
   anchorMessageId: number | null;
@@ -24,14 +22,12 @@ const useChatUIStore = create<useChatUIStoreProps>()(
   persist(
     (set) => ({
       currentChatId: getLastChatId(),
-      incomingCall: { chatId: null, roomName: null },
       isAtBottom: true,
       anchorMessageId: null,
       isTyping: { userName: null, chatId: null, isTyping: false },
       menuForMessage: null,
       pinnedMode: false,
 
-      setIsIncomingCall: (chatId, roomName) => set({ incomingCall: { chatId, roomName } }),
       setIsAtBottom: (val) => set({ isAtBottom: val }),
       setAnchorMessageId: (id) => set({ anchorMessageId: id }),
       setPinnedMode: (val) => set({ pinnedMode: val }),

@@ -13,9 +13,8 @@ import useMessageFormStore from '../../stores/messageForm';
 import TypingBlock from '../TypingBlock';
 import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
-import { useChatSocket } from '../../websocket/ChatSocketContext';
 import type { Message } from '../../api/chats/types';
-import { CallRoom } from '../CallRoom';
+import { useCall } from '../../hooks/useCall';
 
 const ANCHOR_READY_FALLBACK_MS = 300;
 const CHAT_SCROLL_WINDOW_MS = 500;
@@ -26,9 +25,8 @@ const MessageWindow = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
-  const incomingCall = useChatUIStore((s) => s.incomingCall);
-  const setIsIncomingCall = useChatUIStore((s) => s.setIsIncomingCall);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
+
   const isAtBottom = useChatUIStore((s) => s.isAtBottom);
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
@@ -38,9 +36,7 @@ const MessageWindow = () => {
   const anchorReadyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatScrollActiveRef = useRef(false);
 
-  const { deleteMessage, updateMessage, updateReaction, sendMessage, typing, createRoom } = useChatSocket();
-
-  const [callmode, setCallmode] = useState(false);
+  const { initiateCall } = useCall(currentChatId);
 
   const {
     messages,
@@ -66,10 +62,6 @@ const MessageWindow = () => {
     handleOnChange,
     handleKeyDown,
   } = useMessageForm({
-    sendMessage,
-    updateMessage,
-    deleteMessage,
-    typing,
     scrollToMessage,
   });
 
@@ -157,45 +149,9 @@ const MessageWindow = () => {
     if (pinnedMode) {
       return (
         <Suspense fallback={<Loader />}>
-          <PinnedMessagesList updateReaction={updateReaction} handleDelete={deleteMessage} />
+          <PinnedMessagesList />
         </Suspense>
       );
-    }
-
-    if (callmode) {
-      return <CallRoom roomName={`chat-${currentChatId}`} />;
-    }
-
-    if (incomingCall.chatId && incomingCall.roomName) {
-      return (
-        <div className="flex-1 flex items-center justify-center bg-gray-950">
-          <div className="bg-gray-900 p-6 rounded-xl flex flex-col gap-4 items-center">
-            <p className="text-white text-lg">Incoming call...</p>
-            <div className="flex gap-3">
-              <button
-                className="bg-green-500 px-6 py-2 rounded-lg text-white"
-                onClick={() => {
-                  setCallmode(true);
-                  setIsIncomingCall(null, null);
-                }}
-              >
-                Accept
-              </button>
-              <button
-                className="bg-red-500 px-6 py-2 rounded-lg text-white"
-                onClick={() => setIsIncomingCall(null, null)}
-              >
-                Decline
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    if (callmode) {
-      const roomName = incomingCall.roomName ?? `chat-${currentChatId}`;
-      return <CallRoom roomName={roomName} />;
     }
 
     if (!isLoading && messages.length <= 0) {
@@ -221,13 +177,7 @@ const MessageWindow = () => {
             increaseViewportBy={{ top: 300, bottom: 300 }}
             itemsRendered={handleItemsRendered}
             itemContent={(_, message) => (
-              <MessageBlock
-                key={message.id}
-                message={message}
-                updateReaction={updateReaction}
-                deleteMessage={deleteMessage}
-                scrollToMessage={scrollToMessage}
-              />
+              <MessageBlock key={message.id} message={message} scrollToMessage={scrollToMessage} />
             )}
             components={{
               Header: () => (isFetchingNextPage ? <Loader /> : null),
@@ -259,16 +209,7 @@ const MessageWindow = () => {
         {formMode === 'search' ? <X /> : <LucideSearch />}
       </button>
 
-      <button
-        className="self-end p-2"
-        onClick={() => {
-          if (currentChatId) {
-            setCallmode(true);
-            createRoom(currentChatId, `chat-${currentChatId}`);
-          }
-        }}
-        aria-label={formMode === 'search' ? 'Close search' : 'Search messages'}
-      >
+      <button onClick={initiateCall}>
         <PhoneCall />
       </button>
 

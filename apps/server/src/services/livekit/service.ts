@@ -5,9 +5,9 @@ import { config } from '../../config';
 const getRoomService = () => new RoomServiceClient(config.livekit.url, config.livekit.apiKey, config.livekit.apiSecret);
 
 export const init = (): LiveKitService => ({
-  token: async (userId, roomName) => {
+  token: async (userName, roomName) => {
     const token = new AccessToken(config.livekit.apiKey, config.livekit.apiSecret, {
-      identity: userId.toString(),
+      identity: userName,
     });
 
     token.addGrant({

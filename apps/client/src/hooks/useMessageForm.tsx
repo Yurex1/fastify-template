@@ -7,22 +7,14 @@ import { useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
 import type { FormMode } from '../api/chats/types';
+import { useChatSocket } from '../websocket/ChatSocketContext';
 
 interface useMessageFormProps {
-  updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
-  sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
-  deleteMessage: (id: number) => void;
-  typing: (id: number) => void;
   scrollToMessage: (id: number) => void;
 }
 
-export function useMessageForm({
-  sendMessage,
-  updateMessage,
-  deleteMessage,
-  typing,
-  scrollToMessage,
-}: useMessageFormProps) {
+export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
+  const { sendMessage, typing, updateMessage, deleteMessage } = useChatSocket();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();

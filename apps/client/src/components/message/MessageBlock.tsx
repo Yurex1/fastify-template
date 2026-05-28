@@ -11,16 +11,16 @@ import { isOwnMessage } from '../../utils/isOwnMessage';
 import { useMessageActions } from '../../hooks/useMessageActions';
 import useChatUIStore from '../../stores/chatUI';
 import type { Message } from '../../api/chats/types';
+import { useChatSocket } from '../../websocket/ChatSocketContext';
 
 interface MessageBlockProps {
   message: Message;
-  updateReaction: (id: number, userId: number, reaction: string) => void;
-  deleteMessage: (id: number) => void;
   scrollToMessage?: (id: number) => void;
 }
 
-export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToMessage }: MessageBlockProps) => {
+export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) => {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const { updateReaction, deleteMessage } = useChatSocket();
   const setMenuForMessage = useChatUIStore((s) => s.setMenuForMessage);
 
   const { handleEdit, handleCopy, handleReply, handleDelete } = useMessageActions({
@@ -33,7 +33,7 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
   const togglePin = () => {
     if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
     else chatsApi.pinMessage(message.chatId, message.id);
-  }
+  };
 
   if (!message) return null;
 

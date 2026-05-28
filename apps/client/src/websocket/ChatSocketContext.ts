@@ -2,10 +2,10 @@ import { createContext, useContext } from 'react';
 
 export interface ChatSocketContextProps {
   sendMessage: (chatId: number, text: string, reply_id?: number) => void;
-  updateMessage: (messageId: number, definition: { type: string; content: 'text' }) => void;
+  updateMessage: (messageId: number, definition: { type: 'text'; content: string }) => void;
   updateReaction: (id: number, userId: number, reaction: string) => void;
   deleteMessage: (messageId: number) => void;
-  createRoom: (chatId: number, roomName: string) => void;
+  createRoom: (chatId: number, roomName: string, chatName: string) => void;
   typing: (chatId: number) => void;
 }
 

@@ -4,12 +4,7 @@ import { MessageBlock } from './MessageBlock';
 import { Loader } from 'lucide-react';
 import { EmptyBlock } from '../EmptyBlock';
 
-interface PinnedMessagesListProps {
-  updateReaction: (id: number, userId: number, reaction: string) => void;
-  handleDelete: (id: number) => void;
-}
-
-const PinnedMessagesList = ({ updateReaction, handleDelete }: PinnedMessagesListProps) => {
+const PinnedMessagesList = () => {
   const { pinnedMessages, isFetchingNextPage, isLoading, hasNextPage, fetchNextPage } = usePinnedMessages();
 
   return (
@@ -25,12 +20,7 @@ const PinnedMessagesList = ({ updateReaction, handleDelete }: PinnedMessagesList
         initialTopMostItemIndex={pinnedMessages.length - 1}
         followOutput="smooth"
         itemContent={(_, pinnedMessage) => (
-          <MessageBlock
-            key={pinnedMessage.message.id}
-            message={{ ...pinnedMessage.message, isPinned: true }}
-            updateReaction={updateReaction}
-            deleteMessage={handleDelete}
-          />
+          <MessageBlock key={pinnedMessage.message.id} message={{ ...pinnedMessage.message, isPinned: true }} />
         )}
         components={{
           Header: () => (isFetchingNextPage ? <Loader /> : null),

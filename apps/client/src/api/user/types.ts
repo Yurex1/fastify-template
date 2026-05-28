@@ -10,6 +10,7 @@ export interface User {
 
 export interface Member extends User {
   isOnline: boolean;
+  userId?: number;
 }
 
 export interface Session {

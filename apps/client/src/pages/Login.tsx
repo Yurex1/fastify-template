@@ -57,6 +57,7 @@ export default function LoginPage() {
             </div>
 
             <div className="relative">
+              {errorMessage && <div>{errorMessage}</div>}
               <Input
                 name="password"
                 type={showPassword ? 'text' : 'password'}

@@ -3,10 +3,8 @@ import { cn } from '../../lib/utils';
 import Time from '../Time';
 import ChatMenu from '../ContextMenu';
 import { deleteChat } from '../../services/chats';
-import { QueryKeys } from '../../lib/queries';
 import { useState } from 'react';
 import { useUserStatus } from '../../stores/userStatus';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../stores/auth';
 import type { Chat } from '../../api/chats/types';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
@@ -18,30 +16,19 @@ interface ChatBlockProps {
 }
 
 export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlockProps) => {
-  const queryClient = useQueryClient();
   const user = useAuthStore((s) => s.currentUser);
 
   const member = (chat: Chat) => {
-    return chat.members.find((m) => m.id !== user?.id);
+    return chat.members.find((m) => (m.id || m.userId) !== user?.id);
   };
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
   const stats = useUserStatus((s) => s.statuses);
   const lastseen = useUserStatus((s) => s.lastSeenMap);
 
-  const deleteMutation = useMutation({
-    mutationFn: (chatId: number) => deleteChat(chatId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.chats] });
-    },
-  });
-
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (menuForChat) {
-      deleteMutation.mutate(menuForChat.id);
-      if (currentChatId === menuForChat.id) {
-        handleChangeChatId(null);
-      }
+      return await deleteChat(menuForChat.id);
     }
   };
 

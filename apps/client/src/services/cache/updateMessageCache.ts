@@ -1,7 +1,7 @@
 import { QueryClient, type InfiniteData } from '@tanstack/react-query';
-import { QueryKeys } from '../lib/queries';
-import type { WSEvent } from '../websocket/consts/payloads';
-import type { MessageList, MessagePageParam } from '../api/chats/types';
+import { QueryKeys } from '../../lib/queries';
+import type { WSEvent } from '../../websocket/consts/payloads';
+import type { MessageList, MessagePageParam } from '../../api/chats/types';
 
 interface updateMessageCacheProps {
   queryClient: QueryClient;
