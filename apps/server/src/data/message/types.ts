@@ -5,6 +5,7 @@ export interface MessageRepo {
   findByChatId: (chatId: number, { before, after, limit }: FindByChatIdProps) => Promise<CursorResult>;
   findAllByChatId: (chatId: number, text: string) => Promise<MessageSearchResult[]>;
   findOne: (definition: Partial<Message>) => Promise<Message | null>;
+  findLastMessageByChatId: (chatId: number) => Promise<Message | null>;
   updateMessage: (id: number, definition: Partial<UpdateMessage>) => Promise<Message>;
   updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;
   getMessageContext: (

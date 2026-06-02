@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useLayoutEffect } from 'react';
+import { useRef, useEffect, useState, useLayoutEffect, useCallback } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useChatMessages } from './useChatMessages';
 import useChatUIStore from '../stores/chatUI';
@@ -59,7 +59,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     }
 
     prevOldestIdRef.current = currentOldestId ?? null;
-  }, [messages]);
+  }, [messages, chatKey]);
 
   const startReached = () => {
     if (hasNextPage && !isFetchingNextPage && !isLoading) {
@@ -84,19 +84,32 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     return { index, align: 'center' as const };
   };
 
-  const scrollToMessage = (messageId: number) => {
-    const idx = messages.findIndex((m) => m.id === messageId);
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
-    if (idx !== -1) {
-      virtuosoRef.current?.scrollToIndex({
-        index: messages.length - 1 - idx,
-        align: 'center',
-        behavior: 'smooth',
+  const scrollToMessage = useCallback(
+    (messageId: number) => {
+      const current = messagesRef.current;
+      const idx = current.findIndex((m) => m.id === messageId);
+
+      if (idx !== -1) {
+        virtuosoRef.current?.scrollToIndex({
+          index: current.length - 1 - idx,
+          align: 'center',
+          behavior: 'smooth',
+        });
+        return;
+      }
+
+      setAnchorMessageId(null);
+      requestAnimationFrame(() => {
+        setAnchorMessageId(messageId);
       });
-    } else if (anchorMessageId === null) {
-      setAnchorMessageId(messageId);
-    }
-  };
+    },
+    [setAnchorMessageId],
+  );
 
   const reversed = [...messages].reverse();
 

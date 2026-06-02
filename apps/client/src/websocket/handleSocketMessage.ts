@@ -45,7 +45,7 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
       updateMessageCache({
         queryClient,
         anchorMessageId,
-        chatId: data.payload.chatId,
+        chatId: currentChatId!,
         wsEvent: { type: 'reaction-update', payload: data.payload },
       });
       updatePinnedMessagesCache({
@@ -62,8 +62,8 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
         chatId: data.payload.chatId,
         wsEvent: { type: 'delete', payload: data.payload },
       });
-      // change updatedAt to last message createdAt time
-      // updateChatsCache({ queryClient, type: CACHE_OP.CHAT_UPDATE, chatId: data.payload.chatId, data: data.payload });
+      // TODO change updatedAt to last message createdAt time
+      // TODO updateChatsCache({ queryClient, type: CACHE_OP.CHAT_UPDATE, chatId: data.payload.chatId, data: data.payload });
       updatePinnedMessagesCache({ queryClient, currentChatId, action: { type: 'unpin', data: data.payload } });
       break;
 

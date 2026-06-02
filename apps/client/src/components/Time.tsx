@@ -6,7 +6,7 @@ interface TimeProps {
 
 const Time = ({ date, text, additionalStyles }: TimeProps) => {
   return (
-    <small className={`text-gray-300 text-[10px] leading-[8px] ${additionalStyles}`}>
+    <small className={`text-gray-300 text-xs ${additionalStyles}`}>
       {text && text}
       {new Date(date).toLocaleTimeString([], {
         hour: '2-digit',

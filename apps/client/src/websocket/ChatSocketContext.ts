@@ -5,7 +5,7 @@ export interface ChatSocketContextProps {
   updateMessage: (messageId: number, definition: { type: 'text'; content: string }) => void;
   updateReaction: (id: number, userId: number, reaction: string) => void;
   deleteMessage: (messageId: number) => void;
-  createRoom: (chatId: number, roomName: string, chatName: string) => void;
+  createRoom: (chatId: number, roomName: string, chatName: string, type: 'audio' | 'video') => void;
   typing: (chatId: number) => void;
 }
 

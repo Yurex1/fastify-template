@@ -7,16 +7,16 @@ import useChatUIStore from '../stores/chatUI';
 
 export default function HomePage() {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
-  const { incomingCall, activeRoomName, isInCall, acceptCall, declineCall } = useCall(currentChatId);
+  const { incomingCall, activeCall, isInCall, acceptCall, declineCall } = useCall(currentChatId);
 
   if (isInCall) {
-    return <CallRoom roomName={activeRoomName!} />;
+    return <CallRoom roomName={activeCall?.roomName!} />;
   }
   if (incomingCall) {
     return (
       <div className="w-full h-screen flex-1 flex items-center justify-center bg-gray-950">
         <div className="bg-gray-900 p-6 rounded-xl flex flex-col gap-4 items-center">
-          <p className="text-white text-lg">Incoming call...</p>
+          <p className="text-white text-lg">{`Incoming ${activeCall?.type} call...`}</p>
           <p>by {incomingCall.chatName}</p>
           <div className="flex gap-3">
             <button className="bg-green-500 px-6 py-2 rounded-lg text-white" onClick={acceptCall}>

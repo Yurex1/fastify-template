@@ -128,3 +128,15 @@ export const updateReactions = (id: number, userId: number, reaction: string): R
   `,
   params: [id, reaction, JSON.stringify([userId]), userId],
 });
+
+export const selectLastMessage = (chatId: number): RowSqlResult => ({
+  query: `
+    SELECT ${MESSAGE_PROJECTION}
+    FROM "public"."message" m
+    ${MESSAGE_JOINS}
+    WHERE m."chatId" = $1
+    ORDER BY m.id DESC
+    LIMIT 1
+  `,
+  params: [chatId],
+});

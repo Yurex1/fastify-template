@@ -77,7 +77,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
                   <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
                 )}
 
-                <Time date={message.updatedAt} />
+                <Time date={message.createdAt} />
                 <div>{message.isPinned ? <Pin size={10} /> : ''}</div>
               </div>
             </div>

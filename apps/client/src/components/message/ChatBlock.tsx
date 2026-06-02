@@ -1,4 +1,3 @@
-import { Dot } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import Time from '../Time';
 import ChatMenu from '../ContextMenu';
@@ -8,31 +7,29 @@ import { useUserStatus } from '../../stores/userStatus';
 import { useAuthStore } from '../../stores/auth';
 import type { Chat } from '../../api/chats/types';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
+import useChatUIStore from '../../stores/chatUI';
+import { member } from '../../utils/isOwnMessage';
 
 interface ChatBlockProps {
   chat: Chat;
-  currentChatId: number | null;
   handleChangeChatId: (id: number | null) => void;
 }
 
-export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlockProps) => {
+export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
   const user = useAuthStore((s) => s.currentUser);
 
-  const member = (chat: Chat) => {
-    return chat.members.find((m) => (m.id || m.userId) !== user?.id);
-  };
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
   const stats = useUserStatus((s) => s.statuses);
-  const lastseen = useUserStatus((s) => s.lastSeenMap);
 
   const handleDelete = async () => {
     if (menuForChat) {
       return await deleteChat(menuForChat.id);
     }
   };
-
-  const chatMember = member(chat);
+  if (!user) return;
+  const chatMember = member(chat, user.id);
   if (!chatMember) return;
 
   return (
@@ -41,25 +38,27 @@ export const ChatBlock = ({ chat, currentChatId, handleChangeChatId }: ChatBlock
         <div
           onClick={() => handleChangeChatId(chat.id)}
           className={cn(
-            'p-4 cursor-pointer rounded-xl relative',
-            currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400 hover:bg-gray-800',
+            'flex gap-2 items-center p-2 cursor-pointer rounded-xl relative',
+            currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400',
           )}
         >
-          <p className="font-medium">{chatMember?.username || 'Unknown Chat'}</p>
-          <Time date={chat.updatedAt} />
+          <img className="w-13 h-13 rounded-full" src="/user-no-icon.png" alt="user-icon" />
+          {stats.includes(chatMember.userId) && (
+            <span className="text-green-800 absolute text-[2.5em] top-0 right-2">•</span>
+          )}
 
-          {stats.includes(chatMember.id) && (
-            <div className="absolute top-0 right-0 text-green-800">
-              <Dot size={60} />
+          <div className="w-full">
+            <div className="font-medium">{chatMember?.username || 'Unknown Chat'}</div>
+            <div className="flex items-center justify-between ">
+              {chat.lastMessage && (
+                <div className="text-xs">
+                  <span className="font-bold">{`${chat.lastMessage.userId === user?.id ? 'You' : chat.lastMessage.username}: `}</span>
+                  {chat.lastMessage.text}
+                </div>
+              )}
+              <Time date={chat.updatedAt} />
             </div>
-          )}
-          {!stats.includes(chatMember.id) && (
-            <Time
-              date={lastseen[chatMember.id] || chatMember.lastseen || ''}
-              text="Last seen:"
-              additionalStyles="opacity-[0.4] absolute bottom-2 right-2"
-            />
-          )}
+          </div>
         </div>
       </ContextMenuTrigger>
       <ChatMenu onDelete={handleDelete} />

@@ -2,7 +2,6 @@ import { lazy, useEffect, useRef, Suspense, useState } from 'react';
 import { Loader } from '../Loader';
 import MessageForm from './MessageForm';
 import { EmptyBlock } from '../EmptyBlock';
-import { LucideSearch, PhoneCall, X } from 'lucide-react';
 import { useMessageForm } from '../../hooks/useMessageForm';
 import { ReplyBlock } from '../ReplyBlock';
 import { MessageBlock } from './MessageBlock';
@@ -14,7 +13,7 @@ import TypingBlock from '../TypingBlock';
 import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
 import type { Message } from '../../api/chats/types';
-import { useCall } from '../../hooks/useCall';
+import { UserInfo } from './UserInfo';
 
 const ANCHOR_READY_FALLBACK_MS = 300;
 const CHAT_SCROLL_WINDOW_MS = 500;
@@ -36,8 +35,6 @@ const MessageWindow = () => {
   const anchorReadyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatScrollActiveRef = useRef(false);
 
-  const { initiateCall } = useCall(currentChatId);
-
   const {
     messages,
     firstItemIndex,
@@ -52,18 +49,10 @@ const MessageWindow = () => {
   } = useMessageList(virtuosoRef);
 
   const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
-  const {
-    formButton,
-    resultCounter,
-    results,
-    navigateResult,
-    switchFormMode,
-    textareaRef,
-    handleOnChange,
-    handleKeyDown,
-  } = useMessageForm({
-    scrollToMessage,
-  });
+  const { formButton, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
+    useMessageForm({
+      scrollToMessage,
+    });
 
   useEffect(() => {
     if (anchorMessageId !== null) return;
@@ -180,7 +169,12 @@ const MessageWindow = () => {
               <MessageBlock key={message.id} message={message} scrollToMessage={scrollToMessage} />
             )}
             components={{
-              Header: () => (isFetchingNextPage ? <Loader /> : null),
+              Header: () =>
+                isFetchingNextPage ? (
+                  <Loader />
+                ) : (
+                  <p className="text-center text-xs text-gray-500 m-2">No more results</p>
+                ),
               Footer: () => (isFetchingPreviousPage ? <Loader /> : null),
             }}
           />
@@ -199,19 +193,8 @@ const MessageWindow = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-950 h-screen">
+      {formMode !== 'search' && <UserInfo />}
       {formMode !== 'search' && <OpenPinnedMessages pinnedMode={pinnedMode} setPinnedMode={setPinnedMode} />}
-
-      <button
-        className="self-end p-2"
-        onClick={() => switchFormMode(formMode === 'search' ? 'create' : 'search')}
-        aria-label={formMode === 'search' ? 'Close search' : 'Search messages'}
-      >
-        {formMode === 'search' ? <X /> : <LucideSearch />}
-      </button>
-
-      <button onClick={initiateCall}>
-        <PhoneCall />
-      </button>
 
       {renderContent()}
 

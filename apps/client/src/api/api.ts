@@ -4,9 +4,10 @@ import { useAuthStore } from '../stores/auth';
 import type { User } from './user/types';
 
 const userAgent = navigator.userAgent;
+let refreshPromise: Promise<{ accessToken: string; user: User; expiresAt: string }> | null = null;
 
 const api = ky.create({
-  baseUrl: import.meta.env.VITE_API_URL,
+  prefix: import.meta.env.VITE_API_URL,
   credentials: 'include',
   hooks: {
     beforeRequest: [
@@ -15,7 +16,6 @@ const api = ky.create({
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
-
         request.headers.set('x-device-id', userAgent);
       },
     ],
@@ -23,21 +23,21 @@ const api = ky.create({
       async ({ request, response }) => {
         if (response.status === ERROR_STATUSES.UNAUTHORIZED && !request.url.includes('auth/refresh')) {
           try {
-            const refreshRes = await ky
-              .post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
-                credentials: 'include',
-                headers: { 'x-device-id': userAgent },
-              })
-              .json<{ accessToken: string; user: User; expiresAt: string }>();
+            if (!refreshPromise) {
+              refreshPromise = api
+                .post('auth/refresh')
+                .json<{ accessToken: string; user: User; expiresAt: string }>()
+                .finally(() => {
+                  refreshPromise = null;
+                });
+            }
 
+            const refreshRes = await refreshPromise;
             useAuthStore.getState().setAccessToken(refreshRes.accessToken);
 
-            return ky(request, {
-              headers: {
-                ...request.headers,
-                Authorization: `Bearer ${refreshRes.accessToken}`,
-              },
-            });
+            const retryRequest = request.clone();
+            retryRequest.headers.set('Authorization', `Bearer ${refreshRes.accessToken}`);
+            return ky(retryRequest, { credentials: 'include' });
           } catch (refreshError) {
             const wasAuthenticated = !!useAuthStore.getState().accessToken;
             useAuthStore.getState().clearAccessToken();

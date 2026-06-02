@@ -2,7 +2,15 @@ import type { CreateMessage, Message, MessageSearchResult, UpdateMessage } from 
 import type { TypedPool } from '../../infra/pg';
 import { EntityRepo, SqlBuilder } from '../EntityRepo';
 import type { CursorResult, FindByChatIdProps, MessageRepo } from './types';
-import { searchInChat, selectOneById, updateReactions, selectBefore, selectAfter, selectMessageContext } from './sql';
+import {
+  searchInChat,
+  selectOneById,
+  updateReactions,
+  selectBefore,
+  selectAfter,
+  selectMessageContext,
+  selectLastMessage,
+} from './sql';
 
 class MessageRepository extends EntityRepo<Message> {
   constructor(pool: TypedPool) {
@@ -65,6 +73,11 @@ class MessageRepository extends EntityRepo<Message> {
     return await this.pool.queryAll<MessageSearchResult>(query, params);
   }
 
+  async findLastMessageByChatId(chatId: number): Promise<Message | null> {
+    const { query, params } = selectLastMessage(chatId);
+    return await this.pool.queryOne<Message>(query, params);
+  }
+
   async updateReactions(id: number, userId: number, reaction: string): Promise<Message | null> {
     const { query, params } = updateReactions(id, userId, reaction);
     return await this.pool.queryOne<Message | null>(query, params);
@@ -111,6 +124,7 @@ export const init = (pool: TypedPool): MessageRepo => {
       messageRepo.updateReactions(id, userId, reaction),
     getMessageContext: (chatId: number, messageId: number, limit: number) =>
       messageRepo.getMessageContext(chatId, messageId, limit),
+    findLastMessageByChatId: (chatId: number) => messageRepo.findLastMessageByChatId(chatId),
     remove: (id: number) => messageRepo.remove(id),
   };
 };

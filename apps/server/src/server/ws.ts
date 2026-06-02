@@ -38,6 +38,8 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
     try {
       const token = req.headers['sec-websocket-protocol'];
 
+      console.log('raw ws token:', token);
+
       if (!token) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');
       }

@@ -5,6 +5,7 @@ import type { Message } from '../api/chats/types';
 
 interface useChatUIStoreProps {
   currentChatId: number | null;
+  currentChatInfo: any;
   isAtBottom: boolean;
   setIsAtBottom: (val: boolean) => void;
   anchorMessageId: number | null;
@@ -16,12 +17,14 @@ interface useChatUIStoreProps {
   setMenuForMessage: (message: Message | null) => void;
   pinnedMode: boolean;
   setPinnedMode: (val: boolean) => void;
+  setCurrentChatInfo: (val: any) => void;
 }
 
 const useChatUIStore = create<useChatUIStoreProps>()(
   persist(
     (set) => ({
       currentChatId: getLastChatId(),
+      currentChatInfo: null,
       isAtBottom: true,
       anchorMessageId: null,
       isTyping: { userName: null, chatId: null, isTyping: false },
@@ -43,11 +46,13 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       },
 
       setMenuForMessage: (message) => set({ menuForMessage: message }),
+      setCurrentChatInfo: (val) => set({ currentChatInfo: val }),
     }),
     {
       name: 'chat-ui-storage',
       partialize: (state) => ({
         currentChatId: state.currentChatId,
+        currentChatInfo: state.currentChatInfo,
         anchorMessageId: state.anchorMessageId,
       }),
     },

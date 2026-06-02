@@ -5,9 +5,10 @@ import { config } from '../../config';
 const getRoomService = () => new RoomServiceClient(config.livekit.url, config.livekit.apiKey, config.livekit.apiSecret);
 
 export const init = (): LiveKitService => ({
-  token: async (userName, roomName) => {
+  token: async (user, roomName) => {
     const token = new AccessToken(config.livekit.apiKey, config.livekit.apiSecret, {
-      identity: userName,
+      identity: user.id.toString(),
+      name: user.username,
     });
 
     token.addGrant({
@@ -15,6 +16,7 @@ export const init = (): LiveKitService => ({
       room: roomName,
       canPublish: true,
       canSubscribe: true,
+      canPublishData: true,
     });
     return { token: await token.toJwt() };
   },

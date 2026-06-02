@@ -68,4 +68,4 @@ const swaggerUiPlugin: Plugin = {
   options: { routePrefix: '/docs' },
 };
 
-export const plugins = [corsPlugin, cookiePlugin, swaggerPlugin, swaggerUiPlugin];
+export const plugins = [cookiePlugin, corsPlugin, swaggerPlugin, swaggerUiPlugin];

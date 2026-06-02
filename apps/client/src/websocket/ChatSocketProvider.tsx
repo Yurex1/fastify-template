@@ -12,11 +12,11 @@ import type { MessageList, MessagePageParam } from '../api/chats/types';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 export function ChatSocketProvider({ children }: { children: React.ReactNode }) {
-  const token = useAuthStore((s) => s.accessToken);
+  const token = useAuthStore.getState().accessToken;
+
   const queryClient = useQueryClient();
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isFirstConnectRef = useRef(true);
 
   const fillGap = async () => {
     const queries = queryClient.getQueriesData<InfiniteData<MessageList, MessagePageParam>>({
@@ -50,6 +50,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (!token) return;
+    let isFirstConnect = true;
     let active = true;
 
     const connect = () => {
@@ -59,8 +60,8 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       socket.onopen = () => {
         if (reconnectRef.current) clearTimeout(reconnectRef.current);
 
-        if (isFirstConnectRef.current) {
-          isFirstConnectRef.current = false;
+        if (isFirstConnect) {
+          isFirstConnect = false;
         } else {
           fillGap();
         }
@@ -82,11 +83,11 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
     return () => {
       active = false;
-      isFirstConnectRef.current = true;
+      isFirstConnect = true;
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
       socketRef.current?.close();
     };
-  }, [token]);
+  }, []);
 
   const api: ChatSocketContextProps = useMemo(
     () => ({
@@ -99,9 +100,10 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       deleteMessage: (messageId) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.DELETE_MESSAGE, payload: { messageId } })),
       typing: (chatId) => socketRef.current?.send(JSON.stringify({ type: WS_OUT.IS_TYPING, payload: { chatId } })),
-      createRoom: (chatId, roomName, chatName) =>
+
+      createRoom: (chatId, roomName, chatName, type) =>
         socketRef.current?.send(
-          JSON.stringify({ type: WS_OUT.OUTGOING_CALL, payload: { chatId, roomName, chatName } }),
+          JSON.stringify({ type: WS_OUT.OUTGOING_CALL, payload: { chatId, roomName, chatName, type } }),
         ),
     }),
     [],

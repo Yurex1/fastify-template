@@ -8,7 +8,7 @@ export const init = ({ liveKitService }: Deps): LiveKitApi => ({
     schema: schemas.token,
     handler: async (user, request) => {
       const { roomName } = request.body;
-      return await liveKitService.token(user.username, roomName);
+      return await liveKitService.token(user, roomName);
     },
   },
 

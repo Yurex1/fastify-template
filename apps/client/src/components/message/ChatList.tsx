@@ -7,15 +7,17 @@ import { ChatBlock } from './ChatBlock';
 import useChatUIStore from '../../stores/chatUI';
 import { Loader } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
+import type { Chat } from '../../api/chats/types';
 
 const ChatList = () => {
   const { chats, hasNextPage, isFetchingNextPage, isLoading, fetchNextPage } = useChats();
-  const currentChatId = useChatUIStore((s) => s.currentChatId);
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
+  const setCurrentChatInfo = useChatUIStore((s) => s.setCurrentChatInfo);
 
-  const handleChangeChatId = (chatId: number | null) => {
-    setCurrentChatId(chatId);
-    setLastChatId(chatId);
+  const handleChangeChatId = (chat: Chat | null) => {
+    setCurrentChatId(chat?.id || null);
+    setCurrentChatInfo(chat);
+    setLastChatId(chat?.id || null);
   };
 
   return (
@@ -35,12 +37,7 @@ const ChatList = () => {
           }}
           followOutput="smooth"
           itemContent={(_, chat) => (
-            <ChatBlock
-              key={chat.id}
-              chat={chat}
-              currentChatId={currentChatId}
-              handleChangeChatId={handleChangeChatId}
-            />
+            <ChatBlock key={chat.id} chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />
           )}
           components={{
             Header: () => (isFetchingNextPage ? <Loader /> : null),

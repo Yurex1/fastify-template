@@ -1,4 +1,5 @@
 import { ChatMemberStatus } from '../../data/chatMember/types';
+import { ChatPreview } from '../../entities/chat';
 import { server } from '../../server/http';
 import { exception } from '../../utils/exception/util';
 import { CHAT_ACTIONS } from './consts';
@@ -12,7 +13,6 @@ export const init = (deps: Deps): ChatService => {
       if (memberId === userId) {
         throw exception.badRequest('Cannot create chat with yourself');
       }
-
       const memberExists = await userRepo.existsById(memberId);
       if (!memberExists) throw exception.notFound('USER_NOT_FOUND');
 
@@ -42,11 +42,14 @@ export const init = (deps: Deps): ChatService => {
         }
       }
 
+      const lastMessage = await messageRepo.findLastMessageByChatId(chat.id);
+
       return {
         id: chat.id,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
         members,
+        lastMessage,
       };
     },
 

@@ -6,7 +6,6 @@ import useMessageFormStore from '../stores/messageForm';
 import { useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
-import type { FormMode } from '../api/chats/types';
 import { useChatSocket } from '../websocket/ChatSocketContext';
 
 interface useMessageFormProps {
@@ -16,6 +15,8 @@ interface useMessageFormProps {
 export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
   const { sendMessage, typing, updateMessage, deleteMessage } = useChatSocket();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
+  const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
+  const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
 
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
   const [resultCounter, setResultCounter] = useState(0);
@@ -41,14 +42,16 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     const newCounter = resultCounter + direction;
     const index = ((newCounter % results.length) + results.length) % results.length;
     setResultCounter(newCounter);
-    scrollToMessage(results[index].id);
-  };
 
-  const switchFormMode = (mode: FormMode) => {
-    setFormMode(mode);
-    setResults([]);
-    setText('');
-    setResultCounter(0);
+    const targetId = results[index].id;
+
+    if (anchorMessageId !== null && anchorMessageId !== targetId) {
+      setAnchorMessageId(null);
+
+      setTimeout(() => scrollToMessage(targetId), 50);
+    } else {
+      scrollToMessage(targetId);
+    }
   };
 
   const handleSend = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -162,6 +165,5 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     handleKeyDown,
     handleOnChange,
     navigateResult,
-    switchFormMode,
   };
 }

@@ -9,6 +9,6 @@ export function setAuthCookie(name: string, reply: FastifyReply, token: string) 
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'strict' : 'lax',
-    maxAge: 7 * 24 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
   });
 }
