@@ -42,14 +42,12 @@ export const init = (deps: Deps): ChatService => {
         }
       }
 
-      const lastMessage = await messageRepo.findLastMessageByChatId(chat.id);
-
       return {
         id: chat.id,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
         members,
-        lastMessage,
+        lastMessage: null,
       };
     },
 
