@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import authService from '../api/auth/auth';
 import type { User } from '../api/user/types';
 import type { SignIn, SignUp } from '../api/auth/types';
+import useCallsStore from './calls';
+import useChatUIStore from './chatUI';
 
 interface AuthState {
   currentUser: User | null;
@@ -14,7 +16,6 @@ interface AuthState {
   login: (data: SignIn) => Promise<void>;
   register: (data: SignUp) => Promise<void>;
   logout: () => Promise<void>;
-  clear: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,23 +26,15 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (data) => {
-        try {
-          const res = await authService.signIn(data);
-          useAuthStore.getState().setAccessToken(res.accessToken);
-          set({ currentUser: res.user, isAuthenticated: true });
-        } catch (error) {
-          console.log(error);
-        }
+        const res = await authService.signIn(data);
+        useAuthStore.getState().setAccessToken(res.accessToken);
+        set({ currentUser: res.user, isAuthenticated: true });
       },
 
       register: async (data) => {
-        try {
-          const res = await authService.signUp(data);
-          useAuthStore.getState().setAccessToken(res.accessToken);
-          set({ currentUser: res.user, isAuthenticated: true });
-        } catch (error) {
-          console.log(error);
-        }
+        const res = await authService.signUp(data);
+        useAuthStore.getState().setAccessToken(res.accessToken);
+        set({ currentUser: res.user, isAuthenticated: true });
       },
 
       logout: async () => {
@@ -50,13 +43,19 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           useAuthStore.getState().clearAccessToken();
           set({ currentUser: null, isAuthenticated: false });
+          useCallsStore.getState().reset();
+          useChatUIStore.getState().reset();
+
+          sessionStorage.clear();
+          localStorage.clear();
+
+          window.location.href = '/login';
         }
       },
 
       setCurrentUser: (user) => set({ currentUser: user }),
       setAccessToken: (token) => set({ accessToken: token }),
       clearAccessToken: () => set({ accessToken: null }),
-      clear: () => set({ currentUser: null }),
     }),
 
     {

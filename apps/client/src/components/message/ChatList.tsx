@@ -27,24 +27,25 @@ const ChatList = () => {
       <CreateChat />
 
       <div className="flex-1 w-full overflow-y-auto p-2">
-        <Virtuoso
-          className="h-full"
-          data={chats}
-          endReached={() => {
-            if (hasNextPage && !isFetchingNextPage && !isLoading) {
-              fetchNextPage();
-            }
-          }}
-          followOutput="smooth"
-          itemContent={(_, chat) => (
-            <ChatBlock key={chat.id} chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />
-          )}
-          components={{
-            Header: () => (isFetchingNextPage ? <Loader /> : null),
-            Footer: () => <p>end</p>,
-          }}
-        />
-        {!isLoading && chats.length === 0 && <EmptyBlock />}
+        {chats.length > 0 && (
+          <Virtuoso
+            className="h-full"
+            data={chats}
+            endReached={() => {
+              if (hasNextPage && !isFetchingNextPage && !isLoading) {
+                fetchNextPage();
+              }
+            }}
+            followOutput="smooth"
+            itemContent={(_, chat) => (
+              <ChatBlock key={chat.id} chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />
+            )}
+            components={{
+              Header: () => (isFetchingNextPage ? <Loader /> : null),
+            }}
+          />
+        )}
+        {!isLoading && chats.length === 0 && <EmptyBlock text="No chats yet" />}
       </div>
     </div>
   );

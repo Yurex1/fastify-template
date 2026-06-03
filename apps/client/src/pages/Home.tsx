@@ -3,6 +3,7 @@ import ChatList from '../components/message/ChatList';
 import MessageWindow from '../components/message/MessageWindow';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../components/ui/resizable';
 import { useCall } from '../hooks/useCall';
+import { useAuthStore } from '../stores/auth';
 import useChatUIStore from '../stores/chatUI';
 
 export default function HomePage() {
@@ -34,6 +35,14 @@ export default function HomePage() {
     <ResizablePanelGroup orientation="horizontal" className="max-w-full rounded-lg border md:min-w-[450px]">
       <ResizablePanel defaultSize="25%" maxSize="25%">
         <div className="flex h-screen items-center justify-center">
+          <button
+            onClick={() => {
+              useAuthStore.getState().logout();
+            }}
+            className="absolute top-0 z-[999]"
+          >
+            sign out
+          </button>
           <ChatList />
         </div>
       </ResizablePanel>

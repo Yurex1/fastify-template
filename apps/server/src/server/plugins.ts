@@ -46,7 +46,7 @@ const swaggerPlugin: Plugin = {
       consumes: ['application/json'],
       produces: ['application/json'],
       paths: {
-        '/ws/{accessToken}': {
+        '/ws': {
           get: {
             tags: ['WebSocket'],
             parameters: [

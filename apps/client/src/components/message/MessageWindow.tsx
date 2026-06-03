@@ -24,6 +24,7 @@ const MessageWindow = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
+  const currentChatInfo = useChatUIStore((s) => s.currentChatInfo);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
 
   const isAtBottom = useChatUIStore((s) => s.isAtBottom);
@@ -53,6 +54,15 @@ const MessageWindow = () => {
     useMessageForm({
       scrollToMessage,
     });
+
+  const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
+
+  useEffect(() => {
+    if (isListReady && anchorMessageId !== null) {
+      setHighlightedMessageId(anchorMessageId);
+      setTimeout(() => setHighlightedMessageId(null), 1500);
+    }
+  }, [isListReady, anchorMessageId]);
 
   useEffect(() => {
     if (anchorMessageId !== null) return;
@@ -144,7 +154,7 @@ const MessageWindow = () => {
     }
 
     if (!isLoading && messages.length <= 0) {
-      return <EmptyBlock />;
+      return <EmptyBlock text="No messages yet" />;
     }
 
     const showLoader = isLoading || (anchorMessageId !== null && !isListReady);
@@ -192,8 +202,8 @@ const MessageWindow = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-950 h-screen">
-      {formMode !== 'search' && <UserInfo />}
+    <div className="flex-1 flex flex-col bg-gray-950 h-screen overflow-hidden">
+      {formMode !== 'search' && currentChatId && currentChatInfo && <UserInfo />}
       {formMode !== 'search' && <OpenPinnedMessages pinnedMode={pinnedMode} setPinnedMode={setPinnedMode} />}
 
       {renderContent()}

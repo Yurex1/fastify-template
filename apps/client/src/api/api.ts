@@ -1,9 +1,9 @@
 import ky from 'ky';
-import { ERROR_STATUSES } from '../utils/consts/errorStatus';
 import { useAuthStore } from '../stores/auth';
 import type { User } from './user/types';
 
-const userAgent = navigator.userAgent;
+import { getDeviceId } from '../utils/deviceId';
+const deviceId = getDeviceId();
 let refreshPromise: Promise<{ accessToken: string; user: User; expiresAt: string }> | null = null;
 
 const api = ky.create({
@@ -16,12 +16,27 @@ const api = ky.create({
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
-        request.headers.set('x-device-id', userAgent);
+        request.headers.set('x-device-id', deviceId);
       },
     ],
+
     afterResponse: [
       async ({ request, response }) => {
-        if (response.status === ERROR_STATUSES.UNAUTHORIZED && !request.url.includes('auth/refresh')) {
+        if (request.url.includes('auth/refresh')) {
+          if (response.status >= 400) {
+            const body = await response
+              .clone()
+              .json()
+              .catch(() => ({}));
+            const error = new Error(body?.message ?? `HTTP ${response.status}`);
+            (error as any).status = response.status;
+            (error as any).body = body;
+            throw error;
+          }
+          return;
+        }
+
+        if (response.status === 401) {
           try {
             if (!refreshPromise) {
               refreshPromise = api
@@ -38,14 +53,29 @@ const api = ky.create({
             const retryRequest = request.clone();
             retryRequest.headers.set('Authorization', `Bearer ${refreshRes.accessToken}`);
             return ky(retryRequest, { credentials: 'include' });
-          } catch (refreshError) {
+          } catch {
             const wasAuthenticated = !!useAuthStore.getState().accessToken;
             useAuthStore.getState().clearAccessToken();
-            if (wasAuthenticated) {
-              window.location.href = '/login';
-            }
-            throw refreshError;
+            if (wasAuthenticated) window.location.href = '/login';
+            throw new Error('Session expired');
           }
+        }
+
+        if (response.status >= 400) {
+          const body = await response
+            .clone()
+            .json()
+            .catch(() => ({}));
+          const errorMessage =
+            (body?.code === 'FST_ERR_VALIDATION' ? body.message : null) ??
+            body?.message ??
+            body?.error ??
+            `HTTP ${response.status}`;
+
+          const error = new Error(errorMessage);
+          (error as any).status = response.status;
+          (error as any).body = body;
+          throw error;
         }
       },
     ],

@@ -7,6 +7,8 @@ interface useChatUIStoreProps {
   currentChatId: number | null;
   currentChatInfo: any;
   isAtBottom: boolean;
+  highlightedMessageId: number | null;
+  setHighlightedMessageId: (id: number | null) => void;
   setIsAtBottom: (val: boolean) => void;
   anchorMessageId: number | null;
   setAnchorMessageId: (id: number | null) => void;
@@ -18,6 +20,7 @@ interface useChatUIStoreProps {
   pinnedMode: boolean;
   setPinnedMode: (val: boolean) => void;
   setCurrentChatInfo: (val: any) => void;
+  reset: () => void;
 }
 
 const useChatUIStore = create<useChatUIStoreProps>()(
@@ -25,12 +28,14 @@ const useChatUIStore = create<useChatUIStoreProps>()(
     (set) => ({
       currentChatId: getLastChatId(),
       currentChatInfo: null,
+      highlightedMessageId: null,
       isAtBottom: true,
       anchorMessageId: null,
       isTyping: { userName: null, chatId: null, isTyping: false },
       menuForMessage: null,
       pinnedMode: false,
 
+      setHighlightedMessageId: (val) => set({ highlightedMessageId: val }),
       setIsAtBottom: (val) => set({ isAtBottom: val }),
       setAnchorMessageId: (id) => set({ anchorMessageId: id }),
       setPinnedMode: (val) => set({ pinnedMode: val }),
@@ -47,6 +52,12 @@ const useChatUIStore = create<useChatUIStoreProps>()(
 
       setMenuForMessage: (message) => set({ menuForMessage: message }),
       setCurrentChatInfo: (val) => set({ currentChatInfo: val }),
+      reset: () =>
+        set({
+          currentChatId: null,
+          currentChatInfo: null,
+          anchorMessageId: null,
+        }),
     }),
     {
       name: 'chat-ui-storage',

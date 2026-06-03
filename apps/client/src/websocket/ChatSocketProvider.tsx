@@ -12,8 +12,6 @@ import type { MessageList, MessagePageParam } from '../api/chats/types';
 const WS_URL = import.meta.env.VITE_WS_URL;
 
 export function ChatSocketProvider({ children }: { children: React.ReactNode }) {
-  const token = useAuthStore.getState().accessToken;
-
   const queryClient = useQueryClient();
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,11 +47,12 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
   };
 
   useEffect(() => {
-    if (!token) return;
     let isFirstConnect = true;
     let active = true;
 
     const connect = () => {
+      const token = useAuthStore.getState().accessToken;
+      if (!token) return;
       const socket = new WebSocket(`${WS_URL}/ws`, token);
       socketRef.current = socket;
 
@@ -80,9 +79,15 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     };
 
     connect();
+    const unsubscribe = useAuthStore.subscribe((state, prevState) => {
+      if (state.accessToken !== prevState.accessToken && state.accessToken) {
+        socketRef.current?.close();
+      }
+    });
 
     return () => {
       active = false;
+      unsubscribe();
       isFirstConnect = true;
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
       socketRef.current?.close();

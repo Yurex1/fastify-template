@@ -10,7 +10,7 @@ import { useUserStatus } from '../stores/userStatus';
 import useCallsStore from '../stores/calls';
 
 export function handleSocketMessage(event: MessageEvent, queryClient: QueryClient) {
-  const { currentChatId, anchorMessageId, setCurrentChatId } = useChatUIStore.getState();
+  const { currentChatId, anchorMessageId, setCurrentChatId, setCurrentChatInfo } = useChatUIStore.getState();
 
   let data;
   try {
@@ -79,11 +79,13 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
     case CACHE_OP.CHAT_DELETED:
       updateChatsCache({ queryClient, type: CACHE_OP.CHAT_DELETED, chatId: data.payload.id, data: data.payload });
       setCurrentChatId(null);
+      setCurrentChatInfo(null);
       break;
 
     case CACHE_OP.CHAT_CREATE:
       updateChatsCache({ queryClient, type: CACHE_OP.CHAT_CREATE, chatId: data.payload.id, data: data.payload });
       setCurrentChatId(data.payload.id);
+      setCurrentChatInfo(data.payload);
       break;
 
     case WS_IN.IS_TYPING:
@@ -121,7 +123,9 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
     }
 
     case WS_IN.INCOMING_CALL: {
-      useCallsStore.getState().setIncomingCall(data.payload.chatId, data.payload.roomName, data.payload.chatName);
+      useCallsStore
+        .getState()
+        .setIncomingCall(data.payload.chatId, data.payload.roomName, data.payload.chatName, data.payload.type);
       break;
     }
 

@@ -47,16 +47,20 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
             <span className="text-green-800 absolute text-[2.5em] top-0 right-2">•</span>
           )}
 
-          <div className="w-full">
-            <div className="font-medium">{chatMember?.username || 'Unknown Chat'}</div>
-            <div className="flex items-center justify-between ">
+          <div className="w-full min-w-0">
+            <div className="font-medium truncate">{chatMember?.username || 'Unknown Chat'}</div>
+            <div className="flex items-center justify-between min-w-0">
               {chat.lastMessage && (
-                <div className="text-xs">
-                  <span className="font-bold">{`${chat.lastMessage.userId === user?.id ? 'You' : chat.lastMessage.username}: `}</span>
-                  {chat.lastMessage.text}
+                <div className="text-xs truncate min-w-0 flex-1 mr-2">
+                  <span className="font-bold">
+                    {`${chat.lastMessage.userId === user?.id ? 'You' : chat.lastMessage.username}: `}
+                  </span>
+                  <span className="truncate">{chat.lastMessage.text}</span>
                 </div>
               )}
-              <Time date={chat.updatedAt} />
+              <div className="shrink-0">
+                <Time date={chat.updatedAt} />
+              </div>
             </div>
           </div>
         </div>

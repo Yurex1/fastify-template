@@ -13,6 +13,11 @@ interface MessageHandlersDeps {
   user: UserResult;
 }
 
+const BROADCAST_MODES = {
+  OTHERS: 'others',
+  ALL: 'all',
+};
+
 export const createMessageHandlers = ({ services, fastifyWs, uid, user }: MessageHandlersDeps) => {
   const broadcastStatus = async (uid: number, type: string, payload: {}) => {
     try {
@@ -29,7 +34,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     const allMembers = await services.chat.getAllMembersByChatId(chatId);
 
     try {
-      const peers = mode === 'others' ? allMembers.filter((member) => member.userId !== uid) : allMembers;
+      const peers = mode === BROADCAST_MODES.OTHERS ? allMembers.filter((member) => member.userId !== uid) : allMembers;
       for (const peer of peers) {
         fastifyWs.send(peer.userId, { type, payload });
       }

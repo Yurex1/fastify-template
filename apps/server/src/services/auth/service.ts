@@ -92,7 +92,6 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const user = await userRepo.findOne({ id: userId });
     if (payload.id !== user.id) throw exception.unauthorized('TOKEN_USER_MISMATCH');
     const sessionData = await sessionRepo.findOne({ userId, deviceId });
-    console.log(payload, sessionData);
 
     if (!sessionData) {
       throw exception.unauthorized('SESSION_EXPIRED_OR_INVALID');
