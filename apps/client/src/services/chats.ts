@@ -27,12 +27,8 @@ export async function createChat(memberId: number) {
   try {
     return await chatsApi.createChat(memberId);
   } catch (error) {
-    const status = (error as any)?.status;
     const message = (error as any)?.message;
-
-    if (status === 404) toast.error('There is no user with this ID');
-    else if (status === 400) toast.error('Chat with this user already exists');
-    else toast.error(message ?? 'Failed to create chat');
+    toast.error(message ?? 'Failed to create chat');
   }
 }
 

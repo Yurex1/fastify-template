@@ -1,3 +1,5 @@
+import { cn } from '../lib/utils';
+
 interface TimeProps {
   date: string;
   text?: string;
@@ -6,7 +8,7 @@ interface TimeProps {
 
 const Time = ({ date, text, additionalStyles }: TimeProps) => {
   return (
-    <small className={`text-gray-300 text-xs ${additionalStyles}`}>
+    <small className={cn('text-gray-300 text-xs', additionalStyles)}>
       {text && text}
       {new Date(date).toLocaleTimeString([], {
         hour: '2-digit',

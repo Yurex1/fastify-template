@@ -20,7 +20,7 @@ export const UserInfo = () => {
   const { initiateCall } = useCall(currentChatId);
   const switchFormMode = useMessageFormStore((s) => s.setFormMode);
 
-  if (!user) return;
+  if (!user || !currentChatInfo) return;
   const chatMember = member(currentChatInfo, user.id);
   if (!chatMember) return;
   return (
@@ -35,7 +35,7 @@ export const UserInfo = () => {
           <img src="/user-no-icon.png" alt="user-icon" />
         </div>
         <div className="flex flex-col">
-          <div className="text-white">{chatMember.username}</div>
+          <p>{chatMember.username}</p>
 
           {stats.includes(chatMember.userId) ? (
             <p className="text-green-500 text-xs flex items-center gap-1">

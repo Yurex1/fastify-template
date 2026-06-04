@@ -1,0 +1,42 @@
+.call-room .lk-control-bar {
+  background: rgba(28, 28, 30, 0.95);
+  border-top: 1px solid #333337;
+  padding-block: 1rem;
+}
+
+.call-room .lk-button {
+  border-radius: 9999px;
+  background: #ffffff0d;
+  transition: all 0.2s;
+}
+.call-room .lk-button:hover {
+  background: #ffffff1a;
+}
+.call-room .lk-button:active {
+  transform: scale(0.95);
+}
+
+.call-room .lk-button[aria-label*='Leave'] {
+  background: #dc2626 !important;
+}
+.call-room .lk-button[aria-label*='Leave']:hover {
+  background: #ef4444 !important;
+}
+
+.call-room .lk-participant-tile {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+.call-room .lk-participant-tile:hover {
+  border-color: rgb(36 129 204 / 0.4);
+}
+
+.call-room .lk-participant-name {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.25rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  bottom: 0.75rem;
+  left: 0.75rem;
+}

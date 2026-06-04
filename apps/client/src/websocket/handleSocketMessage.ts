@@ -28,7 +28,14 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
         chatId: data.payload.chatId,
         wsEvent: { type: 'add', payload: data.payload },
       });
-      updateChatsCache({ queryClient, type: CACHE_OP.CHAT_UPDATE, chatId: data.payload.chatId, data: data.payload });
+      updateChatsCache({
+        queryClient,
+        payload: {
+          type: CACHE_OP.CHAT_UPDATE,
+          chatId: data.payload.chatId,
+          data: data.payload,
+        },
+      });
       break;
 
     case WS_IN.MESSAGE_UPDATED:
@@ -77,17 +84,30 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
       break;
 
     case CACHE_OP.CHAT_DELETED:
-      updateChatsCache({ queryClient, type: CACHE_OP.CHAT_DELETED, chatId: data.payload.id, data: data.payload });
+      updateChatsCache({
+        queryClient,
+        payload: {
+          type: CACHE_OP.CHAT_DELETED,
+          chatId: data.payload.id,
+          data: data.payload.id,
+        },
+      });
       setCurrentChatId(null);
       setCurrentChatInfo(null);
       break;
 
     case CACHE_OP.CHAT_CREATE:
-      updateChatsCache({ queryClient, type: CACHE_OP.CHAT_CREATE, chatId: data.payload.id, data: data.payload });
+      updateChatsCache({
+        queryClient,
+        payload: {
+          type: CACHE_OP.CHAT_CREATE,
+          chatId: data.payload.id,
+          data: data.payload,
+        },
+      });
       setCurrentChatId(data.payload.id);
       setCurrentChatInfo(data.payload);
       break;
-
     case WS_IN.IS_TYPING:
       useChatUIStore.getState().setIsTyping(data.payload.userName, data.payload.chatId, true);
       break;

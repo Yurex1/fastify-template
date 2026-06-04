@@ -48,11 +48,11 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
           )}
 
           <div className="w-full min-w-0">
-            <div className="font-medium truncate">{chatMember?.username || 'Unknown Chat'}</div>
+            <div className="font-medium truncate text-white">{chatMember?.username || 'Unknown Chat'}</div>
             <div className="flex items-center justify-between min-w-0">
               {chat.lastMessage && (
                 <div className="text-xs truncate min-w-0 flex-1 mr-2">
-                  <span className="font-bold">
+                  <span className="font-bold text-white">
                     {`${chat.lastMessage.userId === user?.id ? 'You' : chat.lastMessage.username}: `}
                   </span>
                   <span className="truncate">{chat.lastMessage.text}</span>

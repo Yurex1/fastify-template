@@ -8,16 +8,16 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password, deviceId) => {
     const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
     if (!user) {
-      throw exception.badRequest('USER_NOT_FOUND');
+      throw exception.badRequest('No account found with this username or email');
     }
 
     if (!user.password) {
-      throw exception.badRequest('BAD_CREDENTIAL');
+      throw exception.badRequest('Invalid credentials');
     }
 
     const validPassword = passwords.compare(password, user.password);
     if (!validPassword) {
-      throw exception.badRequest('INCORRECT_PASSWORD');
+      throw exception.badRequest('Incorrect password');
     }
 
     const session = sessions.generate(user);
@@ -36,12 +36,12 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signUp: async (email, username, password, deviceId) => {
     const existingUser = await userRepo.exists({ email });
     if (existingUser) {
-      throw exception.badRequest('EMAIL_ALREADY_IN_USE');
+      throw exception.badRequest('This email is already registered');
     }
 
     const existingUsername = await userRepo.exists({ username });
     if (existingUsername) {
-      throw exception.badRequest('USERNAME_UNAVAILABLE');
+      throw exception.badRequest('This username is already taken');
     }
     validatePassword(password, email, username);
     const hashedPassword = passwords.hash(password);
@@ -78,7 +78,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       if (!payload.id) throw exception.unauthorized('INVALID_TOKEN_PAYLOAD');
 
       const user = await userRepo.findOne({ id: payload.id });
-      if (!user) throw exception.notFound('USER_NOT_FOUND');
+      if (!user) throw exception.notFound('No account found with this username or email');
 
       return user;
     } catch (err) {
@@ -98,7 +98,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     }
 
     if (!user) {
-      throw exception.notFound('USER_NOT_FOUND');
+      throw exception.notFound('No account found with this username or email');
     }
 
     if (new Date() > sessionData.expiresAt) {
@@ -127,21 +127,21 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   changePassword: async (userId, oldPassword, newPassword) => {
     const user = await userRepo.findOne({ id: userId }, true);
     if (!user) {
-      throw exception.notFound('USER_NOT_FOUND');
+      throw exception.notFound('No account found with this username or email');
     }
 
     if (!user.password) {
-      throw exception.badRequest('INCORRECT_PASSWORD');
+      throw exception.badRequest('Incorrect password');
     }
 
     const validPassword = passwords.compare(oldPassword, user.password);
     if (!validPassword) {
-      throw exception.badRequest('INCORRECT_PASSWORD');
+      throw exception.badRequest('Incorrect password');
     }
 
     const isSamePassword = passwords.compare(newPassword, user.password);
     if (isSamePassword) {
-      throw exception.badRequest('NEW_PASSWORD_SAME_AS_OLD');
+      throw exception.badRequest('New password cannot be the same as the old password');
     }
 
     validatePassword(newPassword, user.email, user.username);

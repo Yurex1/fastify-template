@@ -7,6 +7,14 @@ import {
   ContextMenuSeparator,
 } from './ui/context-menu';
 import useChatUIStore from '../stores/chatUI';
+import type { JSX } from 'react';
+
+interface Item {
+  id: string;
+  text: string;
+  icon: JSX.Element;
+  onClick: () => void;
+}
 
 interface ContextMenuProps {
   onDelete: () => void;
@@ -37,7 +45,7 @@ export default function ContextMenu({
     onCopy && { id: 'copy', text: 'Copy', icon: <Copy size={16} />, onClick: onCopy },
     onPin && { id: 'pin', text: isPinned ? 'Unpin' : 'Pin', icon: <Pin size={16} />, onClick: onPin },
     onReply && !pinnedMode && { id: 'reply', text: 'Reply', icon: <Reply size={16} />, onClick: onReply },
-  ].filter(Boolean);
+  ].filter((item): item is Item => !!item);
 
   return (
     <ContextMenuContent className="max-w-60 w-full">
@@ -46,7 +54,7 @@ export default function ContextMenu({
         <>
           <ContextMenuLabel>{title}</ContextMenuLabel>
           <ContextMenuGroup>
-            {items.map((item: any) => (
+            {items.map((item: Item) => (
               <ContextMenuItem key={item.id} onClick={item.onClick}>
                 {item.icon}
                 <span className="ml-2">{item.text}</span>

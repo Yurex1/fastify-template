@@ -9,6 +9,7 @@ import useChatUIStore from '../stores/chatUI';
 export default function HomePage() {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const { incomingCall, activeCall, isInCall, acceptCall, declineCall } = useCall(currentChatId);
+  const { logout } = useAuthStore();
 
   if (isInCall) {
     return <CallRoom roomName={activeCall?.roomName!} />;
@@ -37,7 +38,7 @@ export default function HomePage() {
         <div className="flex h-screen items-center justify-center">
           <button
             onClick={() => {
-              useAuthStore.getState().logout();
+              logout();
             }}
             className="absolute top-0 z-[999]"
           >
