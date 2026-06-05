@@ -1,7 +1,7 @@
 import { Repos } from '../data/types';
-import { WsServer } from '../server/types';
 import { init as serviceInit } from './service/service';
 import { init as chatServiceInit } from './chat/service';
+import { init as livekitServiceInit } from './livekit/service';
 import { init as userServiceInit } from './user/service';
 import { init as authServiceInit } from './auth/service';
 import { init as postServiceInit } from './post/service';
@@ -20,13 +20,14 @@ export const init = (repos: Repos) => {
     messageRepo: repos.message,
     pinnedMessagesRepo: repos.pinnedMessages,
   });
-
+  const livekit = livekitServiceInit();
   const notification = notificationServiceInit();
   const s3 = s3ServiceInit();
 
   return {
     service,
     chat,
+    livekit,
     user,
     auth,
     post,

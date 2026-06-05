@@ -36,26 +36,54 @@ export const selectChatsForUser = (
   limit: number,
 ): RowSqlResult => ({
   query: `
-    SELECT
-      c.id,
-      c."createdAt",
-      c."updatedAt",
-      json_agg(to_jsonb(u) ORDER BY u.id) AS members
-    FROM "public"."chats" c
-    INNER JOIN "public"."chatMember" m
-      ON  m."chatId" = c.id
-      AND m."userId" = $1
-      AND m."status" = $2
-    INNER JOIN "public"."chatMember" cm
-      ON  cm."chatId" = c.id
-    INNER JOIN "public"."users" u
-      ON  u.id = cm."userId"
-    WHERE
-      $3::timestamptz IS NULL
-      OR (c."updatedAt", c.id) < ($3::timestamptz, $4::int)
-    GROUP BY c.id
-    ORDER BY c."updatedAt" DESC, c.id DESC
-    LIMIT $5
+   SELECT
+    c.id,
+    c."createdAt",
+    c."updatedAt",
+    json_agg(
+      jsonb_build_object(
+        'userId', u.id,
+        'username', u.username,
+        'lastseen', u.lastseen
+      ) ORDER BY u.id
+    ) AS members,
+    (
+      SELECT jsonb_build_object(
+        'id', m.id,
+        'text', m.text,
+        'userId', m."userId",
+        'username', sender.username,
+        'reactions', m.reactions,
+        'createdAt', m."createdAt",
+        'reply', CASE
+          WHEN m.reply_id IS NOT NULL THEN
+            json_build_object(
+              'id', rm.id,
+              'text', rm.text,
+              'userId', rm."userId",
+              'username', ru.username
+            )
+          ELSE NULL
+        END
+      )
+      FROM "public"."message" m
+      LEFT JOIN "public"."users" sender ON sender.id = m."userId"
+      LEFT JOIN "public"."message" rm ON rm.id = m.reply_id
+      LEFT JOIN "public"."users" ru ON ru.id = rm."userId"
+      WHERE m."chatId" = c.id
+      ORDER BY m.id DESC
+      LIMIT 1
+    ) AS "lastMessage"
+  FROM "public"."chats" c
+  INNER JOIN "public"."chatMember" m ON m."chatId" = c.id AND m."userId" = $1 AND m."status" = $2
+  INNER JOIN "public"."chatMember" cm ON cm."chatId" = c.id
+  INNER JOIN "public"."users" u ON u.id = cm."userId"
+  WHERE
+    $3::timestamptz IS NULL
+    OR (c."updatedAt", c.id) < ($3::timestamptz, $4::int)
+  GROUP BY c.id
+  ORDER BY c."updatedAt" DESC, c.id DESC
+  LIMIT $5
   `,
   params: [userId, status, cursor?.updatedAt ?? null, cursor?.id ?? null, limit + 1],
 });

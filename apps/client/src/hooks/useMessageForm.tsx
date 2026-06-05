@@ -6,24 +6,17 @@ import useMessageFormStore from '../stores/messageForm';
 import { useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
-import type { FormMode } from '../api/chats/types';
+import { useChatSocket } from '../websocket/ChatSocketContext';
 
 interface useMessageFormProps {
-  updateMessage: (messageId: number, definition: { type: string; content: any }) => void;
-  sendMessage: (ChatId: number, text: string, reply_id?: number) => void;
-  deleteMessage: (id: number) => void;
-  typing: (id: number) => void;
   scrollToMessage: (id: number) => void;
 }
 
-export function useMessageForm({
-  sendMessage,
-  updateMessage,
-  deleteMessage,
-  typing,
-  scrollToMessage,
-}: useMessageFormProps) {
+export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
+  const { sendMessage, typing, updateMessage, deleteMessage } = useChatSocket();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
+  const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
+  const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
 
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
   const [resultCounter, setResultCounter] = useState(0);
@@ -49,14 +42,16 @@ export function useMessageForm({
     const newCounter = resultCounter + direction;
     const index = ((newCounter % results.length) + results.length) % results.length;
     setResultCounter(newCounter);
-    scrollToMessage(results[index].id);
-  };
 
-  const switchFormMode = (mode: FormMode) => {
-    setFormMode(mode);
-    setResults([]);
-    setText('');
-    setResultCounter(0);
+    const targetId = results[index].id;
+
+    if (anchorMessageId !== null && anchorMessageId !== targetId) {
+      setAnchorMessageId(null);
+
+      setTimeout(() => scrollToMessage(targetId), 50);
+    } else {
+      scrollToMessage(targetId);
+    }
   };
 
   const handleSend = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -170,6 +165,5 @@ export function useMessageForm({
     handleKeyDown,
     handleOnChange,
     navigateResult,
-    switchFormMode,
   };
 }

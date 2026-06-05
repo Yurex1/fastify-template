@@ -1,6 +1,8 @@
 import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
+import { CALL_ACTIONS } from '../services/livekit/consts';
+
 import { WsServer } from './types';
 import { UserResult } from '../entities/user';
 
@@ -10,6 +12,11 @@ interface MessageHandlersDeps {
   uid: number;
   user: UserResult;
 }
+
+const BROADCAST_MODES = {
+  OTHERS: 'others',
+  ALL: 'all',
+};
 
 export const createMessageHandlers = ({ services, fastifyWs, uid, user }: MessageHandlersDeps) => {
   const broadcastStatus = async (uid: number, type: string, payload: {}) => {
@@ -23,9 +30,11 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     }
   };
 
-  const broadcastForChatMembers = async (chatId: number, type: string, payload: {}) => {
+  const broadcastForChatMembers = async (chatId: number, type: string, payload: {}, mode?: 'all' | 'others') => {
+    const allMembers = await services.chat.getAllMembersByChatId(chatId);
+
     try {
-      const peers = await services.chat.getAllMembersByChatId(chatId);
+      const peers = mode === BROADCAST_MODES.OTHERS ? allMembers.filter((member) => member.userId !== uid) : allMembers;
       for (const peer of peers) {
         fastifyWs.send(peer.userId, { type, payload });
       }
@@ -54,23 +63,25 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     if (typingTimers.has(uid)) {
       clearTimeout(typingTimers.get(uid)!);
     } else {
-      const peers = (await services.chat.getAllMembersByChatId(chatId)).filter((member) => member.userId !== uid);
-      for (const peer of peers) {
-        fastifyWs.send(peer.userId, {
-          type: CHAT_ACTIONS.typing,
-          payload: { userName: user.username, chatId, isTyping: false },
-        });
-      }
+      await broadcastForChatMembers(
+        chatId,
+        CHAT_ACTIONS.typing,
+        { userName: user.username, chatId, isTyping: false },
+        'others',
+      );
     }
     const timer = setTimeout(async () => {
       typingTimers.delete(uid);
-      const peers = (await services.chat.getAllMembersByChatId(chatId)).filter((member) => member.userId !== uid);
-      for (const peer of peers) {
-        fastifyWs.send(peer.userId, {
-          type: CHAT_ACTIONS.stopTyping,
-          payload: { userName: user.username, chatId, isTyping: false },
-        });
-      }
+      await broadcastForChatMembers(
+        chatId,
+        CHAT_ACTIONS.stopTyping,
+        {
+          userName: user.username,
+          chatId,
+          isTyping: false,
+        },
+        'others',
+      );
     }, 500);
     typingTimers.set(uid, timer);
   };
@@ -90,6 +101,11 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     } catch (err: unknown) {
       if (err instanceof Error) fastifyWs.send(uid, { type: 'ERROR', payload: { message: err.message } });
     }
+  };
+
+  const handleCreateRoom = async (data: { payload: { chatId: number; roomName: string; chatName: string } }) => {
+    const { chatId, roomName, chatName } = data.payload;
+    await broadcastForChatMembers(chatId, CALL_ACTIONS.incoming, { chatId, roomName, chatName }, 'others');
   };
 
   const handleDeleteMessage = async (data: { payload: { messageId: number } }) => {
@@ -130,6 +146,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     handleUpdateReaction,
     handleDeleteMessage,
     handleInitialStatuses,
+    handleCreateRoom,
     broadcastStatus,
   };
 };

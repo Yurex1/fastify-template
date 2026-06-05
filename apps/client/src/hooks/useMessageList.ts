@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useLayoutEffect } from 'react';
+import { useRef, useEffect, useState, useLayoutEffect, useCallback } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import { useChatMessages } from './useChatMessages';
 import useChatUIStore from '../stores/chatUI';
@@ -10,6 +10,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
   const setIsAtBottom = useChatUIStore((s) => s.setIsAtBottom);
+  const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
 
   const {
     messages,
@@ -21,8 +22,9 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     isFetchingPreviousPage,
     isLoading,
   } = useChatMessages(anchorMessageId);
-
+  const messagesRef = useRef(messages);
   const chatKey = `${currentChatId}-${anchorMessageId ?? ''}`;
+  const chatKeyRef = useRef(chatKey);
 
   const firstItemIndexRef = useRef<number>(START_INDEX);
   const prevOldestIdRef = useRef<number | null>(null);
@@ -33,12 +35,11 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   });
   const firstItemIndex = firstItemState.key === chatKey ? firstItemState.value : START_INDEX;
 
-  useEffect(() => {
+  if (chatKeyRef.current !== chatKey) {
+    chatKeyRef.current = chatKey;
     firstItemIndexRef.current = START_INDEX;
     prevOldestIdRef.current = null;
-    setFirstItemState({ key: chatKey, value: START_INDEX });
-  }, [currentChatId, anchorMessageId]);
-
+  }
   useEffect(() => {
     setAnchorMessageId(null);
   }, [currentChatId]);
@@ -56,16 +57,15 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
         firstItemIndexRef.current -= addedBefore;
         setFirstItemState({ key: chatKey, value: firstItemIndexRef.current });
       }
+    } else if (prevOldestIdRef.current === null) {
+      setFirstItemState({ key: chatKey, value: START_INDEX });
     }
 
     prevOldestIdRef.current = currentOldestId ?? null;
-  }, [messages]);
-
-  const startReached = () => {
-    if (hasNextPage && !isFetchingNextPage && !isLoading) {
-      fetchNextPage();
-    }
-  };
+  }, [messages, chatKey]);
+  const startReached = useCallback(() => {
+    fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
 
   const endReached = () => {
     if (hasPreviousPage && !isFetchingPreviousPage && !isLoading) {
@@ -84,20 +84,38 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     return { index, align: 'center' as const };
   };
 
-  const scrollToMessage = (messageId: number) => {
-    const idx = messages.findIndex((m) => m.id === messageId);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
-    if (idx !== -1) {
-      virtuosoRef.current?.scrollToIndex({
-        index: messages.length - 1 - idx,
-        align: 'center',
-        behavior: 'smooth',
+  const scrollToMessage = useCallback(
+    (messageId: number) => {
+      const current = messagesRef.current;
+      const idx = current.findIndex((m) => m.id === messageId);
+
+      const highlight = () => {
+        setHighlightedMessageId(messageId);
+        setTimeout(() => setHighlightedMessageId(null), 1500);
+      };
+
+      if (idx !== -1) {
+        virtuosoRef.current?.scrollToIndex({
+          index: current.length - 1 - idx,
+          align: 'center',
+          behavior: 'smooth',
+        });
+        setTimeout(highlight, 300);
+        return;
+      }
+
+      setAnchorMessageId(null);
+
+      requestAnimationFrame(() => {
+        setAnchorMessageId(messageId);
       });
-    } else if (anchorMessageId === null) {
-      setAnchorMessageId(messageId);
-    }
-  };
-
+    },
+    [setAnchorMessageId, setHighlightedMessageId],
+  );
   const reversed = [...messages].reverse();
 
   return {

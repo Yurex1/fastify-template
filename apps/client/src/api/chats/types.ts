@@ -8,6 +8,7 @@ export type Chat = {
   createdAt: string;
   updatedAt: string;
   members: Member[];
+  lastMessage: Message | null;
 };
 
 export type ChatPageParam = { updatedAt?: string } | null;

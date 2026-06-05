@@ -1,98 +1,99 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { AuthCard } from '../components/AuthCard';
+import { FormError } from '../components/FormError';
 import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
-import { useMutation } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema, type LoginFormData } from '../schemas/validation/schemas';
+
+type FormData = {
+  usernameOrEmail: string;
+  password: string;
+};
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.login);
 
-  const [form, setForm] = useState({
-    usernameOrEmail: '',
-    password: '',
+  const [showPassword, setShowPassword] = useState(false);
+  const [parsedError, setParsedError] = useState<Error | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: 'onChange',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: (loginData: { usernameOrEmail: string; password: string }) => signIn(loginData),
+  const { mutate, isPending } = useMutation({
+    mutationFn: (data: FormData) => signIn(data),
+    onError: (err: Error) => setParsedError(err),
     onSuccess: () => {
+      setParsedError(null);
       navigate(ROUTES.HOME);
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutate(form);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-4">
-      <div className="p-6 space-y-4">
-        <div className="w-full max-w-md rounded-2xl border border-neutral-700 bg-neutral-900/70 backdrop-blur shadow-xl p-8">
-          {' '}
-          <div className="text-center space-y-2 mb-6">
-            <h1 className="text-2xl font-semibold text-white">Sign in</h1>
-            <h3 className="text-sm text-neutral-400">Enter your credentials to continue</h3>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="relative">
-              <Input
-                name="usernameOrEmail"
-                placeholder="Username or Email"
-                autoComplete="username"
-                value={form.usernameOrEmail}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="relative">
-              <Input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                value={form.password}
-                onChange={handleChange}
-                autoComplete="current-password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-500 text-center">{(error as Error).message || 'Registration failed'}</p>
-            )}
-
-            <Button type="submit" loading={isPending}>
-              Sign in
-            </Button>
-          </form>
-          <div className="text-center text-sm text-neutral-400 mt-1">
-            Don&apos;t have an account?{' '}
-            <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
-              Sign up
-            </span>
-          </div>
+    <AuthCard
+      title="Sign in"
+      subtitle="Enter your credentials to continue"
+      footer={
+        <>
+          Don&apos;t have an account?{' '}
+          <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
+            Sign up
+          </span>
+        </>
+      }
+    >
+      <form
+        onSubmit={handleSubmit((data) => {
+          setParsedError(null);
+          mutate(data);
+        })}
+        className="space-y-4"
+      >
+        <div>
+          <Input
+            placeholder="Username or Email"
+            {...register('usernameOrEmail')}
+            onChange={() => setParsedError(null)}
+          />
+          {errors.usernameOrEmail && <p className="text-xs text-red-400 mt-1 ml-1">{errors.usernameOrEmail.message}</p>}
         </div>
-      </div>
-    </div>
+
+        <div className="relative">
+          <Input
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            {...register('password')}
+            onChange={() => setParsedError(null)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-6 -translate-y-1/2 text-neutral-400 hover:text-neutral-300"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>}
+        </div>
+
+        <FormError message={parsedError} />
+
+        <Button type="submit" loading={isPending}>
+          Sign in
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

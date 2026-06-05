@@ -11,16 +11,18 @@ import { isOwnMessage } from '../../utils/isOwnMessage';
 import { useMessageActions } from '../../hooks/useMessageActions';
 import useChatUIStore from '../../stores/chatUI';
 import type { Message } from '../../api/chats/types';
+import { useChatSocket } from '../../websocket/ChatSocketContext';
 
 interface MessageBlockProps {
   message: Message;
-  updateReaction: (id: number, userId: number, reaction: string) => void;
-  deleteMessage: (id: number) => void;
   scrollToMessage?: (id: number) => void;
 }
 
-export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToMessage }: MessageBlockProps) => {
+export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) => {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const highlightedMessageId = useChatUIStore((s) => s.highlightedMessageId);
+  const isHighlighted = highlightedMessageId === message.id;
+  const { updateReaction, deleteMessage } = useChatSocket();
   const setMenuForMessage = useChatUIStore((s) => s.setMenuForMessage);
 
   const { handleEdit, handleCopy, handleReply, handleDelete } = useMessageActions({
@@ -33,14 +35,18 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
   const togglePin = () => {
     if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
     else chatsApi.pinMessage(message.chatId, message.id);
-  }
+  };
 
   if (!message) return null;
 
   return (
     <div
       id={`message-${message.id}`}
-      className={cn('flex mb-1 whitespace-pre-wrap break-words px-4', isOwn ? 'justify-end' : 'justify-start')}
+      className={cn(
+        'flex mb-1 whitespace-pre-wrap break-words px-4 transition-all duration-300',
+        isOwn ? 'justify-end' : 'justify-start',
+        isHighlighted && 'bg-gray-800',
+      )}
     >
       <ContextMenu>
         <ContextMenuTrigger
@@ -60,10 +66,10 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
               <div
                 onClick={(e) => scrollToMessage?.(Number(e.currentTarget.id))}
                 id={`${message.reply_id}`}
-                className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col"
+                className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col min-w-0 max-w-full overflow-hidden cursor-pointer"
               >
-                <span className="font-bold">{message.reply.username || 'User not found'}</span>
-                <span>{message.reply.text || 'Original message deleted'}</span>
+                <span className="font-bold truncate">{message.reply.username || 'User not found'}</span>
+                <span className="truncate">{message.reply.text || 'Original message deleted'}</span>
               </div>
             )}
 
@@ -77,7 +83,7 @@ export const MessageBlock = ({ message, updateReaction, deleteMessage, scrollToM
                   <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
                 )}
 
-                <Time date={message.updatedAt} />
+                <Time date={message.createdAt} />
                 <div>{message.isPinned ? <Pin size={10} /> : ''}</div>
               </div>
             </div>

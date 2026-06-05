@@ -1,7 +1,7 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
-import { PINNED_MESSAGES_ACTION } from './consts/pinned';
-import { QueryKeys } from '../lib/queries';
-import type { PinnedMessagesPayload, PinnedPage } from '../api/chats/types';
+import { PINNED_MESSAGES_ACTION } from '../../utils/consts/pinned';
+import { QueryKeys } from '../../lib/queries';
+import type { PinnedMessagesPayload, PinnedPage } from '../../api/chats/types';
 
 interface updatePinnedMessagesCacheProps {
   queryClient: QueryClient;

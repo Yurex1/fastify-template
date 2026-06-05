@@ -8,6 +8,7 @@ import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
 
 import { createMessageHandlers } from './messageHandlers';
+import { CALL_ACTIONS } from '../services/livekit/consts';
 
 export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
   await fastify.register(websocket);
@@ -102,6 +103,10 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
           if (data.type === CHAT_ACTIONS.deleteMesage) {
             await handlers.handleDeleteMessage(data);
+          }
+
+          if (data.type === CALL_ACTIONS.outgoing) {
+            await handlers.handleCreateRoom(data);
           }
         } catch (e) {
           console.error(e);

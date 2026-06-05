@@ -6,6 +6,7 @@ import { ChatApi } from './chats/types';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { Api } from './healthCheck/types';
 import { UserResult } from '../entities/user';
+import { LiveKitApi } from './livekit/types';
 
 export type AccessType = 'none' | 'access' | 'refresh';
 
@@ -33,4 +34,5 @@ export interface APIs extends Record<string, API> {
   photo: PhotoApi;
   post: PostApi;
   chats: ChatApi;
+  livekit: LiveKitApi;
 }

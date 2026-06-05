@@ -84,6 +84,16 @@ const chatsApi = {
     const response = await api.delete(`${ENDPOINTS.CHAT_DELETE}/${chatId}`).json<boolean>();
     return response;
   },
+
+  getTokenCall: async (roomName: string) => {
+    const response = await api.post(`${ENDPOINTS.CHAT_GET_LIVEKIT_TOKEN}`, { json: { roomName } }).json();
+    return response;
+  },
+
+  getRoom: async (roomName: string) => {
+    const response = await api.post(`${ENDPOINTS.CHAT_GET_LIVEKIT_ROOM}`, { json: { roomName } }).json();
+    return response;
+  },
 };
 
 export default chatsApi;

@@ -46,7 +46,7 @@ const swaggerPlugin: Plugin = {
       consumes: ['application/json'],
       produces: ['application/json'],
       paths: {
-        '/ws/{accessToken}': {
+        '/ws': {
           get: {
             tags: ['WebSocket'],
             parameters: [
@@ -68,4 +68,4 @@ const swaggerUiPlugin: Plugin = {
   options: { routePrefix: '/docs' },
 };
 
-export const plugins = [corsPlugin, cookiePlugin, swaggerPlugin, swaggerUiPlugin];
+export const plugins = [cookiePlugin, corsPlugin, swaggerPlugin, swaggerUiPlugin];

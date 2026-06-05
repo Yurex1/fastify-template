@@ -7,15 +7,17 @@ import { ChatBlock } from './ChatBlock';
 import useChatUIStore from '../../stores/chatUI';
 import { Loader } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
+import type { Chat } from '../../api/chats/types';
 
 const ChatList = () => {
   const { chats, hasNextPage, isFetchingNextPage, isLoading, fetchNextPage } = useChats();
-  const currentChatId = useChatUIStore((s) => s.currentChatId);
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
+  const setCurrentChatInfo = useChatUIStore((s) => s.setCurrentChatInfo);
 
-  const handleChangeChatId = (chatId: number | null) => {
-    setCurrentChatId(chatId);
-    setLastChatId(chatId);
+  const handleChangeChatId = (chat: Chat | null) => {
+    setCurrentChatId(chat?.id || null);
+    setCurrentChatInfo(chat);
+    setLastChatId(chat?.id || null);
   };
 
   return (
@@ -25,29 +27,23 @@ const ChatList = () => {
       <CreateChat />
 
       <div className="flex-1 w-full overflow-y-auto p-2">
-        <Virtuoso
-          className="h-full"
-          data={chats}
-          endReached={() => {
-            if (hasNextPage && !isFetchingNextPage && !isLoading) {
-              fetchNextPage();
-            }
-          }}
-          followOutput="smooth"
-          itemContent={(_, chat) => (
-            <ChatBlock
-              key={chat.id}
-              chat={chat}
-              currentChatId={currentChatId}
-              handleChangeChatId={handleChangeChatId}
-            />
-          )}
-          components={{
-            Header: () => (isFetchingNextPage ? <Loader /> : null),
-            Footer: () => <p>end</p>,
-          }}
-        />
-        {!isLoading && chats.length === 0 && <EmptyBlock />}
+        {chats.length > 0 && (
+          <Virtuoso
+            className="h-full"
+            data={chats}
+            endReached={() => {
+              if (hasNextPage && !isFetchingNextPage && !isLoading) {
+                fetchNextPage();
+              }
+            }}
+            followOutput="smooth"
+            itemContent={(_, chat) => <ChatBlock chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />}
+            components={{
+              Header: () => (isFetchingNextPage ? <Loader /> : null),
+            }}
+          />
+        )}
+        {!isLoading && chats.length === 0 && <EmptyBlock text="No chats yet" />}
       </div>
     </div>
   );

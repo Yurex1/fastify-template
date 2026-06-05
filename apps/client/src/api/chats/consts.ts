@@ -9,4 +9,6 @@ export const ENDPOINTS = {
   CHAT_POST_PINNED_MESSAGE: '/chats/pinMessage',
   CHAT_DELETE_PINNED_MESSAGE: '/chats/unpinMessage',
   CHAT_DELETE: '/chats/removeChat',
+  CHAT_GET_LIVEKIT_TOKEN: '/livekit/token',
+  CHAT_GET_LIVEKIT_ROOM: '/livekit/room',
 };

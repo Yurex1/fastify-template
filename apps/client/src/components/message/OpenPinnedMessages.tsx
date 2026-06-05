@@ -27,7 +27,7 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMess
     return (
       <div
         className={cn(
-          'flex items-center gap-3 px-4 py-2 cursor-pointer',
+          'flex items-center gap-3 px-4 py-2 cursor-pointer ',
           'bg-gray-900/80 backdrop-blur border-b border-gray-800',
           'hover:bg-gray-800 transition',
         )}
@@ -44,12 +44,12 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMess
     <div
       onClick={() => setPinnedMode(true)}
       className={cn(
-        'flex items-center gap-3 px-4 py-2 cursor-pointer',
+        'flex items-center gap-3 px-4 py-2 cursor-pointer rounded-full m-1',
         'bg-gray-900/80 backdrop-blur border-b border-gray-800',
         'hover:bg-gray-800 transition',
       )}
     >
-      <Pin size={16} className="text-violet-400 shrink-0" />
+      <Pin size={18} className="text-grey-400 shrink-0" />
 
       <div className="flex flex-col overflow-hidden">
         <span className="text-xs text-gray-400">Pinned message{count > 1 ? `s (${count})` : ''}</span>

@@ -1,7 +1,7 @@
 import * as SchemaType from 'json-schema-to-ts';
 import * as schemas from './schemas';
 import { API, ProtectedEndpoint } from '../types';
-import { Chat, ChatPreview } from '../../entities/chat';
+import { ChatPreview } from '../../entities/chat';
 import type { ChatService } from '../../services/chat/types';
 import { ListResult } from '../../data/chatMember/types';
 

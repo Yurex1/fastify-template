@@ -9,19 +9,18 @@ zxcvbnOptions.setOptions({
 });
 
 export const validatePassword = (password: string, email: string, username: string) => {
-  if (password.length < 12) throw exception.badRequest('PASSWORD_IS_TOO_SHORT');
-  if (password.includes(email)) throw exception.badRequest('PASSWORD_CONTAINS_EMAIL');
-  if (password === username) throw exception.badRequest('PASSWORD_EQUALS_USERNAME');
+  if (password.length < 12) throw exception.badRequest('Password is too short, at list 12 symbols');
+  if (password.includes(email)) throw exception.badRequest('Password contains email');
+  if (password === username) throw exception.badRequest('Password equals username');
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
   const isValid = passwordRegex.test(password);
   if (!isValid) {
-    throw exception.badRequest('PASSWORD_MUST_CONTAIN_UPPERCASE_LOWERCASE_NUMBER_AND_SYMBOL');
+    throw exception.badRequest('Password must constain uppercase, lowercase, number and symbol');
   }
-
   const passwordStrength = zxcvbn(password);
 
   if (passwordStrength.score < 3) {
-    throw exception.badRequest('PASSWORD_IS_TOO_WEAK');
+    throw exception.badRequest('Password is too week');
   }
 };

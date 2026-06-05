@@ -1,99 +1,127 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { Input } from '../components/Input';
+import { useForm } from 'react-hook-form';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
+import { AuthCard } from '../components/AuthCard';
+import { FormError } from '../components/FormError';
 import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
-import { Eye, EyeOff } from 'lucide-react';
-import { REGISTER_INPUT_CONFIGS } from '../utils/consts/inputs';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { registerSchema, type RegisterFormData } from '../schemas/validation/schemas';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.register);
-  const [showPassword, setShowPassword] = useState(false);
 
-  const [form, setForm] = useState({
-    email: '',
-    username: '',
-    password: '',
+  const [showField, setShowField] = useState<'none' | 'password' | 'confirm'>('none');
+  const [parsedError, setParsedError] = useState<Error | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',
   });
 
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: (registerData: typeof form) => signUp(registerData),
+  const { mutate, isPending } = useMutation({
+    mutationFn: ({ email, username, password }: RegisterFormData) => signUp({ email, username, password }),
+    onError: (err: Error) => setParsedError(err),
     onSuccess: () => {
+      setParsedError(null);
       navigate(ROUTES.HOME);
     },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    mutate(form);
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-900 via-neutral-800 to-black p-4">
-      <div className="p-6 space-y-4">
-        <div className="w-full max-w-md rounded-2xl border border-neutral-700 bg-neutral-900/70 backdrop-blur shadow-xl p-8">
-          {' '}
-          <div className="text-center space-y-2 mb-6">
-            <h1 className="text-2xl font-semibold text-white">Create account</h1>
-            <h3 className="text-sm text-neutral-400">Sign up to get started</h3>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {REGISTER_INPUT_CONFIGS.map((input) => (
-              <Input
-                key={input.id}
-                name={input.name}
-                placeholder={input.placeholder}
-                autoComplete={input.autoComplete}
-                value={form[input.name]}
-                onChange={handleChange}
-                required
-              />
-            ))}
-            <div className="relative">
-              <Input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Password"
-                autoComplete="current-password"
-                value={form.password}
-                onChange={handleChange}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-500 text-center">{(error as Error).message || 'Registration failed'}</p>
-            )}
-
-            <Button type="submit" loading={isPending}>
-              Sign up
-            </Button>
-          </form>
-          <div className="text-center mt-4 text-sm text-neutral-400">
-            Already have an account?{' '}
-            <span onClick={() => navigate(ROUTES.LOGIN)} className="text-white cursor-pointer hover:underline">
-              Sign in
-            </span>
-          </div>
+    <AuthCard
+      title="Create account"
+      subtitle="Sign up to get started"
+      footer={
+        <>
+          Already have an account?{' '}
+          <span onClick={() => navigate(ROUTES.LOGIN)} className="text-white cursor-pointer hover:underline">
+            Sign in
+          </span>
+        </>
+      }
+    >
+      <form
+        onSubmit={handleSubmit((data) => {
+          setParsedError(null);
+          mutate(data);
+        })}
+        className="space-y-4"
+      >
+        <div>
+          <Input
+            placeholder="Email"
+            autoComplete="email"
+            {...register('email')}
+            onChangeCapture={() => setParsedError(null)}
+          />
+          {errors.email && <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>}
         </div>
-      </div>
-    </div>
+
+        <div>
+          <Input
+            placeholder="Username"
+            autoComplete="username"
+            {...register('username')}
+            onChangeCapture={() => setParsedError(null)}
+          />
+          {errors.username && <p className="text-xs text-red-400 mt-1 ml-1">{errors.username.message}</p>}
+        </div>
+
+        <div className="relative">
+          <Input
+            type={showField === 'password' ? 'text' : 'password'}
+            placeholder="Password"
+            autoComplete="new-password"
+            {...register('password')}
+            onChangeCapture={() => setParsedError(null)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowField((prev) => (prev === 'password' ? 'none' : 'password'))}
+            className="absolute right-3 top-6 -translate-y-1/2 text-neutral-400"
+          >
+            {showField === 'password' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>}
+        </div>
+
+        <div className="relative">
+          <Input
+            type={showField === 'confirm' ? 'text' : 'password'}
+            placeholder="Confirm password"
+            autoComplete="new-password"
+            {...register('confirmPassword')}
+            onChangeCapture={() => setParsedError(null)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowField((prev) => (prev === 'confirm' ? 'none' : 'confirm'))}
+            className="absolute right-3 top-6 -translate-y-1/2 text-neutral-400"
+          >
+            {showField === 'confirm' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+          {errors.confirmPassword && <p className="text-xs text-red-400 mt-1 ml-1">{errors.confirmPassword.message}</p>}
+          {!errors.confirmPassword && watch('confirmPassword')?.length > 0 && (
+            <p className="text-xs text-emerald-400 mt-1 ml-1">Passwords match ✓</p>
+          )}
+        </div>
+
+        <FormError message={parsedError} />
+        <Button type="submit" loading={isPending}>
+          Sign up
+        </Button>
+      </form>
+    </AuthCard>
   );
 }

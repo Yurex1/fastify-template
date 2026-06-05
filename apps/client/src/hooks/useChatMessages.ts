@@ -42,10 +42,7 @@ export function useChatMessages(anchorMessageId: number | null = null) {
     staleTime: Infinity,
   });
 
-  const messages = useMemo(
-    () => query.data?.pages.flatMap((p) => p.messages) ?? [],
-    [query.data],
-  );
+  const messages = useMemo(() => query.data?.pages.flatMap((p) => p.messages) ?? [], [query.data]);
 
   return {
     ...query,

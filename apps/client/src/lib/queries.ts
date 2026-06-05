@@ -3,4 +3,5 @@ export const QueryKeys = {
   chats: ['chats'],
   pinnedMessages: ['pinnedMessages'],
   pinnedStats: ['lastPinnedMessage'],
+  callToken: ['callToken'],
 };

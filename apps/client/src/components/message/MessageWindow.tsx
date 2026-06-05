@@ -2,7 +2,6 @@ import { lazy, useEffect, useRef, Suspense, useState } from 'react';
 import { Loader } from '../Loader';
 import MessageForm from './MessageForm';
 import { EmptyBlock } from '../EmptyBlock';
-import { LucideSearch, X } from 'lucide-react';
 import { useMessageForm } from '../../hooks/useMessageForm';
 import { ReplyBlock } from '../ReplyBlock';
 import { MessageBlock } from './MessageBlock';
@@ -13,8 +12,8 @@ import useMessageFormStore from '../../stores/messageForm';
 import TypingBlock from '../TypingBlock';
 import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
-import { useChatSocket } from '../../websocket/ChatSocketContext';
 import type { Message } from '../../api/chats/types';
+import { UserInfo } from './UserInfo';
 
 const ANCHOR_READY_FALLBACK_MS = 300;
 const CHAT_SCROLL_WINDOW_MS = 500;
@@ -25,7 +24,9 @@ const MessageWindow = () => {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
+  const currentChatInfo = useChatUIStore((s) => s.currentChatInfo);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
+
   const isAtBottom = useChatUIStore((s) => s.isAtBottom);
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
@@ -34,8 +35,6 @@ const MessageWindow = () => {
   const isListReady = anchorMessageId === null || readyKey === virtuosoKey;
   const anchorReadyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chatScrollActiveRef = useRef(false);
-
-  const { deleteMessage, updateMessage, updateReaction, sendMessage, typing } = useChatSocket();
 
   const {
     messages,
@@ -51,22 +50,19 @@ const MessageWindow = () => {
   } = useMessageList(virtuosoRef);
 
   const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
-  const {
-    formButton,
-    resultCounter,
-    results,
-    navigateResult,
-    switchFormMode,
-    textareaRef,
-    handleOnChange,
-    handleKeyDown,
-  } = useMessageForm({
-    sendMessage,
-    updateMessage,
-    deleteMessage,
-    typing,
-    scrollToMessage,
-  });
+  const { formButton, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
+    useMessageForm({
+      scrollToMessage,
+    });
+
+  const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
+
+  useEffect(() => {
+    if (isListReady && anchorMessageId !== null) {
+      setHighlightedMessageId(anchorMessageId);
+      setTimeout(() => setHighlightedMessageId(null), 1500);
+    }
+  }, [isListReady, anchorMessageId]);
 
   useEffect(() => {
     if (anchorMessageId !== null) return;
@@ -152,13 +148,13 @@ const MessageWindow = () => {
     if (pinnedMode) {
       return (
         <Suspense fallback={<Loader />}>
-          <PinnedMessagesList updateReaction={updateReaction} handleDelete={deleteMessage} />
+          <PinnedMessagesList />
         </Suspense>
       );
     }
 
     if (!isLoading && messages.length <= 0) {
-      return <EmptyBlock />;
+      return <EmptyBlock text="No messages yet" />;
     }
 
     const showLoader = isLoading || (anchorMessageId !== null && !isListReady);
@@ -180,16 +176,15 @@ const MessageWindow = () => {
             increaseViewportBy={{ top: 300, bottom: 300 }}
             itemsRendered={handleItemsRendered}
             itemContent={(_, message) => (
-              <MessageBlock
-                key={message.id}
-                message={message}
-                updateReaction={updateReaction}
-                deleteMessage={deleteMessage}
-                scrollToMessage={scrollToMessage}
-              />
+              <MessageBlock key={message.id} message={message} scrollToMessage={scrollToMessage} />
             )}
             components={{
-              Header: () => (isFetchingNextPage ? <Loader /> : null),
+              Header: () =>
+                isFetchingNextPage ? (
+                  <Loader />
+                ) : (
+                  <p className="text-center text-xs text-gray-500 m-2">No more results</p>
+                ),
               Footer: () => (isFetchingPreviousPage ? <Loader /> : null),
             }}
           />
@@ -207,16 +202,9 @@ const MessageWindow = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-950 h-screen">
+    <div className="flex-1 flex flex-col bg-gray-950 h-screen overflow-hidden">
+      {formMode !== 'search' && currentChatId && currentChatInfo && <UserInfo />}
       {formMode !== 'search' && <OpenPinnedMessages pinnedMode={pinnedMode} setPinnedMode={setPinnedMode} />}
-
-      <button
-        className="self-end p-2"
-        onClick={() => switchFormMode(formMode === 'search' ? 'create' : 'search')}
-        aria-label={formMode === 'search' ? 'Close search' : 'Search messages'}
-      >
-        {formMode === 'search' ? <X /> : <LucideSearch />}
-      </button>
 
       {renderContent()}
 
