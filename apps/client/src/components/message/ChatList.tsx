@@ -37,9 +37,7 @@ const ChatList = () => {
               }
             }}
             followOutput="smooth"
-            itemContent={(_, chat) => (
-              <ChatBlock key={chat.id} chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />
-            )}
+            itemContent={(_, chat) => <ChatBlock chat={chat} handleChangeChatId={() => handleChangeChatId(chat)} />}
             components={{
               Header: () => (isFetchingNextPage ? <Loader /> : null),
             }}

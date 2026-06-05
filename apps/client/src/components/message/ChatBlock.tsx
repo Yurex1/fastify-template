@@ -33,7 +33,7 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
   if (!chatMember) return;
 
   return (
-    <ContextMenu key={chat.id}>
+    <ContextMenu>
       <ContextMenuTrigger onContextMenu={() => setMenuForChat(chat)}>
         <div
           onClick={() => handleChangeChatId(chat.id)}
@@ -42,7 +42,7 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
             currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400',
           )}
         >
-          <img className="w-13 h-13 rounded-full" src="/user-no-icon.png" alt="user-icon" />
+          <img className="w-13 h-13 rounded-full" src="/images/user-no-icon.png" alt="user-icon" />
           {stats.includes(chatMember.userId) && (
             <span className="text-green-800 absolute text-[2.5em] top-0 right-2">•</span>
           )}

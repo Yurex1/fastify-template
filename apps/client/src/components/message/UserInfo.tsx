@@ -32,7 +32,7 @@ export const UserInfo = () => {
     >
       <div className="flex items-center gap-2">
         <div className="w-10 h-10 rounded-full overflow-hidden">
-          <img src="/user-no-icon.png" alt="user-icon" />
+          <img src="/images/user-no-icon.png" alt="user-icon" />
         </div>
         <div className="flex flex-col">
           <p>{chatMember.username}</p>

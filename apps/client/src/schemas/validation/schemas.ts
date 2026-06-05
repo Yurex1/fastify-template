@@ -1,22 +1,44 @@
 import { z } from 'zod';
+import i18next from '../../i18next';
 
 export const registerSchema = z
   .object({
-    email: z.string().email('Please enter a valid email address'),
-    username: z.string().min(1, 'Username is required').max(30, 'Username is too long'),
+    username: z
+      .string({
+        error: () => ({ message: i18next.t('auth.registration.validations.firstNameRequired') }),
+      })
+      .min(1, i18next.t('auth.registration.validations.firstNameRequired'))
+      .max(100, i18next.t('common.validation.maxLength')),
+    email: z
+      .string({
+        error: () => ({ message: i18next.t('auth.common.invalidEmail') }),
+      })
+      .email(i18next.t('auth.common.invalidEmail'))
+      .max(100, i18next.t('common.validation.maxLength')),
     password: z
-      .string()
-      .min(12, 'Password must be at least 12 characters')
-      .max(64, 'Password is too long')
-      .regex(/[A-Z]/, 'Password must contain an uppercase letter')
-      .regex(/[a-z]/, 'Password must contain a lowercase letter')
-      .regex(/[0-9]/, 'Password must contain a number')
-      .regex(/[^A-Za-z0-9]/, 'Password must contain a special character'),
-    confirmPassword: z.string(),
+      .string({
+        error: () => ({ message: i18next.t('auth.registration.validations.passwordMinLength') }),
+      })
+      .min(12, i18next.t('auth.registration.validations.passwordMinLength'))
+      .max(100, i18next.t('common.validation.maxLength'))
+      .regex(/[A-Z]/, i18next.t('auth.registration.validations.passwordUpperCase'))
+      .regex(/[a-z]/, i18next.t('auth.registration.validations.passwordLowerCase'))
+      .regex(/[0-9]/, i18next.t('auth.registration.validations.passwordNumber'))
+      .regex(/[!@#$%&*.()_=+[\]{}|;:,.<>?~^/-]/, i18next.t('auth.registration.validations.passwordSpecialCharacter')),
+    confirmPassword: z
+      .string({
+        error: () => ({ message: i18next.t('auth.registration.validations.passwordMinLength') }),
+      })
+      .min(12, i18next.t('auth.registration.validations.passwordMinLength')),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: 'custom',
+        message: i18next.t('auth.common.validation.passwordsDoNotMatch'),
+        path: ['confirmPassword'],
+      });
+    }
   });
 
 export const loginSchema = z.object({

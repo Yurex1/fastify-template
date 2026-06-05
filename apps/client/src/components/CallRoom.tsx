@@ -4,13 +4,14 @@ import chatsApi from '../api/chats/chats';
 import { useCall } from '../hooks/useCall';
 import useChatUIStore from '../stores/chatUI';
 import { useQuery } from '@tanstack/react-query';
+import { QueryKeys } from '../lib/queries';
 
 export function CallRoom({ roomName }: { roomName: string }) {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const { endCall, activeCall } = useCall(currentChatId);
 
   const { data, isError, error } = useQuery({
-    queryKey: ['callToken', roomName],
+    queryKey: [QueryKeys.callToken, roomName],
     queryFn: () =>
       Promise.all([chatsApi.getRoom(roomName), chatsApi.getTokenCall(roomName)]).then(
         ([, tokenRes]: any) => tokenRes.token,

@@ -33,9 +33,13 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
         payload: {
           type: CACHE_OP.CHAT_UPDATE,
           chatId: data.payload.chatId,
-          data: data.payload,
+          data: {
+            lastMessage: data.payload,
+            updatedAt: data.payload.createdAt,
+          },
         },
       });
+
       break;
 
     case WS_IN.MESSAGE_UPDATED:

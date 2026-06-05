@@ -1,16 +1,9 @@
 import ky from 'ky';
 import { useAuthStore } from '../stores/auth';
 import type { User } from './user/types';
-export class ApiError extends Error {
-  public statusCode: number;
 
-  constructor(code: number, message: string) {
-    super(message);
-    this.statusCode = code;
-    Object.setPrototypeOf(this, ApiError.prototype);
-  }
-}
 import { getDeviceId } from '../utils/deviceId';
+import { createApiError } from './apiError';
 const deviceId = getDeviceId();
 let refreshPromise: Promise<{ accessToken: string; user: User; expiresAt: string }> | null = null;
 
@@ -36,7 +29,7 @@ const api = ky.create({
               .clone()
               .json()
               .catch(() => ({}));
-            const error = new ApiError(response.status, body?.message ?? `HTTP ${response.status}`);
+            const error = createApiError(response.status, body?.message ?? `HTTP ${response.status}`);
             throw error;
           }
           return;
@@ -79,7 +72,7 @@ const api = ky.create({
             body?.error ??
             `HTTP ${response.status}`;
 
-          throw new ApiError(response.status, errorMessage);
+          throw createApiError(response.status, errorMessage);
         }
       },
     ],

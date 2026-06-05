@@ -12,13 +12,6 @@ import { ROUTES } from '../utils/consts/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/validation/schemas';
 
-type FormData = {
-  email: string;
-  username: string;
-  password: string;
-  confirmPassword: string;
-};
-
 export default function RegisterPage() {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.register);
@@ -35,10 +28,9 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     mode: 'onChange',
   });
-  const password = watch('password');
 
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ email, username, password }: FormData) => signUp({ email, username, password }),
+    mutationFn: ({ email, username, password }: RegisterFormData) => signUp({ email, username, password }),
     onError: (err: Error) => setParsedError(err),
     onSuccess: () => {
       setParsedError(null);
@@ -70,7 +62,7 @@ export default function RegisterPage() {
           <Input
             placeholder="Email"
             autoComplete="email"
-            {...register('email', { required: 'Email is required' })}
+            {...register('email')}
             onChangeCapture={() => setParsedError(null)}
           />
           {errors.email && <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>}
@@ -80,7 +72,7 @@ export default function RegisterPage() {
           <Input
             placeholder="Username"
             autoComplete="username"
-            {...register('username', { required: 'Username is required' })}
+            {...register('username')}
             onChangeCapture={() => setParsedError(null)}
           />
           {errors.username && <p className="text-xs text-red-400 mt-1 ml-1">{errors.username.message}</p>}
@@ -91,7 +83,7 @@ export default function RegisterPage() {
             type={showField === 'password' ? 'text' : 'password'}
             placeholder="Password"
             autoComplete="new-password"
-            {...register('password', { required: 'Password is required' })}
+            {...register('password')}
             onChangeCapture={() => setParsedError(null)}
           />
           <button
@@ -109,10 +101,7 @@ export default function RegisterPage() {
             type={showField === 'confirm' ? 'text' : 'password'}
             placeholder="Confirm password"
             autoComplete="new-password"
-            {...register('confirmPassword', {
-              required: 'Please confirm your password',
-              validate: (val) => val === password || 'Passwords do not match',
-            })}
+            {...register('confirmPassword')}
             onChangeCapture={() => setParsedError(null)}
           />
           <button

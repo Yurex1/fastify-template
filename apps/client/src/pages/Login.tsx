@@ -65,7 +65,7 @@ export default function LoginPage() {
         <div>
           <Input
             placeholder="Username or Email"
-            {...register('usernameOrEmail', { required: 'This field is required' })}
+            {...register('usernameOrEmail')}
             onChange={() => setParsedError(null)}
           />
           {errors.usernameOrEmail && <p className="text-xs text-red-400 mt-1 ml-1">{errors.usernameOrEmail.message}</p>}
@@ -75,7 +75,7 @@ export default function LoginPage() {
           <Input
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
-            {...register('password', { required: 'This field is required' })}
+            {...register('password')}
             onChange={() => setParsedError(null)}
           />
           <button

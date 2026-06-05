@@ -80,8 +80,14 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
 
     connect();
     const unsubscribe = useAuthStore.subscribe((state, prevState) => {
-      if (state.accessToken !== prevState.accessToken && state.accessToken) {
-        socketRef.current?.close();
+      if (state.accessToken !== prevState.accessToken) {
+        if (state.accessToken) {
+          connect();
+        } else {
+          if (socketRef.current) {
+            socketRef.current.close();
+          }
+        }
       }
     });
 
