@@ -1,5 +1,6 @@
 import { ChatMemberStatus } from '../../data/chatMember/types';
 import { ChatPreview } from '../../entities/chat';
+import { t } from '../../utils/i18n/util';
 import { server } from '../../server/http';
 import { exception } from '../../utils/exception/util';
 import { CHAT_ACTIONS } from './consts';
@@ -9,15 +10,15 @@ export const init = (deps: Deps): ChatService => {
   const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo } = deps;
 
   const service: ChatService = {
-    create: async (userId, memberId) => {
+    create: async (userId, memberId, lang) => {
       if (memberId === userId) {
-        throw exception.badRequest('Cannot create chat with yourself');
+        throw exception.badRequest(t('chat.errors.selfChat', lang));
       }
       const memberExists = await userRepo.existsById(memberId);
-      if (!memberExists) throw exception.notFound('No account found with this username or email');
+      if (!memberExists) throw exception.notFound(t('auth.errors.notFound', lang));
 
       const existing = await chatMemberRepo.findDirectChat(userId, memberId);
-      if (existing) throw exception.badRequest('Chat already exist');
+      if (existing) throw exception.badRequest(t('chat.errors.alreadyExists', lang));
 
       const chat = await chatRepo.create({});
 
@@ -75,9 +76,9 @@ export const init = (deps: Deps): ChatService => {
       return messageRepo.remove(id);
     },
 
-    sendMessage: async (userId, chatId, text, reply_id) => {
+    sendMessage: async (userId, chatId, text, lang, reply_id) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       const message = await messageRepo.create({ userId, chatId, text, reply_id: reply_id || null });
       await chatRepo.update(chatId, { updatedAt: new Date() });
@@ -85,55 +86,55 @@ export const init = (deps: Deps): ChatService => {
       return message;
     },
 
-    getMessagesByChatId: async (userId, chatId, { before, after, limit }) => {
+    getMessagesByChatId: async (userId, chatId, { before, after, limit }, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       return await messageRepo.findByChatId(chatId, { before, after, limit });
     },
 
-    searchMessagesByChatId: async (userId, chatId, text) => {
+    searchMessagesByChatId: async (userId, chatId, text, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       return await messageRepo.findAllByChatId(chatId, text);
     },
 
-    updateMessage: async (id, definition) => {
+    updateMessage: async (id, definition, lang) => {
       const existing = await messageRepo.findOne({ id });
-      if (!existing) throw exception.notFound('Message not found');
+      if (!existing) throw exception.notFound(t('chat.errors.messageNotFound', lang));
 
       return messageRepo.updateMessage(id, definition);
     },
 
-    updateReactions: async (id, userId, reaction) => {
+    updateReactions: async (id, userId, reaction, lang) => {
       const existingMessage = await messageRepo.findOne({ id });
 
       if (!existingMessage) {
-        throw exception.notFound('Message not found');
+        throw exception.notFound(t('chat.errors.messageNotFound', lang));
       }
 
       return messageRepo.updateReactions(id, userId, reaction);
     },
 
-    getMessageContext: async (userId, chatId, messageId, limit) => {
+    getMessageContext: async (userId, chatId, messageId, limit, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       return await messageRepo.getMessageContext(chatId, messageId, limit);
     },
 
-    pinMessage: async (userId, chatId, messageId) => {
+    pinMessage: async (userId, chatId, messageId, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       const message = await messageRepo.findOne({ id: messageId });
-      if (!message) throw exception.notFound('Message not found');
-      if (message.chatId !== chatId) throw exception.forbidden('Cannot pin this message');
+      if (!message) throw exception.notFound(t('chat.errors.messageNotFound', lang));
+      if (message.chatId !== chatId) throw exception.forbidden(t('chat.errors.cannotPin', lang));
 
       const isAlreadyPinned = await pinnedMessagesRepo.findOne({ message_id: messageId });
       if (isAlreadyPinned) {
-        throw exception.badRequest('Message already pinned');
+        throw exception.badRequest(t('chat.errors.alreadyPinned', lang));
       }
 
       const pinned = await pinnedMessagesRepo.create({
@@ -162,9 +163,9 @@ export const init = (deps: Deps): ChatService => {
       return pinned;
     },
 
-    unpinMessage: async (userId, chatId, messageId) => {
+    unpinMessage: async (userId, chatId, messageId, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
 
       const removed = await pinnedMessagesRepo.removeByMessageId(chatId, messageId);
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
@@ -181,9 +182,9 @@ export const init = (deps: Deps): ChatService => {
       return removed;
     },
 
-    removeChat: async (userId, chatId) => {
+    removeChat: async (userId, chatId, lang) => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('You are not a member of this chat');
+      if (!isMember) throw exception.forbidden(t('chat.errors.forbidden', lang));
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
       for (const member of members) {

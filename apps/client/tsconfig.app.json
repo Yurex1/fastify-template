@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "public/locales/en.ts", "public/locales/uk.ts"]
+  "include": ["src", "public/locales/en.ts", "public/locales/uk.ts", "src/i18next.ts"]
 }

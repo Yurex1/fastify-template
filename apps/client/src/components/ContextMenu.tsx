@@ -1,4 +1,5 @@
 import { Copy, PencilIcon, Pin, Reply, TrashIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import {
   ContextMenuContent,
   ContextMenuGroup,
@@ -37,14 +38,23 @@ export default function ContextMenu({
   isPinned,
   isOwn,
   children,
-  title = 'Actions',
+  title = 'actions',
 }: ContextMenuProps) {
+  const { t } = useTranslation();
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const items = [
-    onEdit && !pinnedMode && isOwn && { id: 'edit', text: 'Edit', icon: <PencilIcon size={16} />, onClick: onEdit },
-    onCopy && { id: 'copy', text: 'Copy', icon: <Copy size={16} />, onClick: onCopy },
-    onPin && { id: 'pin', text: isPinned ? 'Unpin' : 'Pin', icon: <Pin size={16} />, onClick: onPin },
-    onReply && !pinnedMode && { id: 'reply', text: 'Reply', icon: <Reply size={16} />, onClick: onReply },
+    onEdit &&
+      !pinnedMode &&
+      isOwn && { id: 'edit', text: t('contextMenu.edit'), icon: <PencilIcon size={16} />, onClick: onEdit },
+    onCopy && { id: 'copy', text: t('contextMenu.copy'), icon: <Copy size={16} />, onClick: onCopy },
+    onPin && {
+      id: 'pin',
+      text: isPinned ? t('contextMenu.unpin') : t('contextMenu.pin'),
+      icon: <Pin size={16} />,
+      onClick: onPin,
+    },
+    onReply &&
+      !pinnedMode && { id: 'reply', text: t('contextMenu.reply'), icon: <Reply size={16} />, onClick: onReply },
   ].filter((item): item is Item => !!item);
 
   return (
@@ -52,7 +62,7 @@ export default function ContextMenu({
       {children}
       {items.length > 0 && (
         <>
-          <ContextMenuLabel>{title}</ContextMenuLabel>
+          <ContextMenuLabel>{t(`contextMenu.${title}`)}</ContextMenuLabel>
           <ContextMenuGroup>
             {items.map((item: Item) => (
               <ContextMenuItem key={item.id} onClick={item.onClick}>
@@ -66,10 +76,10 @@ export default function ContextMenu({
       )}
 
       <ContextMenuGroup>
-        <ContextMenuLabel>Danger</ContextMenuLabel>
+        <ContextMenuLabel>{t('contextMenu.danger')}</ContextMenuLabel>
         <ContextMenuItem onClick={onDelete} variant="destructive">
           <TrashIcon size={16} />
-          <span className="ml-2">Delete</span>
+          <span className="ml-2">{t('contextMenu.delete')}</span>
         </ContextMenuItem>
       </ContextMenuGroup>
     </ContextMenuContent>

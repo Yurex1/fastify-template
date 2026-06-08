@@ -8,11 +8,14 @@ import useChatUIStore from '../../stores/chatUI';
 import { Loader } from 'lucide-react';
 import { Virtuoso } from 'react-virtuoso';
 import type { Chat } from '../../api/chats/types';
+import { SwitchLangBtn } from '../SwitchLang';
+import { useTranslation } from 'react-i18next';
 
 const ChatList = () => {
   const { chats, hasNextPage, isFetchingNextPage, isLoading, fetchNextPage } = useChats();
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
   const setCurrentChatInfo = useChatUIStore((s) => s.setCurrentChatInfo);
+  const { t } = useTranslation();
 
   const handleChangeChatId = (chat: Chat | null) => {
     setCurrentChatId(chat?.id || null);
@@ -22,9 +25,10 @@ const ChatList = () => {
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">Chats</h2>
+      <h2 className="p-4 text-xl font-bold text-white border-b border-gray-800">{t('chat.chats')}</h2>
 
       <CreateChat />
+      <SwitchLangBtn />
 
       <div className="flex-1 w-full overflow-y-auto p-2">
         {chats.length > 0 && (

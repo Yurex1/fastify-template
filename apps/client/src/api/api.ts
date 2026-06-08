@@ -4,6 +4,8 @@ import type { User } from './user/types';
 
 import { getDeviceId } from '../utils/deviceId';
 import { createApiError } from './apiError';
+import useUserStore from '../stores/user';
+
 const deviceId = getDeviceId();
 let refreshPromise: Promise<{ accessToken: string; user: User; expiresAt: string }> | null = null;
 
@@ -18,6 +20,7 @@ const api = ky.create({
           request.headers.set('Authorization', `Bearer ${token}`);
         }
         request.headers.set('x-device-id', deviceId);
+        request.headers.set('accept-language', useUserStore.getState().language);
       },
     ],
 

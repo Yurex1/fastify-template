@@ -37,6 +37,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   fastify.get<{ Querystring: { token: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
       const token = req.headers['sec-websocket-protocol'];
+      const lang = (req.headers['accept-language'] as string)?.split('-')[0] || 'en';
 
       if (!token) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');
@@ -47,7 +48,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       connections.set(uid, socket);
 
-      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
+      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user, lang });
 
       const heartbeatTimer = setInterval(() => {
         const state = heartbeatStates.get(uid);

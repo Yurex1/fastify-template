@@ -2,6 +2,7 @@ import { toast } from 'react-toastify';
 import useMessageFormStore from '../stores/messageForm';
 import useChatUIStore from '../stores/chatUI';
 import { searchMessagesByChatId } from '../services/chats';
+import i18n from '../i18next';
 
 interface useMessageActionsProps {
   deleteMessage: (messageId: number) => void;
@@ -31,8 +32,14 @@ export function useMessageActions({ deleteMessage }: useMessageActionsProps) {
 
   const handleCopy = () => {
     if (menuForMessage?.text) {
-      navigator.clipboard.writeText(menuForMessage.text);
-      toast.success('Text copied');
+      navigator.clipboard
+        .writeText(menuForMessage.text)
+        .then(() => {
+          toast.success(i18n.t('messageActions.copied'));
+        })
+        .catch(() => {
+          toast.error(i18n.t('messageActions.errorCopy'));
+        });
     }
   };
 

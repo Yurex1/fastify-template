@@ -1,6 +1,7 @@
 import { LucideArrowLeftCircle, Pin } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { usePinnedMessages } from '../../hooks/usePinnedMessages';
 import useChatUIStore from '../../stores/chatUI';
@@ -11,6 +12,7 @@ interface OpenPinnedMessagesProps {
 }
 
 export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMessagesProps) => {
+  const { t } = useTranslation();
   const { data } = usePinnedMessages();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
@@ -35,7 +37,7 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMess
         <span className="text-xs text-gray-400">
           <LucideArrowLeftCircle onClick={() => setPinnedMode(false)} />
         </span>
-        <span className="text-xs text-gray-400">{count > 1 ? `${count} messages` : `${count} message`}</span>
+        <span className="text-xs text-gray-400">{t('pinnedMessages.count', { count })}</span>
       </div>
     );
   }
@@ -52,7 +54,7 @@ export const OpenPinnedMessages = ({ pinnedMode, setPinnedMode }: OpenPinnedMess
       <Pin size={18} className="text-grey-400 shrink-0" />
 
       <div className="flex flex-col overflow-hidden">
-        <span className="text-xs text-gray-400">Pinned message{count > 1 ? `s (${count})` : ''}</span>
+        <span className="text-xs text-gray-400">{t('pinnedMessages.count', { count })}</span>
 
         <span className="text-sm text-white truncate">{pinned}</span>
       </div>

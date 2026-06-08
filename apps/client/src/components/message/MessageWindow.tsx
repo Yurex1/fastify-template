@@ -1,5 +1,6 @@
 import { lazy, useEffect, useRef, Suspense, useState } from 'react';
 import { Loader } from '../Loader';
+import { useTranslation } from 'react-i18next';
 import MessageForm from './MessageForm';
 import { EmptyBlock } from '../EmptyBlock';
 import { useMessageForm } from '../../hooks/useMessageForm';
@@ -21,6 +22,7 @@ const CHAT_SCROLL_WINDOW_MS = 500;
 const PinnedMessagesList = lazy(() => import('./PinnedMessagesList'));
 
 const MessageWindow = () => {
+  const { t } = useTranslation();
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
@@ -141,7 +143,9 @@ const MessageWindow = () => {
   const renderContent = () => {
     if (!currentChatId) {
       return (
-        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-950 h-full">Select chat</div>
+        <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-950 h-full">
+          {t('messageWindow.selectChat')}
+        </div>
       );
     }
 
@@ -154,7 +158,7 @@ const MessageWindow = () => {
     }
 
     if (!isLoading && messages.length <= 0) {
-      return <EmptyBlock text="No messages yet" />;
+      return <EmptyBlock text={t('messageWindow.noMessages')} />;
     }
 
     const showLoader = isLoading || (anchorMessageId !== null && !isListReady);
@@ -183,7 +187,7 @@ const MessageWindow = () => {
                 isFetchingNextPage ? (
                   <Loader />
                 ) : (
-                  <p className="text-center text-xs text-gray-500 m-2">No more results</p>
+                  <p className="text-center text-xs text-gray-500 m-2">{t('messageWindow.noMoreResults')}</p>
                 ),
               Footer: () => (isFetchingPreviousPage ? <Loader /> : null),
             }}
