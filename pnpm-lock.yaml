@@ -7,19 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      i18next:
-        specifier: ^26.3.1
-        version: 26.3.1(typescript@6.0.2)
-      i18next-browser-languagedetector:
-        specifier: ^8.2.1
-        version: 8.2.1
-      i18next-http-backend:
-        specifier: ^4.0.0
-        version: 4.0.0
-      react-i18next:
-        specifier: ^17.0.8
-        version: 17.0.8(i18next@26.3.1(typescript@6.0.2))(react@19.2.5)(typescript@6.0.2)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.4
@@ -78,6 +65,15 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      i18next:
+        specifier: ^26.3.1
+        version: 26.3.1(typescript@6.0.2)
+      i18next-browser-languagedetector:
+        specifier: ^8.2.1
+        version: 8.2.1
+      i18next-http-backend:
+        specifier: ^4.0.0
+        version: 4.0.0
       ky:
         specifier: ^2.0.1
         version: 2.0.1
@@ -99,6 +95,9 @@ importers:
       react-hook-form:
         specifier: ^7.77.0
         version: 7.77.0(react@19.2.5)
+      react-i18next:
+        specifier: ^17.0.8
+        version: 17.0.8(i18next@26.3.1(typescript@6.0.2))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@6.0.2)
       react-resizable-panels:
         specifier: ^4.10.0
         version: 4.10.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -223,6 +222,9 @@ importers:
       firebase-admin:
         specifier: ^13.5.0
         version: 13.8.0
+      i18next:
+        specifier: ^26.3.1
+        version: 26.3.1(typescript@5.9.3)
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.3
@@ -8879,6 +8881,10 @@ snapshots:
 
   i18next-http-backend@4.0.0: {}
 
+  i18next@26.3.1(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
+
   i18next@26.3.1(typescript@6.0.2):
     optionalDependencies:
       typescript: 6.0.2
@@ -9739,7 +9745,7 @@ snapshots:
     dependencies:
       react: 19.2.5
 
-  react-i18next@17.0.8(i18next@26.3.1(typescript@6.0.2))(react@19.2.5)(typescript@6.0.2):
+  react-i18next@17.0.8(i18next@26.3.1(typescript@6.0.2))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@6.0.2):
     dependencies:
       '@babel/runtime': 7.29.2
       html-parse-stringify: 3.0.1
@@ -9747,6 +9753,7 @@ snapshots:
       react: 19.2.5
       use-sync-external-store: 1.6.0(react@19.2.5)
     optionalDependencies:
+      react-dom: 19.2.5(react@19.2.5)
       typescript: 6.0.2
 
   react-remove-scroll-bar@2.3.8(@types/react@19.2.14)(react@19.2.5):

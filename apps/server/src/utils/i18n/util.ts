@@ -10,7 +10,8 @@ i18n.init({
   },
 });
 
-export const t = (key: string, lng: string) => {
-  const normalizedLng = lng.split('-')[0];
+export const t = (key: string, lng?: string) => {
+  const targetLng = lng || i18n.language || 'en';
+  const normalizedLng = targetLng.split('-')[0];
   return i18n.t(key, { lng: normalizedLng });
 };
