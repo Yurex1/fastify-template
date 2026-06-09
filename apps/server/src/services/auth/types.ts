@@ -10,6 +10,7 @@ export interface AuthService {
   verify: (access: 'access' | 'refresh', token: string) => Promise<UserResult>;
   refresh: (userId: number, deviceId: string, refreshToken: string) => Promise<Session>;
   changePassword: (userId: number, oldPassword: string, newPassword: string, lang: string) => Promise<User>;
+  signInWithGoogle: (googleId: string, email: string, name: string, deviceId: string) => Promise<Session>;
 }
 
 export interface Deps {

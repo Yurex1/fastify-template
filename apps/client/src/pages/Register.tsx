@@ -12,6 +12,7 @@ import { ROUTES } from '../utils/consts/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/validation/schemas';
 import { useTranslation } from 'react-i18next';
+import { GoogleBtn } from '../components/GoogleBtn';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -95,7 +96,7 @@ export default function RegisterPage() {
           >
             {showField === 'password' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.password.message!)}</p>}
+          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.password.message}`)}</p>}
         </div>
 
         <div className="relative">
@@ -114,7 +115,7 @@ export default function RegisterPage() {
             {showField === 'confirm' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
           {errors.confirmPassword && (
-            <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.confirmPassword.message!)}</p>
+            <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.confirmPassword.message}`)}</p>
           )}
           {!errors.confirmPassword && watch('confirmPassword')?.length > 0 && (
             <p className="text-xs text-emerald-400 mt-1 ml-1">{t('common.validation.passwordsDoMatch')} ✓</p>
@@ -122,6 +123,7 @@ export default function RegisterPage() {
         </div>
 
         {parsedError && <FormError message={t(`${parsedError.message}`)} />}
+        <GoogleBtn />
         <Button type="submit" loading={isPending}>
           {t('auth.registration.signUp')}
         </Button>

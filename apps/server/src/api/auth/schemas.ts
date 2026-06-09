@@ -95,3 +95,25 @@ export const changePassword = {
   },
   required: ['body'],
 } as const;
+
+export const googleCallback = {
+  type: 'object',
+  properties: {
+    headers: {
+      type: 'object',
+      properties: {
+        'x-device-id': { type: 'string' },
+        'accept-language': { type: 'string' },
+      },
+    },
+
+    querystring: {
+      type: 'object',
+      properties: {
+        code: { type: 'string' },
+        state: { type: 'string' },
+        error: { type: 'string' },
+      },
+    },
+  },
+} as const;

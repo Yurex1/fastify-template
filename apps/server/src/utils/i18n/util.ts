@@ -1,6 +1,6 @@
 import i18n from 'i18next';
-import en from '../../../../client/public/locales/en/translation.json';
-import uk from '../../../../client/public/locales/uk/translation.json';
+import en from '../../../../client/src/locales/en/translation.json';
+import uk from '../../../../client/src/locales/uk/translation.json';
 
 i18n.init({
   fallbackLng: 'en',

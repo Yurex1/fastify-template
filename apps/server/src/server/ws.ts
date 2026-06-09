@@ -37,7 +37,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   fastify.get<{ Querystring: { token: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
       const token = req.headers['sec-websocket-protocol'];
-      const lang = (req.headers['accept-language'] as string)?.split('-')[0] || 'en';
+      const { lang } = req;
 
       if (!token) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');

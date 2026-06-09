@@ -6,6 +6,7 @@ import Register from '../pages/Register';
 // import Dashboard from "@/pages/Dashboard";
 import Home from '../pages/Home';
 import { ROUTES } from '../utils/consts/routes';
+import AuthCallbackPage from '../pages/AuthCallbackPage';
 
 interface ProtectedRoute {
   children: JSX.Element;
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
     path: ROUTES.REGISTER,
     element: <Register />,
   },
+  { path: '/auth/callback', element: <AuthCallbackPage /> },
   // {
   //   path: "/dashboard",
   //   element: (

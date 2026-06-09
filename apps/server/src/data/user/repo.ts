@@ -6,7 +6,7 @@ import { updateUserEmail, selectByUsernameOrEmail, updateLastSeenDate, updateUse
 
 class UserRepository extends EntityRepo<User> {
   constructor(pool: TypedPool) {
-    super(pool, 'users', ['id', 'email', 'username', 'password', 'createdAt', 'updatedAt', 'lastseen']);
+    super(pool, 'users', ['id', 'email', 'username', 'password', 'googleId', 'createdAt', 'updatedAt', 'lastseen']);
   }
 
   async findOne(definition: Partial<User>, includePassword = false): Promise<User> {
@@ -23,6 +23,10 @@ class UserRepository extends EntityRepo<User> {
   async findOneByUsernameOrEmail(value: string, includePassword = false): Promise<User | null> {
     const { query, params } = selectByUsernameOrEmail(value, includePassword);
     return await this.pool.queryOne<User>(query, params);
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.findOne({ googleId } as Partial<User>);
   }
 
   async updateEmail(id: number, email: string): Promise<User> {
@@ -68,6 +72,7 @@ export const init = (pool: TypedPool): UserRepo => {
     findOne: (definition: Partial<User>, includePassword = false) => userRepo.findOne(definition, includePassword),
     findById: (id: number) => userRepo.findById(id),
     findAll: () => userRepo.findAll(),
+    findByGoogleId: (id: string) => userRepo.findByGoogleId(id),
     update: (id: number, definition: Partial<UpdateUser>) => userRepo.update(id, definition),
     remove: (id: number) => userRepo.remove(id),
     exists: (definition: Partial<User>) => userRepo.exists(definition),

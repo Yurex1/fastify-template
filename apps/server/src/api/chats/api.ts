@@ -12,7 +12,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
 
       handler: (user, request, _reply) => {
         const { memberId } = request.params;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
         return chatService.create(user.id, memberId, lang);
       },
     },
@@ -37,7 +37,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       handler: (user, request) => {
         const { chatId } = request.params;
         const { after, before, limit } = request.query;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
         return chatService.getMessagesByChatId(user.id, chatId, { after, before, limit }, lang);
       },
     },
@@ -50,7 +50,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       handler: (user, request) => {
         const { chatId } = request.params;
         const { text } = request.query;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.searchMessagesByChatId(user.id, chatId, text, lang);
       },
@@ -64,7 +64,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       handler: (user, request) => {
         const { chatId, messageId } = request.params;
         const { limit } = request.query;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.getMessageContext(user.id, chatId, messageId, limit, lang);
       },
@@ -77,7 +77,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
 
       handler: async (user, request) => {
         const { chatId, messageId } = request.body;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.pinMessage(user.id, chatId, messageId, lang);
       },
@@ -90,7 +90,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
 
       handler: async (user, request) => {
         const { chatId, messageId } = request.body;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.unpinMessage(user.id, chatId, messageId, lang);
       },
@@ -104,7 +104,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       handler: (user, request) => {
         const { chatId } = request.params;
         const { createdAt, limit } = request.query;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.getAllPinnedMessages(chatId, { createdAt, id: user.id }, limit, lang);
       },
@@ -117,7 +117,7 @@ export const init = ({ chatService }: Deps): ChatApi => {
       params: ['chatId'],
       handler: (user, request) => {
         const { chatId } = request.params;
-        const lang = (request.headers['accept-language'] as string) || 'en';
+        const { lang } = request;
 
         return chatService.removeChat(user.id, chatId, lang);
       },

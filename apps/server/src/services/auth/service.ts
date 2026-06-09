@@ -152,4 +152,51 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
 
     return userRepo.updatePassword(user.id, hash);
   },
+
+  signInWithGoogle: async (googleId, email, name, deviceId) => {
+    let user = await userRepo.findOneByUsernameOrEmail(email);
+
+    if (!user) {
+      user = await userRepo.findByGoogleId(googleId);
+    }
+
+    if (user) {
+      if (!user.googleId) {
+        await userRepo.update(user.id, { googleId });
+      }
+
+      const session = sessions.generate(user);
+      const hashedToken = passwords.hash(session.refreshToken);
+
+      await sessionRepo.upsert({
+        userId: user.id,
+        deviceId,
+        refreshToken: hashedToken,
+        expiresAt: session.expiresAt,
+      });
+
+      return session;
+    }
+
+    const username = name ? name.replace(/\s+/g, '').slice(0, 30) : email.split('@')[0];
+
+    const newUser = await userRepo.create({
+      email,
+      username,
+      googleId,
+      password: null,
+    });
+
+    const session = sessions.generate(newUser);
+    const hashedToken = passwords.hash(session.refreshToken);
+
+    await sessionRepo.upsert({
+      userId: newUser.id,
+      deviceId,
+      refreshToken: hashedToken,
+      expiresAt: session.expiresAt,
+    });
+
+    return session;
+  },
 });

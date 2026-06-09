@@ -17,6 +17,7 @@ export interface AuthApi extends API {
   'sign-out': ProtectedEndpoint<SignOutParam, { signedOut: boolean }>;
   refresh: ProtectedEndpoint<RefreshParam, { accessToken: string; user: UserResult }>;
   'change-password': ProtectedEndpoint<ChangePasswordParam, User>;
+  'google/callback': UnprotectedEndpoint<Record<string, unknown>, UserResult | undefined>;
 }
 
 export interface Deps {

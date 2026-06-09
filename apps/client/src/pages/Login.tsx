@@ -13,6 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../schemas/validation/schemas';
 import { useTranslation } from 'react-i18next';
 import i18next from 'i18next';
+import { GoogleBtn } from '../components/GoogleBtn';
 
 type FormData = {
   usernameOrEmail: string;
@@ -96,6 +97,7 @@ export default function LoginPage() {
         </div>
 
         {parsedError && <FormError message={t(`${parsedError}`)} />}
+        <GoogleBtn />
 
         <Button type="submit" loading={isPending}>
           {t('auth.registration.signIn')}

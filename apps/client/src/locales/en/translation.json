@@ -6,6 +6,7 @@
       "subtitle": "Enter your credentials to continue",
       "dontHaveAccount": "Don't have an account?"
     },
+    "google": "Continue with Google",
 
     "registration": {
       "title": "Create account",
@@ -83,7 +84,7 @@
       "hoursAgo_one": "{{count}} hour ago",
       "hoursAgo_other": "{{count}} hours ago",
       "today": "today at {{time}}",
-      "yesterday": "testerday at {{time}}",
+      "yesterday": "yesterday at {{time}}",
       "daysAgo_one": "{{count}} day ago",
       "daysAgo_other": "{{count}} days ago",
       "weeksAgo_one": "week ago at {{time}}",

@@ -1,13 +1,15 @@
 import { fastify } from 'fastify';
-import { plugins } from './plugins';
+import { plugins, googleOAuth } from './plugins';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
 import { wsPlugin } from './ws';
+import { DEFAULT_DEVICE_ID } from '../data/session/constants';
 
 export const server = fastify({
   logger: true,
   trustProxy: config.node_env === 'production',
+
   ajv: {
     customOptions: {
       removeAdditional: true,
@@ -16,14 +18,30 @@ export const server = fastify({
   },
 });
 
+server.decorateRequest('lang', 'en');
+server.decorateRequest('deviceId', DEFAULT_DEVICE_ID);
+
+server.addHook('preHandler', (request, _reply, done) => {
+  const acceptLang = request.headers['accept-language'];
+
+  const parsed = acceptLang?.split(',')[0]?.split('-')[0]?.toLowerCase();
+  const supported = ['en', 'uk', 'ru'];
+
+  request.lang = supported.includes(parsed ?? '') ? parsed! : 'en';
+  request.deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+  done();
+});
+
 async function registerPlugins() {
   for (const plugin of plugins) {
     await server.register(plugin.plugin, plugin.options);
   }
+  await server.register(googleOAuth);
 }
 
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
+  server.printRoutes();
 
   await server.register(wsPlugin, { services });
 
@@ -69,7 +87,10 @@ export const init = async ({ services, apis }: Deps) => {
         const sessionProvider = await sessionProviders[access]();
 
         const result = await handler(sessionProvider, request, reply);
-        return reply.send(result);
+
+        if (!reply.sent) {
+          return reply.send(result);
+        }
       });
     }
   }
