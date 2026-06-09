@@ -1,23 +1,25 @@
 import { exception } from '../../utils/exception/util';
+import { t } from '../../utils/i18n/util';
 import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
-  signIn: async (usernameOrEmail, password, deviceId) => {
+  signIn: async (usernameOrEmail, password, deviceId, lang) => {
     const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
+
     if (!user) {
-      throw exception.badRequest('No account found with this username or email');
+      throw exception.badRequest(t('auth.errors.notFound', lang));
     }
 
     if (!user.password) {
-      throw exception.badRequest('Invalid credentials');
+      throw exception.badRequest(t('auth.errors.invalidCredentials', lang));
     }
 
     const validPassword = passwords.compare(password, user.password);
     if (!validPassword) {
-      throw exception.badRequest('Incorrect password');
+      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
     }
 
     const session = sessions.generate(user);
@@ -33,17 +35,17 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  signUp: async (email, username, password, deviceId) => {
+  signUp: async (email, username, password, deviceId, lang) => {
     const existingUser = await userRepo.exists({ email });
     if (existingUser) {
-      throw exception.badRequest('This email is already registered');
+      throw exception.badRequest(t('auth.registration.errors.emailTaken', lang));
     }
 
     const existingUsername = await userRepo.exists({ username });
     if (existingUsername) {
-      throw exception.badRequest('This username is already taken');
+      throw exception.badRequest(t('auth.registration.errors.usernameTaken', lang));
     }
-    validatePassword(password, email, username);
+    validatePassword(password, email, username, lang);
     const hashedPassword = passwords.hash(password);
 
     const user = await userRepo.create({
@@ -65,7 +67,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  signOut: async (userId, deviceId) => {
+  signOut: async (userId, deviceId, lang) => {
     await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
     return { signedOut: true };
   },
@@ -124,27 +126,27 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  changePassword: async (userId, oldPassword, newPassword) => {
+  changePassword: async (userId, oldPassword, newPassword, lang) => {
     const user = await userRepo.findOne({ id: userId }, true);
     if (!user) {
-      throw exception.notFound('No account found with this username or email');
+      throw exception.notFound(t('auth.errors.notFound', lang));
     }
 
     if (!user.password) {
-      throw exception.badRequest('Incorrect password');
+      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
     }
 
     const validPassword = passwords.compare(oldPassword, user.password);
     if (!validPassword) {
-      throw exception.badRequest('Incorrect password');
+      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
     }
 
     const isSamePassword = passwords.compare(newPassword, user.password);
     if (isSamePassword) {
-      throw exception.badRequest('New password cannot be the same as the old password');
+      throw exception.badRequest(t('auth.errors.samePassword', lang));
     }
 
-    validatePassword(newPassword, user.email, user.username);
+    validatePassword(newPassword, user.email, user.username, lang);
 
     const hash = passwords.hash(newPassword);
 

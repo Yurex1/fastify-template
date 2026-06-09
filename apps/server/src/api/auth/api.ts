@@ -13,8 +13,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     handler: async (_user, request, reply) => {
       const { usernameOrEmail, password } = request.body;
       const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      const lang = (request.headers['accept-language'] as string) || 'en';
 
-      const user = await authService.signIn(usernameOrEmail, password, deviceId);
+      const user = await authService.signIn(usernameOrEmail, password, deviceId, lang);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -27,7 +28,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     handler: async (_user, request, reply) => {
       const { email, username, password } = request.body;
       const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
-      const user = await authService.signUp(email, username, password, deviceId);
+      const lang = (request.headers['accept-language'] as string) || 'en';
+
+      const user = await authService.signUp(email, username, password, deviceId, lang);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -39,8 +42,10 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signOut,
     handler: async (user, request, reply) => {
       const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      const lang = (request.headers['accept-language'] as string) || 'en';
+
       reply.clearCookie('refreshToken', { path: '/' });
-      return authService.signOut(user.id, deviceId);
+      return authService.signOut(user.id, deviceId, lang);
     },
   },
 
@@ -72,7 +77,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.changePassword,
     handler: async (user, request) => {
       const { oldPassword, newPassword } = request.body;
-      return authService.changePassword(user.id, oldPassword, newPassword);
+      const lang = (request.headers['accept-language'] as string) || 'en';
+
+      return authService.changePassword(user.id, oldPassword, newPassword, lang);
     },
   },
 });

@@ -11,10 +11,12 @@ import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { registerSchema, type RegisterFormData } from '../schemas/validation/schemas';
+import { useTranslation } from 'react-i18next';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const signUp = useAuthStore((s) => s.register);
+  const { t } = useTranslation();
 
   const [showField, setShowField] = useState<'none' | 'password' | 'confirm'>('none');
   const [parsedError, setParsedError] = useState<Error | null>(null);
@@ -40,13 +42,13 @@ export default function RegisterPage() {
 
   return (
     <AuthCard
-      title="Create account"
-      subtitle="Sign up to get started"
+      title={t('auth.registration.title')}
+      subtitle={t('auth.registration.subtitle')}
       footer={
         <>
-          Already have an account?{' '}
+          {t(`auth.registration.alreadyHaveAccount`)}{' '}
           <span onClick={() => navigate(ROUTES.LOGIN)} className="text-white cursor-pointer hover:underline">
-            Sign in
+            {t(`auth.registration.signIn`)}
           </span>
         </>
       }
@@ -60,28 +62,28 @@ export default function RegisterPage() {
       >
         <div>
           <Input
-            placeholder="Email"
+            placeholder={t('common.email')}
             autoComplete="email"
             {...register('email')}
             onChangeCapture={() => setParsedError(null)}
           />
-          {errors.email && <p className="text-xs text-red-400 mt-1 ml-1">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.email.message!)}</p>}
         </div>
 
         <div>
           <Input
-            placeholder="Username"
+            placeholder={t('common.username')}
             autoComplete="username"
             {...register('username')}
             onChangeCapture={() => setParsedError(null)}
           />
-          {errors.username && <p className="text-xs text-red-400 mt-1 ml-1">{errors.username.message}</p>}
+          {errors.username && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.username.message!)}</p>}
         </div>
 
         <div className="relative">
           <Input
             type={showField === 'password' ? 'text' : 'password'}
-            placeholder="Password"
+            placeholder={t('common.password')}
             autoComplete="new-password"
             {...register('password')}
             onChangeCapture={() => setParsedError(null)}
@@ -93,13 +95,13 @@ export default function RegisterPage() {
           >
             {showField === 'password' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.password.message!)}</p>}
         </div>
 
         <div className="relative">
           <Input
             type={showField === 'confirm' ? 'text' : 'password'}
-            placeholder="Confirm password"
+            placeholder={t('common.confirmPassword')}
             autoComplete="new-password"
             {...register('confirmPassword')}
             onChangeCapture={() => setParsedError(null)}
@@ -111,15 +113,17 @@ export default function RegisterPage() {
           >
             {showField === 'confirm' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-          {errors.confirmPassword && <p className="text-xs text-red-400 mt-1 ml-1">{errors.confirmPassword.message}</p>}
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.confirmPassword.message!)}</p>
+          )}
           {!errors.confirmPassword && watch('confirmPassword')?.length > 0 && (
-            <p className="text-xs text-emerald-400 mt-1 ml-1">Passwords match ✓</p>
+            <p className="text-xs text-emerald-400 mt-1 ml-1">{t('common.validation.passwordsDoMatch')} ✓</p>
           )}
         </div>
 
-        <FormError message={parsedError} />
+        {parsedError && <FormError message={t(`${parsedError.message}`)} />}
         <Button type="submit" loading={isPending}>
-          Sign up
+          {t('auth.registration.signUp')}
         </Button>
       </form>
     </AuthCard>

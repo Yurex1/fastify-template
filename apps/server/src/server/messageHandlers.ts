@@ -11,6 +11,7 @@ interface MessageHandlersDeps {
   fastifyWs: WsServer;
   uid: number;
   user: UserResult;
+  lang: string;
 }
 
 const BROADCAST_MODES = {
@@ -18,7 +19,7 @@ const BROADCAST_MODES = {
   ALL: 'all',
 };
 
-export const createMessageHandlers = ({ services, fastifyWs, uid, user }: MessageHandlersDeps) => {
+export const createMessageHandlers = ({ services, fastifyWs, uid, user, lang }: MessageHandlersDeps) => {
   const broadcastStatus = async (uid: number, type: string, payload: {}) => {
     try {
       const peers = await services.chat.getAllMembers(uid);
@@ -45,7 +46,8 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
 
   const handleSendMessage = async (data: any) => {
     const { chatId, text, reply_id } = data.payload;
-    const message = await services.chat.sendMessage(uid, chatId, text, reply_id);
+
+    const message = await services.chat.sendMessage(uid, chatId, text, lang, reply_id);
     await broadcastForChatMembers(message.chatId, CHAT_ACTIONS.newMessage, message);
   };
 
@@ -55,7 +57,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     const { messageId, definition } = data.payload;
 
     const key = definition.type;
-    const updated = await services.chat.updateMessage(messageId, { [key]: definition.content });
+    const updated = await services.chat.updateMessage(messageId, { [key]: definition.content }, lang);
     await broadcastForChatMembers(updated.chatId, CHAT_ACTIONS.updatedMessage, updated);
   };
 
@@ -89,7 +91,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
   const handleUpdateReaction = async (data: { payload: { id: number; userId: number; reaction: string } }) => {
     const { id, userId, reaction } = data.payload;
     try {
-      const updatedMessage = await services.chat.updateReactions(id, userId, reaction);
+      const updatedMessage = await services.chat.updateReactions(id, userId, reaction, lang);
       if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
       const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
       memberIds.forEach((member) =>

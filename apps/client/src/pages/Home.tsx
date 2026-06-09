@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { CallRoom } from '../components/CallRoom';
 import ChatList from '../components/message/ChatList';
 import MessageWindow from '../components/message/MessageWindow';
@@ -9,7 +10,8 @@ import useChatUIStore from '../stores/chatUI';
 export default function HomePage() {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const { incomingCall, activeCall, isInCall, acceptCall, declineCall } = useCall(currentChatId);
-  const { logout } = useAuthStore();
+  const logout = useAuthStore((s) => s.logout);
+  const { t } = useTranslation();
 
   if (isInCall) {
     return <CallRoom roomName={activeCall?.roomName!} />;
@@ -42,7 +44,7 @@ export default function HomePage() {
             }}
             className="absolute top-0 z-[999]"
           >
-            sign out
+            {t('auth.logout')}
           </button>
           <ChatList />
         </div>

@@ -1,0 +1,141 @@
+{
+  "auth": {
+    "logout": "Вийти",
+    "login": {
+      "title": "Увійти в акаунт",
+      "subtitle": "Введіть свої дані, щоб продовжити",
+      "dontHaveAccount": "Не маєте акаунта?"
+    },
+    "registration": {
+      "title": "Створити акаунт",
+      "subtitle": "Зареєструйтеся, щоб почати",
+      "alreadyHaveAccount": "Вже маєте акаунт?",
+      "signIn": "Увійти",
+      "signUp": "Зареєструватися",
+      "validations": {
+        "passwordMinLength": "Пароль повинен містити щонайменше 12 символів",
+        "passwordUpperCase": "Пароль повинен містити велику літеру",
+        "passwordLowerCase": "Пароль повинен містити малу літеру",
+        "passwordNumber": "Пароль повинен містити цифру",
+        "passwordSpecialCharacter": "Пароль повинен містити спеціальний символ"
+      },
+      "errors": {
+        "emailTaken": "Ця електронна адреса вже зареєстрована",
+        "usernameTaken": "Це ім'я користувача вже зайнято"
+      }
+    },
+    "errors": {
+      "notFound": "Користувача з таким іменем або поштою не знайдено",
+      "invalidCredentials": "Невірні облікові дані",
+      "incorrectPassword": "Невірний пароль",
+      "samePassword": "Новий пароль не може збігатися зі старим"
+    },
+    "password": {
+      "tooShort": "Пароль занадто короткий, щонайменше 12 символів",
+      "containsEmail": "Пароль не повинен містити вашу електронну адресу",
+      "equalsUsername": "Пароль не може збігатися з іменем користувача",
+      "invalidFormat": "Пароль повинен містити велику, малу літеру, цифру та спеціальний символ",
+      "tooWeak": "Пароль занадто слабкий"
+    }
+  },
+  "errors": {
+    "fetchChats": "Не вдалося завантажити чати",
+    "searchMessage": "Не вдалося виконати пошук",
+    "createChat": "Не вдалося створити чат",
+    "deleteChat": "Не вдалося видалити чат"
+  },
+  "common": {
+    "email": "Електронна пошта",
+    "username": "Ім'я користувача",
+    "password": "Пароль",
+    "confirmPassword": "Підтвердження пароля",
+    "invalidEmail": "Будь ласка, введіть дійсну електронну адресу",
+    "fieldRequired": "Це поле є обов'язковим",
+    "validation": {
+      "maxLength": "Занадто довго",
+      "tooShort": "Занадто коротко",
+      "passwordsDoNotMatch": "Паролі не збігаються",
+      "passwordsDoMatch": "Паролі збігаються"
+    }
+  },
+  "chat": {
+    "chats": "Чати",
+    "create": "Введіть айді користувача",
+    "unknown": "Невідомий чат",
+    "you": "Ви",
+    "errors": {
+      "selfChat": "Неможливо створити чат з собою",
+      "alreadyExists": "Чат вже існує",
+      "forbidden": "Ви не є учасником цього чату",
+      "messageNotFound": "Повідомлення не знайдено",
+      "cannotPin": "Неможливо закріпити це повідомлення",
+      "alreadyPinned": "Повідомлення вже закріплено"
+    }
+  },
+  "userStatus": {
+    "lastSeen": {
+      "last": "Остання активність",
+      "online": "В мережі",
+      "justNow": "щойно",
+      "minutesAgo_one": "{{count}} хвилину тому",
+      "minutesAgo_few": "{{count}} хвилини тому",
+      "minutesAgo_many": "{{count}} хвилин тому",
+      "hoursAgo_one": "{{count}} годину тому",
+      "hoursAgo_few": "{{count}} години тому",
+      "hoursAgo_many": "{{count}} годин тому",
+      "today": "сьогодні о {{time}}",
+      "yesterday": "вчора о {{time}}",
+      "daysAgo_one": "{{count}} день тому",
+      "daysAgo_few": "{{count}} дні тому",
+      "daysAgo_many": "{{count}} днів тому",
+      "weeksAgo_one": "тиждень тому о {{time}}",
+      "weeksAgo_few": "{{count}} тижні тому",
+      "weeksAgo_many": "{{count}} тижнів тому",
+      "monthsAgo_one": "місяць тому",
+      "monthsAgo_few": "{{count}} місяці тому",
+      "monthsAgo_many": "{{count}} місяців тому",
+      "dateWithTime": "{{date}} о {{time}}",
+      "yearAgo": "рік тому"
+    }
+  },
+  "messageForm": {
+    "noResults": "Результатів не знайдено",
+    "placeholder": "Повідомлення..."
+  },
+  "messageWindow": {
+    "selectChat": "Оберіть чат",
+    "noMessages": "Повідомлень ще немає",
+    "noMoreResults": "Більше результатів немає"
+  },
+  "contextMenu": {
+    "actions": "Дії",
+    "edit": "Редагувати",
+    "copy": "Копіювати",
+    "pin": "Закріпити",
+    "unpin": "Відкріпити",
+    "reply": "Відповісти",
+    "danger": "Небезпечно",
+    "delete": "Видалити"
+  },
+  "replyBlock": {
+    "replyingTo": "Відповідь для {{userName}}"
+  },
+  "messageBlock": {
+    "userNotFound": "Користувача не знайдено",
+    "messageDeleted": "Оригінальне повідомлення видалено",
+    "edited": "змінено"
+  },
+  "pinnedMessages": {
+    "count_one": "{{count}} повідомлення",
+    "count_few": "{{count}} повідомлення",
+    "count_many": "{{count}} повідомлень",
+    "label_zero": "Закріплених повідомлень немає",
+    "label_one": "Закріплене повідомлення",
+    "label_few": "Закріплені повідомлення ({{count}})",
+    "label_many": "Закріплені повідомлення ({{count}})"
+  },
+  "messageActions": {
+    "copied": "Текст скопійовано",
+    "errorCopy": "Не вдалося скопіювати текст"
+  }
+}

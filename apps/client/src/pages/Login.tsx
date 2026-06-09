@@ -11,6 +11,8 @@ import { useAuthStore } from '../stores/auth';
 import { ROUTES } from '../utils/consts/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../schemas/validation/schemas';
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 
 type FormData = {
   usernameOrEmail: string;
@@ -20,9 +22,10 @@ type FormData = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.login);
+  const { t } = useTranslation();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [parsedError, setParsedError] = useState<Error | null>(null);
+  const [parsedError, setParsedError] = useState<string | null>(null);
 
   const {
     register,
@@ -35,7 +38,7 @@ export default function LoginPage() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: (data: FormData) => signIn(data),
-    onError: (err: Error) => setParsedError(err),
+    onError: (err: Error) => setParsedError(err.message),
     onSuccess: () => {
       setParsedError(null);
       navigate(ROUTES.HOME);
@@ -44,13 +47,13 @@ export default function LoginPage() {
 
   return (
     <AuthCard
-      title="Sign in"
-      subtitle="Enter your credentials to continue"
+      title={t('auth.login.title')}
+      subtitle={t('auth.login.subtitle')}
       footer={
         <>
-          Don&apos;t have an account?{' '}
+          {t('auth.login.dontHaveAccount')}{' '}
           <span onClick={() => navigate(ROUTES.REGISTER)} className="text-white cursor-pointer hover:underline">
-            Sign up
+            {t('auth.registration.signUp')}
           </span>
         </>
       }
@@ -64,17 +67,21 @@ export default function LoginPage() {
       >
         <div>
           <Input
-            placeholder="Username or Email"
+            placeholder={t(`common.email`)}
+            autoComplete="username"
             {...register('usernameOrEmail')}
             onChange={() => setParsedError(null)}
           />
-          {errors.usernameOrEmail && <p className="text-xs text-red-400 mt-1 ml-1">{errors.usernameOrEmail.message}</p>}
+          {errors.usernameOrEmail && (
+            <p className="text-xs text-red-400 mt-1 ml-1">{i18next.t(`${errors.usernameOrEmail.message}`)}</p>
+          )}
         </div>
 
         <div className="relative">
           <Input
             type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
+            placeholder={t(`common.password`)}
+            autoComplete="current-password"
             {...register('password')}
             onChange={() => setParsedError(null)}
           />
@@ -85,13 +92,13 @@ export default function LoginPage() {
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{errors.password.message}</p>}
+          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.password.message}`)}</p>}
         </div>
 
-        <FormError message={parsedError} />
+        {parsedError && <FormError message={t(`${parsedError}`)} />}
 
         <Button type="submit" loading={isPending}>
-          Sign in
+          {t('auth.registration.signIn')}
         </Button>
       </form>
     </AuthCard>

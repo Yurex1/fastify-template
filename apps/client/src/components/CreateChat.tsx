@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { SquarePen } from 'lucide-react';
 import { createChat } from '../services/chats';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 export const CreateChat = () => {
   const [memberId, setMemberId] = useState<number | string>('');
+  const { t } = useTranslation();
+
   const queryClient = useQueryClient();
 
   const { mutate, isPending } = useMutation({
@@ -26,7 +29,7 @@ export const CreateChat = () => {
     <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800">
       <input
         type="number"
-        placeholder="Enter userId"
+        placeholder={t('chat.create')}
         value={memberId}
         disabled={isPending}
         className="flex-1 bg-gray-950 border border-gray-800 rounded-lg p-2 text-sm text-white focus:border-violet-500 focus:outline-none transition-colors"

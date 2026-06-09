@@ -1,6 +1,7 @@
 import TextareaAutosize from 'react-textarea-autosize';
 import useMessageFormStore from '../../stores/messageForm';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MessageForm {
   formButton: () => React.ReactNode;
@@ -22,6 +23,7 @@ const MessageForm = ({
   handleKeyDown,
 }: MessageForm) => {
   const { text, formMode } = useMessageFormStore();
+  const { t } = useTranslation();
 
   const currentIndex = ((resultCounter % results.length) + results.length) % results.length;
   return (
@@ -30,7 +32,7 @@ const MessageForm = ({
         <div className="fixed top-2">
           <div className="backdrop-blur-md bg-zinc-900/80 border border-red-500/20 shadow-2xl rounded-2xl px-4 py-2 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="w-2 h-2 rounded-full bg-red-400" />
-            <span className="text-sm font-medium text-zinc-300">No results found</span>
+            <span className="text-sm font-medium text-zinc-300">{t('messageForm.noResults')}</span>
           </div>
         </div>
       )}
@@ -72,7 +74,7 @@ const MessageForm = ({
         minRows={1}
         maxRows={10}
         className="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:outline-none resize-none"
-        placeholder="Message..."
+        placeholder={t('messageForm.placeholder')}
       />
       <button className="bg-blue-600 px-3 py-2 rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
         {formButton()}

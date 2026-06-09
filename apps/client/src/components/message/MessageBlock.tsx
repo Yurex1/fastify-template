@@ -1,4 +1,5 @@
 import { cn } from '../../lib/utils';
+import { useTranslation } from 'react-i18next';
 import { EmojiMenu } from '../EmojiMenu';
 import { ReactionList, userPressedEmojis } from '../ReactionList';
 import Time from '../Time';
@@ -19,6 +20,7 @@ interface MessageBlockProps {
 }
 
 export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) => {
+  const { t } = useTranslation();
   const currentUser = useAuthStore((state) => state.currentUser);
   const highlightedMessageId = useChatUIStore((s) => s.highlightedMessageId);
   const isHighlighted = highlightedMessageId === message.id;
@@ -68,8 +70,8 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
                 id={`${message.reply_id}`}
                 className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col min-w-0 max-w-full overflow-hidden cursor-pointer"
               >
-                <span className="font-bold truncate">{message.reply.username || 'User not found'}</span>
-                <span className="truncate">{message.reply.text || 'Original message deleted'}</span>
+                <span className="font-bold truncate">{message.reply.username || t('messageBlock.userNotFound')}</span>
+                <span className="truncate">{message.reply.text || t('messageBlock.messageDeleted')}</span>
               </div>
             )}
 
@@ -80,7 +82,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
 
               <div className="flex items-center justify-end gap-2 mt-1">
                 {message.createdAt !== message.updatedAt && (
-                  <p className="text-[10px] opacity-[0.7] leading-[8px]">edited</p>
+                  <p className="text-[10px] opacity-[0.7] leading-[8px]">{t('messageBlock.edited')}</p>
                 )}
 
                 <Time date={message.createdAt} />

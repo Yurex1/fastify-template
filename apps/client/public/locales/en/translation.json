@@ -1,0 +1,135 @@
+{
+  "auth": {
+    "logout": "Sign out",
+    "login": {
+      "title": "Login account",
+      "subtitle": "Enter your credentials to continue",
+      "dontHaveAccount": "Don't have an account?"
+    },
+
+    "registration": {
+      "title": "Create account",
+      "subtitle": "Sign up to get started",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "signUp": "Sign up",
+      "validations": {
+        "passwordMinLength": "Password must be at least 12 characters",
+        "passwordUpperCase": "Password must contain an uppercase letter",
+        "passwordLowerCase": "Password must contain a lowercase letter",
+        "passwordNumber": "Password must contain a number",
+        "passwordSpecialCharacter": "Password must contain a special character"
+      },
+      "errors": {
+        "emailTaken": "This email is already registered",
+        "usernameTaken": "This username is already taken"
+      }
+    },
+    "errors": {
+      "notFound": "No account found with this username or email",
+      "invalidCredentials": "Invalid credentials",
+      "incorrectPassword": "Incorrect password",
+      "samePassword": "New password cannot be the same as the old password"
+    },
+    "password": {
+      "tooShort": "Password is too short, at least 12 characters",
+      "containsEmail": "Password must not contain your email",
+      "equalsUsername": "Password must not be the same as your username",
+      "invalidFormat": "Password must contain uppercase, lowercase, number and special character",
+      "tooWeak": "Password is too weak"
+    }
+  },
+  "errors": {
+    "fetchChats": "Failed to fetch chats",
+    "searchMessage": "Failed to search message",
+    "createChat": "Failed to create chat",
+    "deleteChat": "Failed to delete the chat"
+  },
+  "common": {
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "invalidEmail": "Please enter a valid email",
+    "fieldRequired": "This field is required",
+    "validation": {
+      "maxLength": "Too long",
+      "tooShort": "Too short",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "passwordsDoMatch": "Passwords match"
+    }
+  },
+  "chat": {
+    "chats": "Chats",
+    "create": "Enter userId",
+    "unknown": "Unknown Chat",
+    "you": "You",
+    "errors": {
+      "selfChat": "Cannot create chat with yourself",
+      "alreadyExists": "Chat already exist",
+      "forbidden": "You are not a member of this chat",
+      "messageNotFound": "Message not found",
+      "cannotPin": "Cannot pin this message",
+      "alreadyPinned": "Message already pinned"
+    }
+  },
+  "userStatus": {
+    "lastSeen": {
+      "last": "Last seen",
+      "online": "Online",
+      "justNow": "just now",
+      "minutesAgo_one": "{{count}} minute ago",
+      "minutesAgo_other": "{{count}} minutes ago",
+      "hoursAgo_one": "{{count}} hour ago",
+      "hoursAgo_other": "{{count}} hours ago",
+      "today": "today at {{time}}",
+      "yesterday": "testerday at {{time}}",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "weeksAgo_one": "week ago at {{time}}",
+      "weeksAgo_other": "{{count}} weeks ago",
+      "monthsAgo_one": "month ago",
+      "monthsAgo_other": "{{count}} months ago",
+      "dateWithTime": "{{date}} at {{time}}",
+      "yearAgo": "year ago"
+    }
+  },
+  "messageForm": {
+    "noResults": "No results found",
+    "placeholder": "Message..."
+  },
+  "messageWindow": {
+    "selectChat": "Select chat",
+    "noMessages": "No messages yet",
+    "noMoreResults": "No more results"
+  },
+  "contextMenu": {
+    "actions": "Actions",
+    "edit": "Edit",
+    "copy": "Copy",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "reply": "Reply",
+    "danger": "Danger",
+    "delete": "Delete"
+  },
+  "replyBlock": {
+    "replyingTo": "Replying to {{userName}}"
+  },
+  "messageBlock": {
+    "userNotFound": "User not found",
+    "messageDeleted": "Original message deleted",
+    "edited": "edited"
+  },
+  "pinnedMessages": {
+    "count_one": "{{count}} message",
+    "count_other": "{{count}} messages",
+    "label_zero": "No pinned messages",
+    "label_one": "Pinned message",
+    "label_other": "Pinned messages ({{count}})"
+  },
+  "messageActions": {
+    "copied": "Text copied",
+    "errorCopy": "Failed to copy text"
+  }
+}

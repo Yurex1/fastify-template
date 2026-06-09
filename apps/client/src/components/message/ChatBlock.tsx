@@ -8,6 +8,7 @@ import { useAuthStore } from '../../stores/auth';
 import type { Chat } from '../../api/chats/types';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import useChatUIStore from '../../stores/chatUI';
+import { useTranslation } from 'react-i18next';
 import { member } from '../../utils/isOwnMessage';
 
 interface ChatBlockProps {
@@ -17,7 +18,7 @@ interface ChatBlockProps {
 
 export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
   const user = useAuthStore((s) => s.currentUser);
-
+  const { t } = useTranslation();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   const [menuForChat, setMenuForChat] = useState<Chat | null>(null);
@@ -48,12 +49,12 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
           )}
 
           <div className="w-full min-w-0">
-            <div className="font-medium truncate text-white">{chatMember?.username || 'Unknown Chat'}</div>
+            <div className="font-medium truncate text-white">{chatMember?.username || t('chat.unknown')}</div>
             <div className="flex items-center justify-between min-w-0">
               {chat.lastMessage && (
                 <div className="text-xs truncate min-w-0 flex-1 mr-2">
                   <span className="font-bold text-white">
-                    {`${chat.lastMessage.userId === user?.id ? 'You' : chat.lastMessage.username}: `}
+                    {`${chat.lastMessage.userId === user?.id ? t('chat.you') : chat.lastMessage.username}: `}
                   </span>
                   <span className="truncate">{chat.lastMessage.text}</span>
                 </div>
