@@ -16,7 +16,7 @@ export const handleGoogleCallback = async (
     headers: { Authorization: `Bearer ${token.access_token}` },
   }).then((res) => res.json());
 
-  const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+  const { deviceId } = request;
 
   const session = await authService.signInWithGoogle(userInfo.sub, userInfo.email, userInfo.name, deviceId);
 

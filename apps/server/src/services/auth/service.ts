@@ -178,7 +178,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       return session;
     }
 
-    const username = name ? name.replace(/\s+/g, '').slice(0, 30) : email.split('@')[0];
+    const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
 
     const newUser = await userRepo.create({
       email,

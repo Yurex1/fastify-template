@@ -25,7 +25,7 @@ server.addHook('preHandler', (request, _reply, done) => {
   const acceptLang = request.headers['accept-language'];
 
   const parsed = acceptLang?.split(',')[0]?.split('-')[0]?.toLowerCase();
-  const supported = ['en', 'uk', 'ru'];
+  const supported = ['en', 'uk'];
 
   request.lang = supported.includes(parsed ?? '') ? parsed! : 'en';
   request.deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
@@ -41,8 +41,6 @@ async function registerPlugins() {
 
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
-  server.printRoutes();
-
   await server.register(wsPlugin, { services });
 
   for (const [service, api] of Object.entries(apis)) {
