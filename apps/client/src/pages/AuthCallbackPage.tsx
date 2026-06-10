@@ -1,41 +1,40 @@
-import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/auth';
+import Cookies from 'js-cookie';
+import { useEffect } from 'react';
+import { Loader } from '../components/Loader';
 
 export default function AuthCallbackPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setAccessToken, setCurrentUser } = useAuthStore();
+  const { setCurrentUser } = useAuthStore();
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken');
-    const error = searchParams.get('error');
-    const userParam = searchParams.get('user');
-    // TODO error handling for google auth error
-    if (error) {
-      console.error('OAuth error:', error);
-      navigate('/login?error=oauth_failed');
+    handleCallback();
+  }, [handleCallback]);
+
+  function handleCallback() {
+    const success = searchParams.get('status');
+    const userCookie = Cookies.get('user');
+
+    if (!success || !userCookie) {
+      navigate('/login?error=no_user', { replace: true });
       return;
     }
 
-    if (accessToken && userParam) {
-      try {
-        const user = JSON.parse(atob(userParam));
-        setAccessToken(accessToken);
-        setCurrentUser(user);
-        useAuthStore.setState({ isAuthenticated: true });
-        navigate('/', { replace: true });
-      } catch (err) {
-        console.error('Failed to login from callback:', err);
-        navigate('/login?error=login_failed');
-      }
-    } else {
-      navigate('/login?error=no_token');
+    try {
+      const user = JSON.parse(userCookie);
+      setCurrentUser(user);
+      useAuthStore.setState({ isAuthenticated: true });
+      navigate('/', { replace: true });
+    } catch {
+      navigate('/login?error=login_failed', { replace: true });
     }
-  }, [searchParams]);
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <p>Completing login...</p>
+    <div className="flex min-h-screen items-center justify-center bg-gray-950 text-white">
+      <Loader />
     </div>
   );
 }

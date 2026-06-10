@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -23,6 +23,8 @@ type FormData = {
 export default function LoginPage() {
   const navigate = useNavigate();
   const signIn = useAuthStore((s) => s.login);
+  const [searchParams] = useSearchParams();
+  const error = searchParams.get('error');
   const { t } = useTranslation();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -74,7 +76,9 @@ export default function LoginPage() {
             onChange={() => setParsedError(null)}
           />
           {errors.usernameOrEmail && (
-            <p className="text-xs text-red-400 mt-1 ml-1">{i18next.t(`${errors.usernameOrEmail.message}`)}</p>
+            <p className="text-xs text-red-400 mt-1 ml-1">
+              {i18next.t(`${errors.usernameOrEmail.message?.toLowerCase()}`)}
+            </p>
           )}
         </div>
 
@@ -93,10 +97,13 @@ export default function LoginPage() {
           >
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-          {errors.password && <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.password.message}`)}</p>}
+          {errors.password && (
+            <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.password.message?.toLowerCase()}`)}</p>
+          )}
         </div>
 
-        {parsedError && <FormError message={t(`${parsedError}`)} />}
+        {parsedError && <FormError message={t(`auth.login.${parsedError.toLowerCase()}`)} />}
+        {error && <FormError message={t(`auth.errors.${error}`)} />}
         <GoogleBtn />
 
         <Button type="submit" loading={isPending}>

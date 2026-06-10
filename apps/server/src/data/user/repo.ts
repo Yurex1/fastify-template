@@ -9,15 +9,15 @@ class UserRepository extends EntityRepo<User> {
     super(pool, 'users', ['id', 'email', 'username', 'password', 'googleId', 'createdAt', 'updatedAt', 'lastseen']);
   }
 
-  async findOne(definition: Partial<User>, includePassword = false): Promise<User> {
+  async findOne(definition: Partial<User>, includePassword = false): Promise<User | null> {
     if (includePassword) {
       const { query, params } = this.buildSelectOneWithPasswordQuery(definition);
       const result = await this.pool.queryOne<User>(query, params);
-      return result!;
+      return result;
     }
 
     const result = await super.findOne(definition);
-    return result as User;
+    return result;
   }
 
   async findOneByUsernameOrEmail(value: string, includePassword = false): Promise<User | null> {
@@ -26,25 +26,25 @@ class UserRepository extends EntityRepo<User> {
   }
 
   async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.findOne({ googleId } as Partial<User>);
+    return this.findOne({ googleId });
   }
 
-  async updateEmail(id: number, email: string): Promise<User> {
+  async updateEmail(id: number, email: string): Promise<User | null> {
     const { query, params } = updateUserEmail(id, email);
     const result = await this.pool.queryOne<User>(query, params);
-    return result!;
+    return result;
   }
 
   async updateLastSeen(id: number) {
     const { query, params } = updateLastSeenDate(id);
     const result = await this.pool.queryOne<User>(query, params);
-    return result!;
+    return result;
   }
 
-  async updatePassword(id: number, password: string): Promise<User> {
+  async updatePassword(id: number, password: string): Promise<User | null> {
     const { query, params } = updateUserPassword(id, password);
     const result = await this.pool.queryOne<User>(query, params);
-    return result!;
+    return result;
   }
 
   private buildSelectOneWithPasswordQuery(definition: Partial<User>) {

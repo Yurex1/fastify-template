@@ -13,9 +13,10 @@ export default function HomePage() {
   const logout = useAuthStore((s) => s.logout);
   const { t } = useTranslation();
 
-  if (isInCall) {
-    return <CallRoom roomName={activeCall?.roomName!} />;
+  if (isInCall && activeCall?.roomName) {
+    return <CallRoom roomName={activeCall.roomName} />;
   }
+
   if (incomingCall) {
     return (
       <div className="w-full h-screen flex-1 flex items-center justify-center bg-gray-950">

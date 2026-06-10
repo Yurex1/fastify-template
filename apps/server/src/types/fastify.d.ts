@@ -9,7 +9,6 @@ declare module 'fastify' {
   }
 
   interface FastifyRequest {
-    lang: string;
     deviceId: string;
   }
 }

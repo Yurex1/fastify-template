@@ -4,7 +4,9 @@
     "login": {
       "title": "Login account",
       "subtitle": "Enter your credentials to continue",
-      "dontHaveAccount": "Don't have an account?"
+      "dontHaveAccount": "Don't have an account?",
+      "incorrect_password": "Incorrect password",
+      "user_not_found": "User with such name or email not found"
     },
     "google": "Continue with Google",
 
@@ -15,6 +17,8 @@
       "signIn": "Sign in",
       "signUp": "Sign up",
       "validations": {
+        "email_already_in_use": "Email already in use",
+        "username_unavailable": "Username already in use",
         "passwordMinLength": "Password must be at least 12 characters",
         "passwordUpperCase": "Password must contain an uppercase letter",
         "passwordLowerCase": "Password must contain a lowercase letter",
@@ -27,10 +31,14 @@
       }
     },
     "errors": {
-      "notFound": "No account found with this username or email",
-      "invalidCredentials": "Invalid credentials",
-      "incorrectPassword": "Incorrect password",
-      "samePassword": "New password cannot be the same as the old password"
+      "notFound": "No account found with this username or email.",
+      "invalidCredentials": "The username or password you entered is incorrect.",
+      "incorrectPassword": "The password you entered is incorrect.",
+      "samePassword": "New password cannot be the same as the old one.",
+      "login_failed": "Login failed. Please try again.",
+      "no_user": "Session expired or user not found. Please sign in again.",
+      "unauthorized": "Please log in to continue.",
+      "server_error": "Something went wrong on our end. We are working to fix it."
     },
     "password": {
       "tooShort": "Password is too short, at least 12 characters",
@@ -66,10 +74,11 @@
     "unknown": "Unknown Chat",
     "you": "You",
     "errors": {
-      "selfChat": "Cannot create chat with yourself",
-      "alreadyExists": "Chat already exist",
-      "forbidden": "You are not a member of this chat",
+      "cannot_create_chat_with_yourself": "Cannot create chat with yourself",
+      "chat_already_exist": "Chat already exist",
+      "not_a_member": "You are not a member of this chat",
       "messageNotFound": "Message not found",
+      "user_not_found": "User not found",
       "cannotPin": "Cannot pin this message",
       "alreadyPinned": "Message already pinned"
     }

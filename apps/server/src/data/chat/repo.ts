@@ -1,5 +1,6 @@
 import type { Chat, CreateChat, UpdateChat } from '../../entities/chat';
 import type { TypedPool } from '../../infra/pg';
+import { exception } from '../../utils/exception/util';
 
 import { CreateEntity, EntityRepo } from '../EntityRepo';
 import type { ChatRepo } from './types';
@@ -16,7 +17,8 @@ class ChatRepository extends EntityRepo<Chat> {
       RETURNING ${returning};
     `;
     const result = await this.pool.queryOne<Chat>(query, []);
-    return result!;
+    if (!result) throw exception.serverError('FAILED_TO_CREATE_CHAT');
+    return result;
   }
 }
 

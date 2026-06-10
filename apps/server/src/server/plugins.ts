@@ -1,10 +1,10 @@
 import cors from '@fastify/cors';
+import cookie from '@fastify/cookie';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from '../config';
 import type { Plugin } from './types';
 import oauth2 from '@fastify/oauth2';
-import fp from 'fastify-plugin';
 
 const corsPlugin: Plugin = {
   plugin: cors,
@@ -18,25 +18,27 @@ const corsPlugin: Plugin = {
   },
 };
 
-export const googleOAuth = fp(
-  async (fastify) => {
-    await fastify.register(oauth2, {
-      name: 'googleOAuth2',
-      credentials: {
-        client: {
-          id: config.client.id,
-          secret: config.client.secret,
-        },
-        auth: oauth2.GOOGLE_CONFIGURATION,
-      },
-      scope: ['openid', 'profile', 'email'],
-      startRedirectPath: '/auth/google',
-      callbackUri: config.client.callbackUri,
-    });
-  },
-  { name: 'google-oauth' },
-);
+const cookiePlugin: Plugin = {
+  plugin: cookie,
+  options: {},
+};
 
+export const googleOAuth = {
+  plugin: oauth2,
+  options: {
+    name: 'googleOAuth2',
+    credentials: {
+      client: {
+        id: config.oauth.google.clientId,
+        secret: config.oauth.google.clientSecret,
+      },
+      auth: oauth2.GOOGLE_CONFIGURATION,
+    },
+    scope: ['openid', 'profile', 'email'],
+    startRedirectPath: '/auth/google',
+    callbackUri: config.oauth.google.redirectUri,
+  },
+};
 const swaggerPlugin: Plugin = {
   plugin: swagger,
   options: {
@@ -83,4 +85,4 @@ const swaggerUiPlugin: Plugin = {
   options: { routePrefix: '/docs' },
 };
 
-export const plugins = [corsPlugin, swaggerPlugin, swaggerUiPlugin];
+export const plugins = [cookiePlugin, corsPlugin, swaggerPlugin, swaggerUiPlugin];

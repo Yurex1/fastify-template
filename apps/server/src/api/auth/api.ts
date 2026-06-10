@@ -1,11 +1,9 @@
 import { setAuthCookie } from '../../utils/cookies/util';
-import { DEFAULT_DEVICE_ID } from '../../data/session/constants';
 import { exception } from '../../utils/exception/util';
 import * as schemas from './schemas';
 import type { AuthApi, Deps } from './types';
 import { sessions } from '../../utils/sessions/utils';
 import { handleGoogleCallback } from '../../utils/oauth/util';
-import { config } from '../../config';
 
 export const init = ({ authService }: Deps): AuthApi => ({
   'sign-in': {
@@ -14,9 +12,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signIn,
     handler: async (_user, request, reply) => {
       const { usernameOrEmail, password } = request.body;
-      const { lang, deviceId } = request;
+      const { deviceId } = request;
 
-      const user = await authService.signIn(usernameOrEmail, password, deviceId, lang);
+      const user = await authService.signIn(usernameOrEmail, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -28,9 +26,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signUp,
     handler: async (_user, request, reply) => {
       const { email, username, password } = request.body;
-      const { lang, deviceId } = request;
+      const { deviceId } = request;
 
-      const user = await authService.signUp(email, username, password, deviceId, lang);
+      const user = await authService.signUp(email, username, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -41,10 +39,10 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'access',
     schema: schemas.signOut,
     handler: async (user, request, reply) => {
-      const { lang, deviceId } = request;
+      const { deviceId } = request;
 
       reply.clearCookie('refreshToken', { path: '/' });
-      return authService.signOut(user.id, deviceId, lang);
+      return authService.signOut(user.id, deviceId);
     },
   },
 
@@ -76,9 +74,8 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.changePassword,
     handler: async (user, request) => {
       const { oldPassword, newPassword } = request.body;
-      const { lang } = request;
 
-      return authService.changePassword(user.id, oldPassword, newPassword, lang);
+      return authService.changePassword(user.id, oldPassword, newPassword);
     },
   },
 
@@ -88,8 +85,8 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.googleCallback,
     handler: async (_user, request, reply) => {
       try {
-        await handleGoogleCallback(request, reply, authService, config.client.url);
-      } catch (err: any) {
+        await handleGoogleCallback(request, reply, authService);
+      } catch (err: unknown) {
         console.error('Google OAuth Error:', err);
         reply.redirect('/login?error=oauth_failed');
       }

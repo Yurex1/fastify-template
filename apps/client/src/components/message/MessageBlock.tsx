@@ -1,7 +1,8 @@
 import { cn } from '../../lib/utils';
 import { useTranslation } from 'react-i18next';
 import { EmojiMenu } from '../EmojiMenu';
-import { ReactionList, userPressedEmojis } from '../ReactionList';
+import { ReactionList } from '../ReactionList';
+
 import Time from '../Time';
 import MessageMenu from '../ContextMenu';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
@@ -13,6 +14,7 @@ import { useMessageActions } from '../../hooks/useMessageActions';
 import useChatUIStore from '../../stores/chatUI';
 import type { Message } from '../../api/chats/types';
 import { useChatSocket } from '../../websocket/ChatSocketContext';
+import { userPressedEmojis } from '../../utils/pressedEmoji';
 
 interface MessageBlockProps {
   message: Message;

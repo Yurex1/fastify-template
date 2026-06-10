@@ -1,5 +1,6 @@
 import { fastify } from 'fastify';
 import { plugins, googleOAuth } from './plugins';
+import { hooks } from './hooks';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
@@ -18,29 +19,25 @@ export const server = fastify({
   },
 });
 
-server.decorateRequest('lang', 'en');
-server.decorateRequest('deviceId', DEFAULT_DEVICE_ID);
-
-server.addHook('preHandler', (request, _reply, done) => {
-  const acceptLang = request.headers['accept-language'];
-
-  const parsed = acceptLang?.split(',')[0]?.split('-')[0]?.toLowerCase();
-  const supported = ['en', 'uk'];
-
-  request.lang = supported.includes(parsed ?? '') ? parsed! : 'en';
-  request.deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
-  done();
-});
-
 async function registerPlugins() {
   for (const plugin of plugins) {
     await server.register(plugin.plugin, plugin.options);
   }
-  await server.register(googleOAuth);
+  await server.register(googleOAuth.plugin, googleOAuth.options);
+}
+
+async function registerHooks() {
+  server.decorateRequest('deviceId', DEFAULT_DEVICE_ID);
+
+  for (const hook of hooks) {
+    server.addHook('onRequest', hook);
+  }
 }
 
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
+  await registerHooks();
+
   await server.register(wsPlugin, { services });
 
   for (const [service, api] of Object.entries(apis)) {
@@ -78,6 +75,7 @@ export const init = async ({ services, apis }: Deps) => {
           },
           refresh: async () => {
             const token = request.cookies.refreshToken;
+
             if (!token) throw exception.unauthorized('NO_REFRESH_TOKEN');
             return services.auth.verify('refresh', token);
           },

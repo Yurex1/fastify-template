@@ -3,6 +3,10 @@ import api from '../api';
 import { ENDPOINTS } from './consts';
 import type { Chat, ChatList, Message, MessageList, PinnedMessage, PinnedMessageList } from './types';
 
+type CallTokenResponse = {
+  token: string;
+};
+
 const chatsApi = {
   createChat: async (memberId: number) => {
     const response = await api.post(`${ENDPOINTS.CHAT_CREATE}/${memberId}`).json<Chat>();
@@ -86,7 +90,9 @@ const chatsApi = {
   },
 
   getTokenCall: async (roomName: string) => {
-    const response = await api.post(`${ENDPOINTS.CHAT_GET_LIVEKIT_TOKEN}`, { json: { roomName } }).json();
+    const response = await api
+      .post(`${ENDPOINTS.CHAT_GET_LIVEKIT_TOKEN}`, { json: { roomName } })
+      .json<CallTokenResponse>();
     return response;
   },
 

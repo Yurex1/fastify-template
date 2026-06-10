@@ -68,7 +68,6 @@ export default function RegisterPage() {
             {...register('email')}
             onChangeCapture={() => setParsedError(null)}
           />
-          {errors.email && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.email.message!)}</p>}
         </div>
 
         <div>
@@ -78,7 +77,6 @@ export default function RegisterPage() {
             {...register('username')}
             onChangeCapture={() => setParsedError(null)}
           />
-          {errors.username && <p className="text-xs text-red-400 mt-1 ml-1">{t(errors.username.message!)}</p>}
         </div>
 
         <div className="relative">
@@ -122,7 +120,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {parsedError && <FormError message={t(`${parsedError.message}`)} />}
+        {parsedError && <FormError message={t(`auth.registration.validations.${parsedError.message.toLowerCase()}`)} />}
         <GoogleBtn />
         <Button type="submit" loading={isPending}>
           {t('auth.registration.signUp')}

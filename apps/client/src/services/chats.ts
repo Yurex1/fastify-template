@@ -7,7 +7,7 @@ import i18n from '../i18next';
 export async function fetchChats() {
   try {
     return await chatsApi.getChatList();
-  } catch (error) {
+  } catch {
     toast.error(i18n.t('errors.fetchChats'));
     return [];
   }
@@ -16,7 +16,7 @@ export async function fetchChats() {
 export async function searchMessagesByChatId(chatId: number, text: string) {
   try {
     return await chatsApi.searchMessagesByChatId(chatId, text);
-  } catch (error) {
+  } catch {
     toast.error(i18n.t('errors.searchMessage'));
     return [];
   }
@@ -27,9 +27,12 @@ export async function createChat(memberId: number) {
 
   try {
     return await chatsApi.createChat(memberId);
-  } catch (error) {
-    const message = (error as any)?.message;
-    toast.error(message ?? i18n.t('errors.createChat'));
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      const message = error?.message;
+      console.log(message);
+      toast.error(i18n.t(`chat.errors.${message.toLowerCase()}`));
+    }
   }
 }
 
@@ -39,7 +42,7 @@ export async function deleteChat(chatId: number) {
     clearLastChatId();
     useChatUIStore.getState().reset();
     return response;
-  } catch (error) {
+  } catch {
     toast.error(i18n.t('errors.deleteChat'));
     return [];
   }

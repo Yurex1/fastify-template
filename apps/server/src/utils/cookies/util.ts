@@ -10,7 +10,7 @@ export function setAuthCookie(name: string, reply: FastifyReply, token: string) 
   const secondsExpiration = msExpiration ? Math.floor(msExpiration / 1000) : 604800;
   reply.setCookie(name, token, {
     path: '/',
-    httpOnly: true,
+    httpOnly: isProduction,
     secure: isProduction,
     sameSite: isProduction ? 'strict' : 'lax',
     maxAge: secondsExpiration,

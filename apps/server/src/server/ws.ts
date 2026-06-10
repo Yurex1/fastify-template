@@ -16,7 +16,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   const connections = new Map<number, WebSocket>();
   const typingTimers = new Map<number, NodeJS.Timeout>();
   const heartbeatStates = new Map<number, { isAlive: boolean; timer: NodeJS.Timeout }>();
-  const eventHandlers: Array<(uid: number, data: any) => void> = [];
+  const eventHandlers: Array<(uid: number, data: unknown) => void> = [];
   const PING_INTERVAL_MS = 25000;
 
   const cleanupConnection = (uid: number, socket: WebSocket) => {
@@ -29,7 +29,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
     }
     connections.delete(uid);
     if (typingTimers.has(uid)) {
-      clearTimeout(typingTimers.get(uid)!);
+      clearTimeout(typingTimers.get(uid));
       typingTimers.delete(uid);
     }
   };
@@ -37,7 +37,6 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   fastify.get<{ Querystring: { token: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
       const token = req.headers['sec-websocket-protocol'];
-      const { lang } = req;
 
       if (!token) {
         throw exception.unauthorized('NO_TOKEN_PROVIDED');
@@ -48,7 +47,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       connections.set(uid, socket);
 
-      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user, lang });
+      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
 
       const heartbeatTimer = setInterval(() => {
         const state = heartbeatStates.get(uid);
@@ -62,7 +61,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
         state.isAlive = false;
         try {
           socket.ping();
-        } catch (error) {
+        } catch {
           socket.terminate();
         }
       }, PING_INTERVAL_MS);
@@ -125,8 +124,8 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
         }
         cleanupConnection(uid, socket);
       });
-    } catch (e: any) {
-      console.error('WS Auth Error:', e.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) console.error('WS Auth Error:', e.message);
 
       if (socket) {
         socket.close(1008, 'Authentication failed');
@@ -135,7 +134,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
   });
 
   fastify.decorate('ws', {
-    onMessage(handler: (uid: number, data: any) => void) {
+    onMessage(handler: (uid: number, data: unknown) => void) {
       eventHandlers.push(handler);
     },
 
