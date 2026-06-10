@@ -4,7 +4,6 @@ import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import { config } from '../config';
 import type { Plugin } from './types';
-import oauth2 from '@fastify/oauth2';
 
 const corsPlugin: Plugin = {
   plugin: cors,
@@ -23,22 +22,6 @@ const cookiePlugin: Plugin = {
   options: {},
 };
 
-export const googleOAuth = {
-  plugin: oauth2,
-  options: {
-    name: 'googleOAuth2',
-    credentials: {
-      client: {
-        id: config.oauth.google.clientId,
-        secret: config.oauth.google.clientSecret,
-      },
-      auth: oauth2.GOOGLE_CONFIGURATION,
-    },
-    scope: ['openid', 'profile', 'email'],
-    startRedirectPath: '/auth/google',
-    callbackUri: config.oauth.google.redirectUri,
-  },
-};
 const swaggerPlugin: Plugin = {
   plugin: swagger,
   options: {

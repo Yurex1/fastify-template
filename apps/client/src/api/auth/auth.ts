@@ -17,6 +17,8 @@ const auth = {
     return response;
   },
 
+  signInWithGoogle: (credential: string) => api.post('auth/google', { json: { credential } }).json<Session>(),
+
   changePassword: async (data: ChangePassword) => {
     const response = await api.put('/auth/change-password', { json: data }).json();
     return response;

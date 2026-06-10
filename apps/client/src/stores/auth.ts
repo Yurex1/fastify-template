@@ -5,11 +5,13 @@ import type { User } from '../api/user/types';
 import type { SignIn, SignUp } from '../api/auth/types';
 import useCallsStore from './calls';
 import useChatUIStore from './chatUI';
+import auth from '../api/auth/auth';
 
 interface AuthState {
   currentUser: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  loginWithGoogle: (credential: string) => Promise<void>;
   setCurrentUser: (user: User) => void;
   setAccessToken: (token: string | null) => void;
   clearAccessToken: () => void;
@@ -51,6 +53,11 @@ export const useAuthStore = create<AuthState>()(
 
           window.location.href = '/login';
         }
+      },
+
+      loginWithGoogle: async (credential) => {
+        const session = await auth.signInWithGoogle(credential);
+        set({ accessToken: session.accessToken, currentUser: session.user, isAuthenticated: true });
       },
 
       setCurrentUser: (user) => set({ currentUser: user }),

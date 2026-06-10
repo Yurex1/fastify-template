@@ -3,7 +3,6 @@ import { exception } from '../../utils/exception/util';
 import * as schemas from './schemas';
 import type { AuthApi, Deps } from './types';
 import { sessions } from '../../utils/sessions/utils';
-import { handleGoogleCallback } from '../../utils/oauth/util';
 
 export const init = ({ authService }: Deps): AuthApi => ({
   'sign-in': {
@@ -79,17 +78,18 @@ export const init = ({ authService }: Deps): AuthApi => ({
     },
   },
 
-  'google/callback': {
-    method: 'get',
+  google: {
+    method: 'post',
     access: 'none',
     schema: schemas.googleCallback,
     handler: async (_user, request, reply) => {
-      try {
-        await handleGoogleCallback(request, reply, authService);
-      } catch (err: unknown) {
-        console.error('Google OAuth Error:', err);
-        reply.redirect('/login?error=oauth_failed');
-      }
+      const { credential } = request.body as { credential: string };
+      const { deviceId } = request;
+
+      const session = await authService.signInWithGoogle(credential, deviceId);
+      setAuthCookie('refreshToken', reply, session.refreshToken);
+      setAuthCookie('accessToken', reply, session.accessToken);
+      return sessions.toSessionResponse(session);
     },
   },
 });

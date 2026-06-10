@@ -43,15 +43,9 @@ export const config = {
     allowedOrigins: env.requireEnv('CORS_ALLOWED_ORIGINS').split(',') || [],
   },
 
-  client: {
-    url: env.requireEnv('CLIENT_URL'),
-  },
-
   oauth: {
     google: {
       clientId: env.requireEnv('GOOGLE_CLIENT_ID'),
-      clientSecret: env.requireEnv('GOOGLE_CLIENT_SECRET'),
-      redirectUri: env.requireEnv('GOOGLE_REDIRECT_URI'),
     },
   },
   node_env: process.env.NODE_ENV || 'development',

@@ -1,8 +1,11 @@
+import { config } from '../../config';
 import { exception } from '../../utils/exception/util';
 import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(config.oauth.google.clientId);
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password, deviceId) => {
@@ -156,14 +159,22 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return updatedUser;
   },
 
-  signInWithGoogle: async (googleId, email, name, deviceId) => {
-    let user = (await userRepo.findByGoogleId(googleId)) || (await userRepo.findOneByUsernameOrEmail(email));
+  signInWithGoogle: async (accessToken, deviceId) => {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw exception.unauthorized('INVALID_GOOGLE_TOKEN');
+
+    const { sub, email, name } = await res.json();
+    if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
+
+    let user = (await userRepo.findByGoogleId(sub)) || (await userRepo.findOneByUsernameOrEmail(email));
 
     if (!user) {
       const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
-      user = await userRepo.create({ email, username, googleId, password: null });
+      user = await userRepo.create({ email, username, googleId: sub, password: null });
     } else if (!user.googleId) {
-      await userRepo.update(user.id, { googleId });
+      await userRepo.update(user.id, { googleId: sub });
     }
 
     const session = sessions.generate(user);

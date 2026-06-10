@@ -1,5 +1,5 @@
 import { fastify } from 'fastify';
-import { plugins, googleOAuth } from './plugins';
+import { plugins } from './plugins';
 import { hooks } from './hooks';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
@@ -23,7 +23,6 @@ async function registerPlugins() {
   for (const plugin of plugins) {
     await server.register(plugin.plugin, plugin.options);
   }
-  await server.register(googleOAuth.plugin, googleOAuth.options);
 }
 
 async function registerHooks() {
