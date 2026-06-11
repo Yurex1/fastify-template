@@ -25,7 +25,13 @@ export const init = ({ userRepo }: Deps): UserService => ({
   },
 
   updateLastSeen: async (userId) => {
-    return userRepo.updateLastSeen(userId);
+    const user = await userRepo.updateLastSeen(userId);
+
+    if (!user) {
+      throw exception.notFound('USER_NOT_FOUND');
+    }
+
+    return user;
   },
 
   updateEmail: async (id, email) => {

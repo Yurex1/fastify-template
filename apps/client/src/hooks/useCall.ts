@@ -25,7 +25,7 @@ export function useCall(currentChatId: number | null) {
       createRoom(currentChatId, roomName, currentUser?.username, type);
       startCall(roomName, type);
     },
-    [currentChatId, createRoom, startCall],
+    [currentChatId, createRoom, startCall, currentUser],
   );
 
   return {

@@ -4,7 +4,8 @@ export interface User extends BaseEntity {
   id: number;
   email: string;
   username: string;
-  password: string;
+  password?: string | null;
+  googleId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   lastseen: Date;
@@ -13,7 +14,8 @@ export interface User extends BaseEntity {
 export interface CreateUser {
   email: string;
   username: string;
-  password: string;
+  password?: string | null;
+  googleId?: string | null;
 }
 
 export interface UpdateUser extends Partial<CreateUser> {}

@@ -1,0 +1,5 @@
+-- up
+ALTER TABLE users ALTER COLUMN password DROP NOT NULL;
+
+-- down
+ALTER TABLE users ALTER COLUMN password SET NOT NULL;

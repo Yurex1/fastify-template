@@ -36,6 +36,7 @@ export const router = createBrowserRouter([
     path: ROUTES.REGISTER,
     element: <Register />,
   },
+
   // {
   //   path: "/dashboard",
   //   element: (

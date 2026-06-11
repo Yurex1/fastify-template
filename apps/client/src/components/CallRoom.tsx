@@ -13,9 +13,7 @@ export function CallRoom({ roomName }: { roomName: string }) {
   const { data, isError, error } = useQuery({
     queryKey: [QueryKeys.callToken, roomName],
     queryFn: () =>
-      Promise.all([chatsApi.getRoom(roomName), chatsApi.getTokenCall(roomName)]).then(
-        ([, tokenRes]: any) => tokenRes.token,
-      ),
+      Promise.all([chatsApi.getRoom(roomName), chatsApi.getTokenCall(roomName)]).then(([, tokenRes]) => tokenRes.token),
   });
 
   if (isError) return <div className="flex-1 flex items-center justify-center text-red-500">{error.message}</div>;

@@ -8,7 +8,7 @@ export interface UserService {
   isExists: (definition: Partial<User>) => Promise<boolean>;
   update: (id: number, definition: Partial<UpdateUser>) => Promise<User>;
   updateLastSeen: (userId: number) => Promise<User>;
-  updateEmail: (id: number, email: string) => Promise<User>;
+  updateEmail: (id: number, email: string) => Promise<User | null>;
   remove: (id: number) => Promise<{ removed: boolean }>;
 }
 

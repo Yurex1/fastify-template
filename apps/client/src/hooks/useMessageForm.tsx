@@ -100,7 +100,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
   useEffect(() => {
     setFormMode('create');
     setText('');
-  }, [currentChatId]);
+  }, [currentChatId, setFormMode, setText]);
 
   async function handleOnChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const value = e.target.value;

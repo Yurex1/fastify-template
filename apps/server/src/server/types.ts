@@ -3,7 +3,7 @@ import { Services } from '../services/types';
 import { FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions } from 'fastify/types/plugin';
 
 export interface WsServer {
-  onMessage: (handler: (uid: number, data: any) => void) => void;
+  onMessage: (handler: (uid: number, data: unknown) => void) => void;
   hasConnection: (id: number) => boolean;
   send: (id: number, message: object) => void;
 }

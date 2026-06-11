@@ -16,7 +16,6 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     messages,
     fetchNextPage,
     fetchPreviousPage,
-    hasNextPage,
     hasPreviousPage,
     isFetchingNextPage,
     isFetchingPreviousPage,
@@ -42,7 +41,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   }
   useEffect(() => {
     setAnchorMessageId(null);
-  }, [currentChatId]);
+  }, [currentChatId, setAnchorMessageId]);
 
   useLayoutEffect(() => {
     if (messages.length === 0) return;
@@ -65,7 +64,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   }, [messages, chatKey]);
   const startReached = useCallback(() => {
     fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
+  }, [fetchNextPage]);
 
   const endReached = () => {
     if (hasPreviousPage && !isFetchingPreviousPage && !isLoading) {
@@ -114,7 +113,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
         setAnchorMessageId(messageId);
       });
     },
-    [setAnchorMessageId, setHighlightedMessageId],
+    [setAnchorMessageId, setHighlightedMessageId, virtuosoRef],
   );
   const reversed = [...messages].reverse();
 

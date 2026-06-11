@@ -64,7 +64,7 @@ const MessageWindow = () => {
       setHighlightedMessageId(anchorMessageId);
       setTimeout(() => setHighlightedMessageId(null), 1500);
     }
-  }, [isListReady, anchorMessageId]);
+  }, [isListReady, anchorMessageId, setHighlightedMessageId]);
 
   useEffect(() => {
     if (anchorMessageId !== null) return;
@@ -73,7 +73,7 @@ const MessageWindow = () => {
       chatScrollActiveRef.current = false;
     }, CHAT_SCROLL_WINDOW_MS);
     return () => clearTimeout(timer);
-  }, [currentChatId]);
+  }, [currentChatId, anchorMessageId]);
 
   useEffect(() => {
     return () => {

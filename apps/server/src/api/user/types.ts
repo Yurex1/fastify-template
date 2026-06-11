@@ -12,7 +12,7 @@ type RemoveParam = SchemaType.FromSchema<typeof schemas.remove>;
 export interface UserApi extends API {
   id: ProtectedEndpoint<GetByIdParam, UserResult>;
   'get-all': ProtectedEndpoint<unknown, User[]>;
-  'update-email': ProtectedEndpoint<UpdateEmailParam, User>;
+  'update-email': ProtectedEndpoint<UpdateEmailParam, User | null>;
   update: ProtectedEndpoint<UpdateParam, User>;
   remove: ProtectedEndpoint<RemoveParam, { removed: boolean }>;
 }

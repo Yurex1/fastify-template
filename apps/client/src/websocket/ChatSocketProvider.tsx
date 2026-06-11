@@ -51,6 +51,10 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     let active = true;
 
     const connect = () => {
+      if (reconnectRef.current) {
+        clearTimeout(reconnectRef.current);
+        reconnectRef.current = null;
+      }
       const token = useAuthStore.getState().accessToken;
       if (!token) return;
       const socket = new WebSocket(`${WS_URL}/ws`, token);
@@ -82,6 +86,10 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
     const unsubscribe = useAuthStore.subscribe((state, prevState) => {
       if (state.accessToken !== prevState.accessToken) {
         if (state.accessToken) {
+          if (socketRef.current) {
+            socketRef.current.close();
+          }
+
           connect();
         } else {
           if (socketRef.current) {
@@ -98,7 +106,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       if (reconnectRef.current) clearTimeout(reconnectRef.current);
       socketRef.current?.close();
     };
-  }, []);
+  }, [fillGap, queryClient]);
 
   const api: ChatSocketContextProps = useMemo(
     () => ({

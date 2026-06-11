@@ -18,6 +18,7 @@ export const sessions = {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastseen: user.lastseen,
+      ...(user.googleId && { googleId: user.googleId }),
     };
 
     const refreshToken = jwt.sign({ id, type: 'refresh' }, config.jwt.expiration.refresh as SignOptions['expiresIn']);
@@ -27,6 +28,7 @@ export const sessions = {
     }
 
     const expiresAt = new Date(decoded.exp * 1000);
+
     return {
       user: sanitizedUser,
       accessToken,

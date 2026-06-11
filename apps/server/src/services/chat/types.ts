@@ -9,48 +9,26 @@ import { PinnedMessagesCursor, PinnedMessagesRepo } from '../../data/pinnedMessa
 import { PinnedMessage, PinnedMessageList } from '../../entities/pinnedMessages';
 
 export interface ChatService {
-  create: (userId: number, memberId: number, lang: string) => Promise<ChatPreview>;
+  create: (userId: number, memberId: number) => Promise<ChatPreview>;
   list: (userId: number, status: ChatMemberStatus, cursor: ChatCursor | null, limit: number) => Promise<ListResult>;
   getAllMembers: (userId: number) => Promise<ChatMember[]>;
   getAllMembersByChatId: (chatId: number) => Promise<ChatMember[]>;
   findMessage: (definition: Partial<Message>) => Promise<Message | null>;
   removeMessage: (id: number) => Promise<{ removed: boolean }>;
-  sendMessage: (userId: number, chatId: number, text: string, lang: string, reply_id?: number) => Promise<Message>;
+  sendMessage: (userId: number, chatId: number, text: string, reply_id?: number) => Promise<Message>;
   getMessagesByChatId: (
     userId: number,
     chatId: number,
     { before, after, limit }: FindByChatIdProps,
-    lang: string,
   ) => Promise<CursorResult>;
-  searchMessagesByChatId: (
-    userId: number,
-    chatId: number,
-    text: string,
-    lang: string,
-  ) => Promise<MessageSearchResult[]>;
-  getAllPinnedMessages: (
-    chatId: number,
-    cursor: PinnedMessagesCursor,
-    limit: number,
-    lang: string,
-  ) => Promise<PinnedMessageList>;
-  updateMessage: (id: number, definition: UpdateMessage, lang: string) => Promise<Message>;
-  updateReactions: (id: number, userId: number, reaction: string, lang: string) => Promise<Message | null>;
-  getMessageContext: (
-    userId: number,
-    chatId: number,
-    messageId: number,
-    limit: number,
-    lang: string,
-  ) => Promise<CursorResult | null>;
-  pinMessage: (userId: number, chatId: number, messageId: number, lang: string) => Promise<PinnedMessage>;
-  unpinMessage: (
-    userId: number,
-    chatId: number,
-    messageId: number,
-    lang: string,
-  ) => Promise<{ chatId: number; messageId: number }>;
-  removeChat: (userId: number, chatId: number, lang: string) => Promise<{ removed: boolean }>;
+  searchMessagesByChatId: (userId: number, chatId: number, text: string) => Promise<MessageSearchResult[]>;
+  getAllPinnedMessages: (chatId: number, cursor: PinnedMessagesCursor, limit: number) => Promise<PinnedMessageList>;
+  updateMessage: (id: number, definition: UpdateMessage) => Promise<Message>;
+  updateReactions: (id: number, userId: number, reaction: string) => Promise<Message | null>;
+  getMessageContext: (userId: number, chatId: number, messageId: number, limit: number) => Promise<CursorResult | null>;
+  pinMessage: (userId: number, chatId: number, messageId: number) => Promise<PinnedMessage>;
+  unpinMessage: (userId: number, chatId: number, messageId: number) => Promise<{ chatId: number; messageId: number }>;
+  removeChat: (userId: number, chatId: number) => Promise<{ removed: boolean }>;
 }
 
 export interface Deps {

@@ -1,25 +1,27 @@
+import { config } from '../../config';
 import { exception } from '../../utils/exception/util';
-import { t } from '../../utils/i18n/util';
 import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
+import { OAuth2Client } from 'google-auth-library';
+const googleClient = new OAuth2Client(config.oauth.google.clientId);
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
-  signIn: async (usernameOrEmail, password, deviceId, lang) => {
+  signIn: async (usernameOrEmail, password, deviceId) => {
     const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
 
     if (!user) {
-      throw exception.badRequest(t('auth.errors.notFound', lang));
+      throw exception.badRequest('USER_NOT_FOUND');
     }
 
     if (!user.password) {
-      throw exception.badRequest(t('auth.errors.invalidCredentials', lang));
+      throw exception.badRequest('BAD_CREDENTIAL');
     }
 
     const validPassword = passwords.compare(password, user.password);
     if (!validPassword) {
-      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
+      throw exception.badRequest('INCORRECT_PASSWORD');
     }
 
     const session = sessions.generate(user);
@@ -35,17 +37,17 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  signUp: async (email, username, password, deviceId, lang) => {
+  signUp: async (email, username, password, deviceId) => {
     const existingUser = await userRepo.exists({ email });
     if (existingUser) {
-      throw exception.badRequest(t('auth.registration.errors.emailTaken', lang));
+      throw exception.badRequest('EMAIL_ALREADY_IN_USE');
     }
 
     const existingUsername = await userRepo.exists({ username });
     if (existingUsername) {
-      throw exception.badRequest(t('auth.registration.errors.usernameTaken', lang));
+      throw exception.badRequest('USERNAME_UNAVAILABLE');
     }
-    validatePassword(password, email, username, lang);
+    validatePassword(password);
     const hashedPassword = passwords.hash(password);
 
     const user = await userRepo.create({
@@ -67,7 +69,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  signOut: async (userId, deviceId, lang) => {
+  signOut: async (userId, deviceId) => {
     await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
     return { signedOut: true };
   },
@@ -92,7 +94,9 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   refresh: async (userId, deviceId, refreshToken) => {
     const payload = sessions.validate('refresh', refreshToken);
     const user = await userRepo.findOne({ id: userId });
+    if (!user) throw exception.notFound('USER_NOT_FOUND');
     if (payload.id !== user.id) throw exception.unauthorized('TOKEN_USER_MISMATCH');
+
     const sessionData = await sessionRepo.findOne({ userId, deviceId });
 
     if (!sessionData) {
@@ -126,30 +130,65 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     return session;
   },
 
-  changePassword: async (userId, oldPassword, newPassword, lang) => {
+  changePassword: async (userId, oldPassword, newPassword) => {
     const user = await userRepo.findOne({ id: userId }, true);
     if (!user) {
-      throw exception.notFound(t('auth.errors.notFound', lang));
+      throw exception.notFound('USER_NOT_FOUND');
     }
 
     if (!user.password) {
-      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
+      throw exception.badRequest('INCORRECT_PASSWORD');
     }
 
     const validPassword = passwords.compare(oldPassword, user.password);
     if (!validPassword) {
-      throw exception.badRequest(t('auth.errors.incorrectPassword', lang));
+      throw exception.badRequest('INCORRECT_PASSWORD');
     }
 
     const isSamePassword = passwords.compare(newPassword, user.password);
     if (isSamePassword) {
-      throw exception.badRequest(t('auth.errors.samePassword', lang));
+      throw exception.badRequest('NEW_PASSWORD_SAME_AS_OLD');
     }
 
-    validatePassword(newPassword, user.email, user.username, lang);
+    validatePassword(newPassword);
 
     const hash = passwords.hash(newPassword);
 
-    return userRepo.updatePassword(user.id, hash);
+    const updatedUser = await userRepo.updatePassword(user.id, hash);
+    if (!updatedUser) throw exception.notFound('USER_NOT_FOUND');
+    return updatedUser;
+  },
+
+  signInWithGoogle: async (accessToken, deviceId) => {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) throw exception.unauthorized('INVALID_GOOGLE_TOKEN');
+
+    const { sub, email, name } = await res.json();
+    if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
+
+    let user = (await userRepo.findOne({ googleId: sub })) || (await userRepo.findOneByUsernameOrEmail(email));
+
+    if (!user) {
+      const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
+      const exist = await userRepo.exists({ username });
+      if (exist) throw exception.badRequest('USERNAME_UNAVAILABLE');
+      user = await userRepo.create({ email, username, googleId: sub, password: null });
+    } else if (!user.googleId) {
+      await userRepo.update(user.id, { googleId: sub });
+    }
+
+    const session = sessions.generate(user);
+    const hashedToken = passwords.hash(session.refreshToken);
+
+    await sessionRepo.upsert({
+      userId: user.id,
+      deviceId,
+      refreshToken: hashedToken,
+      expiresAt: session.expiresAt,
+    });
+
+    return session;
   },
 });

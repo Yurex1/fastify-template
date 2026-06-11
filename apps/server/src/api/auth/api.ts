@@ -1,5 +1,4 @@
 import { setAuthCookie } from '../../utils/cookies/util';
-import { DEFAULT_DEVICE_ID } from '../../data/session/constants';
 import { exception } from '../../utils/exception/util';
 import * as schemas from './schemas';
 import type { AuthApi, Deps } from './types';
@@ -12,10 +11,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signIn,
     handler: async (_user, request, reply) => {
       const { usernameOrEmail, password } = request.body;
-      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
-      const lang = (request.headers['accept-language'] as string) || 'en';
+      const { deviceId } = request;
 
-      const user = await authService.signIn(usernameOrEmail, password, deviceId, lang);
+      const user = await authService.signIn(usernameOrEmail, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -27,10 +25,9 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.signUp,
     handler: async (_user, request, reply) => {
       const { email, username, password } = request.body;
-      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
-      const lang = (request.headers['accept-language'] as string) || 'en';
+      const { deviceId } = request;
 
-      const user = await authService.signUp(email, username, password, deviceId, lang);
+      const user = await authService.signUp(email, username, password, deviceId);
       setAuthCookie('refreshToken', reply, user.refreshToken);
       return sessions.toSessionResponse(user);
     },
@@ -41,11 +38,10 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'access',
     schema: schemas.signOut,
     handler: async (user, request, reply) => {
-      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
-      const lang = (request.headers['accept-language'] as string) || 'en';
+      const { deviceId } = request;
 
       reply.clearCookie('refreshToken', { path: '/' });
-      return authService.signOut(user.id, deviceId, lang);
+      return authService.signOut(user.id, deviceId);
     },
   },
 
@@ -54,7 +50,7 @@ export const init = ({ authService }: Deps): AuthApi => ({
     access: 'refresh',
     schema: schemas.refresh,
     handler: async (user, request, reply) => {
-      const deviceId = (request.headers['x-device-id'] as string) || DEFAULT_DEVICE_ID;
+      const { deviceId } = request;
       const currentToken = request.cookies.refreshToken;
 
       if (!currentToken) {
@@ -77,9 +73,23 @@ export const init = ({ authService }: Deps): AuthApi => ({
     schema: schemas.changePassword,
     handler: async (user, request) => {
       const { oldPassword, newPassword } = request.body;
-      const lang = (request.headers['accept-language'] as string) || 'en';
 
-      return authService.changePassword(user.id, oldPassword, newPassword, lang);
+      return authService.changePassword(user.id, oldPassword, newPassword);
+    },
+  },
+
+  google: {
+    method: 'post',
+    access: 'none',
+    schema: schemas.googleCallback,
+    handler: async (_user, request, reply) => {
+      const { credential } = request.body as { credential: string };
+      const { deviceId } = request;
+
+      const session = await authService.signInWithGoogle(credential, deviceId);
+      setAuthCookie('refreshToken', reply, session.refreshToken);
+      setAuthCookie('accessToken', reply, session.accessToken);
+      return sessions.toSessionResponse(session);
     },
   },
 });

@@ -1,13 +1,16 @@
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
+import { hooks } from './hooks';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
 import { wsPlugin } from './ws';
+import { DEFAULT_DEVICE_ID } from '../data/session/constants';
 
 export const server = fastify({
   logger: true,
   trustProxy: config.node_env === 'production',
+
   ajv: {
     customOptions: {
       removeAdditional: true,
@@ -22,8 +25,17 @@ async function registerPlugins() {
   }
 }
 
+async function registerHooks() {
+  server.decorateRequest('deviceId', DEFAULT_DEVICE_ID);
+
+  for (const hook of hooks) {
+    server.addHook('onRequest', hook);
+  }
+}
+
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
+  await registerHooks();
 
   await server.register(wsPlugin, { services });
 
@@ -62,6 +74,7 @@ export const init = async ({ services, apis }: Deps) => {
           },
           refresh: async () => {
             const token = request.cookies.refreshToken;
+
             if (!token) throw exception.unauthorized('NO_REFRESH_TOKEN');
             return services.auth.verify('refresh', token);
           },
@@ -69,7 +82,10 @@ export const init = async ({ services, apis }: Deps) => {
         const sessionProvider = await sessionProviders[access]();
 
         const result = await handler(sessionProvider, request, reply);
-        return reply.send(result);
+
+        if (!reply.sent) {
+          return reply.send(result);
+        }
       });
     }
   }

@@ -2,7 +2,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpBackend from 'i18next-http-backend';
-import en from '../public/locales/en/translation.json';
+import en from './locales/en/translation.json';
 import useUserStore from './stores/user';
 const savedLang = useUserStore.getState().language;
 
@@ -27,7 +27,7 @@ i18n
     defaultNS: 'translation',
 
     backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
+      loadPath: '/src/locales/{{lng}}/translation.json',
     },
 
     interpolation: {

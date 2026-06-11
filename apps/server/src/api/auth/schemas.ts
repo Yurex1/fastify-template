@@ -10,8 +10,8 @@ export const signIn = {
     body: {
       type: 'object',
       properties: {
-        usernameOrEmail: { type: 'string', minLength: 1 },
-        password: { type: 'string', minLength: 6, maxLength: 64 },
+        usernameOrEmail: { type: 'string', minLength: 1, maxLength: 100 },
+        password: { type: 'string', minLength: 1, maxLength: 64 },
       },
       required: ['usernameOrEmail', 'password'],
       additionalProperties: false,
@@ -34,7 +34,12 @@ export const signUp = {
       properties: {
         email: { type: 'string', format: 'email' },
         username: { type: 'string', minLength: 1, maxLength: 30 },
-        password: { type: 'string', minLength: 6, maxLength: 64 },
+        password: {
+          type: 'string',
+          minLength: 12,
+          maxLength: 64,
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).+$',
+        },
       },
       required: ['email', 'username', 'password'],
       additionalProperties: false,
@@ -86,12 +91,33 @@ export const changePassword = {
     body: {
       type: 'object',
       properties: {
-        oldPassword: { type: 'string', minLength: 1 },
-        newPassword: { type: 'string', minLength: 6, maxLength: 64 },
+        oldPassword: { type: 'string', minLength: 1, maxLength: 64 },
+        newPassword: { type: 'string', minLength: 1, maxLength: 64 },
       },
       required: ['oldPassword', 'newPassword'],
       additionalProperties: false,
     },
   },
   required: ['body'],
+} as const;
+
+export const googleCallback = {
+  type: 'object',
+  properties: {
+    headers: {
+      type: 'object',
+      properties: {
+        'x-device-id': { type: 'string' },
+      },
+    },
+
+    querystring: {
+      type: 'object',
+      properties: {
+        code: { type: 'string' },
+        state: { type: 'string' },
+        error: { type: 'string' },
+      },
+    },
+  },
 } as const;
