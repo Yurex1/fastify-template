@@ -12,7 +12,6 @@ import { ROUTES } from '../utils/consts/routes';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '../schemas/validation/schemas';
 import { useTranslation } from 'react-i18next';
-import i18next from 'i18next';
 import { GoogleBtn } from '../components/GoogleBtn';
 
 type FormData = {
@@ -74,9 +73,7 @@ export default function LoginPage() {
             onChange={() => setParsedError(null)}
           />
           {errors.usernameOrEmail && (
-            <p className="text-xs text-red-400 mt-1 ml-1">
-              {i18next.t(`${errors.usernameOrEmail.message?.toLowerCase()}`)}
-            </p>
+            <p className="text-xs text-red-400 mt-1 ml-1">{t(`${errors.usernameOrEmail.message?.toLowerCase()}`)}</p>
           )}
         </div>
 

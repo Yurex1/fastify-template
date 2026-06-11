@@ -8,24 +8,7 @@ zxcvbnOptions.setOptions({
   translations,
 });
 
-export const validatePassword = (password: string, email: string, username: string) => {
-  if (password.length < 12) {
-    throw exception.badRequest('PASSWORD_IS_TOO_SHORT');
-  }
-
-  if (password.includes(email)) {
-    throw exception.badRequest('PASSWORD_CONTAINS_EMAIL');
-  }
-
-  if (password === username) {
-    throw exception.badRequest('PASSWORD_EQUALS_USERNAME');
-  }
-
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-  if (!passwordRegex.test(password)) {
-    throw exception.badRequest('PASSWORD_INVALID_FORMAT');
-  }
-
+export const validatePassword = (password: string) => {
   const passwordStrength = zxcvbn(password);
   if (passwordStrength.score < 3) {
     throw exception.badRequest('PASSWORD_IS_TOO_WEAK');

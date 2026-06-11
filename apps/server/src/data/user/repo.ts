@@ -25,10 +25,6 @@ class UserRepository extends EntityRepo<User> {
     return await this.pool.queryOne<User>(query, params);
   }
 
-  async findByGoogleId(googleId: string): Promise<User | null> {
-    return this.findOne({ googleId });
-  }
-
   async updateEmail(id: number, email: string): Promise<User | null> {
     const { query, params } = updateUserEmail(id, email);
     const result = await this.pool.queryOne<User>(query, params);
@@ -72,7 +68,6 @@ export const init = (pool: TypedPool): UserRepo => {
     findOne: (definition: Partial<User>, includePassword = false) => userRepo.findOne(definition, includePassword),
     findById: (id: number) => userRepo.findById(id),
     findAll: () => userRepo.findAll(),
-    findByGoogleId: (id: string) => userRepo.findByGoogleId(id),
     update: (id: number, definition: Partial<UpdateUser>) => userRepo.update(id, definition),
     remove: (id: number) => userRepo.remove(id),
     exists: (definition: Partial<User>) => userRepo.exists(definition),

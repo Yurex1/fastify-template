@@ -5,7 +5,6 @@ export interface UserRepo {
   create: (user: CreateUser) => Promise<User>;
   findOne: (definition: Partial<User>, includePassword?: boolean) => Promise<User | null>;
   findById: (id: number) => Promise<User | null>;
-  findByGoogleId: (id: string) => Promise<User | null>;
   findAll: () => Promise<User[]>;
   update: (id: number, definition: Partial<UpdateUser>) => Promise<User>;
   remove: (id: number) => Promise<{ removed: boolean }>;

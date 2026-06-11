@@ -47,7 +47,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     if (existingUsername) {
       throw exception.badRequest('USERNAME_UNAVAILABLE');
     }
-    validatePassword(password, email, username);
+    validatePassword(password);
     const hashedPassword = passwords.hash(password);
 
     const user = await userRepo.create({
@@ -150,7 +150,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       throw exception.badRequest('NEW_PASSWORD_SAME_AS_OLD');
     }
 
-    validatePassword(newPassword, user.email, user.username);
+    validatePassword(newPassword);
 
     const hash = passwords.hash(newPassword);
 
@@ -168,10 +168,12 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const { sub, email, name } = await res.json();
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
-    let user = (await userRepo.findByGoogleId(sub)) || (await userRepo.findOneByUsernameOrEmail(email));
+    let user = (await userRepo.findOne({ googleId: sub })) || (await userRepo.findOneByUsernameOrEmail(email));
 
     if (!user) {
       const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
+      const exist = await userRepo.exists({ username });
+      if (exist) throw exception.badRequest('USERNAME_UNAVAILABLE');
       user = await userRepo.create({ email, username, googleId: sub, password: null });
     } else if (!user.googleId) {
       await userRepo.update(user.id, { googleId: sub });

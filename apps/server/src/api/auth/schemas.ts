@@ -10,8 +10,8 @@ export const signIn = {
     body: {
       type: 'object',
       properties: {
-        usernameOrEmail: { type: 'string', minLength: 1 },
-        password: { type: 'string', minLength: 1 },
+        usernameOrEmail: { type: 'string', minLength: 1, maxLength: 100 },
+        password: { type: 'string', minLength: 1, maxLength: 64 },
       },
       required: ['usernameOrEmail', 'password'],
       additionalProperties: false,
@@ -33,8 +33,13 @@ export const signUp = {
       type: 'object',
       properties: {
         email: { type: 'string', format: 'email' },
-        username: { type: 'string', minLength: 1 },
-        password: { type: 'string', minLength: 1 },
+        username: { type: 'string', minLength: 1, maxLength: 30 },
+        password: {
+          type: 'string',
+          minLength: 12,
+          maxLength: 64,
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).+$',
+        },
       },
       required: ['email', 'username', 'password'],
       additionalProperties: false,
@@ -86,8 +91,8 @@ export const changePassword = {
     body: {
       type: 'object',
       properties: {
-        oldPassword: { type: 'string', minLength: 1 },
-        newPassword: { type: 'string', minLength: 1 },
+        oldPassword: { type: 'string', minLength: 1, maxLength: 64 },
+        newPassword: { type: 'string', minLength: 1, maxLength: 64 },
       },
       required: ['oldPassword', 'newPassword'],
       additionalProperties: false,
