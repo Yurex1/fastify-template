@@ -23,6 +23,10 @@ interface MessageBlockProps {
 
 export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) => {
   const { t } = useTranslation();
+  const pinnedMode = useChatUIStore((s) => s.pinnedMode);
+  const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
+
   const currentUser = useAuthStore((state) => state.currentUser);
   const highlightedMessageId = useChatUIStore((s) => s.highlightedMessageId);
   const isHighlighted = highlightedMessageId === message.id;
@@ -42,6 +46,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
   };
 
   if (!message) return null;
+  if (!currentChatId) return;
 
   return (
     <div
@@ -60,7 +65,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
           asChild
         >
           <div
-            onDoubleClick={() => updateReaction(message.id, currentUser.id, '❤️')}
+            onDoubleClick={() => updateReaction(message.id, currentUser.id, '❤️', currentChatId)}
             className={cn(
               'px-3 py-2 rounded-2xl max-w-[70%] relative',
               isOwn ? 'bg-violet-700 text-white rounded-tr-none' : 'bg-gray-800 text-white rounded-tl-none',
@@ -68,8 +73,15 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
           >
             {message.reply && (
               <div
-                onClick={(e) => scrollToMessage?.(Number(e.currentTarget.id))}
-                id={`${message.reply_id}`}
+                onClick={(e) => {
+                  if (pinnedMode) {
+                    setPinnedMode(false);
+                  }
+
+                  scrollToMessage?.(Number(e.currentTarget.id));
+                  console.log(e.currentTarget.id);
+                }}
+                id={`${message.reply.id}`}
                 className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col min-w-0 max-w-full overflow-hidden cursor-pointer"
               >
                 <span className="font-bold truncate">{message.reply.username || t('messageBlock.userNotFound')}</span>
@@ -108,7 +120,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
             handleClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
               const selectedEmoji = e.currentTarget.textContent;
               if (selectedEmoji) {
-                updateReaction(message.id, currentUser.id, selectedEmoji);
+                updateReaction(message.id, currentUser.id, selectedEmoji, currentChatId);
               }
             }}
           />

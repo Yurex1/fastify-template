@@ -15,6 +15,7 @@ import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
 import type { Message } from '../../api/chats/types';
 import { UserInfo } from './UserInfo';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const ANCHOR_READY_FALLBACK_MS = 300;
 const CHAT_SCROLL_WINDOW_MS = 500;
@@ -23,6 +24,7 @@ const PinnedMessagesList = lazy(() => import('./PinnedMessagesList'));
 
 const MessageWindow = () => {
   const { t } = useTranslation();
+
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
@@ -50,6 +52,7 @@ const MessageWindow = () => {
     isFetchingPreviousPage,
     isLoading,
   } = useMessageList(virtuosoRef);
+  const { requestPermission } = useNotifications({ scrollToMessage });
 
   const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
   const { formButton, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
@@ -152,7 +155,7 @@ const MessageWindow = () => {
     if (pinnedMode) {
       return (
         <Suspense fallback={<Loader />}>
-          <PinnedMessagesList />
+          <PinnedMessagesList scrollToMessage={scrollToMessage} />
         </Suspense>
       );
     }
@@ -215,8 +218,17 @@ const MessageWindow = () => {
       {replyTo && <ReplyBlock message={replyTo} userName={replyTo.username} onClose={() => setReplyTo(null)} />}
 
       <TypingBlock />
+      <button
+        className="z-[9999]"
+        onClick={() => {
+          console.log('cl');
+          requestPermission();
+        }}
+      >
+        Enable Notifications
+      </button>
 
-      {!pinnedMode && (
+      {!pinnedMode && currentChatId && (
         <MessageForm
           resultCounter={resultCounter}
           results={results}

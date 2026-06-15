@@ -1,16 +1,18 @@
 import type { Message } from '../api/chats/types';
 import { cn } from '../lib/utils';
 import { useAuthStore } from '../stores/auth';
+import useChatUIStore from '../stores/chatUI';
 
 interface ReactionListProps {
   message: Message;
-  updateReaction: (id: number, userId: number, reaction: string) => void;
+  updateReaction: (id: number, userId: number, reaction: string, chatId: number) => void;
 }
 
 export const ReactionList = ({ message, updateReaction }: ReactionListProps) => {
   const currentUser = useAuthStore((state) => state.currentUser);
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
 
-  if (!currentUser || !message.reactions || Object.keys(message.reactions).length === 0) {
+  if (!currentUser || !currentChatId || !message.reactions || Object.keys(message.reactions).length === 0) {
     return null;
   }
 
@@ -26,7 +28,7 @@ export const ReactionList = ({ message, updateReaction }: ReactionListProps) => 
           <div
             onClick={(e) => {
               e.stopPropagation();
-              updateReaction(message.id, currentUser.id, emoji);
+              updateReaction(message.id, currentUser.id, emoji, currentChatId);
             }}
             key={emoji}
             className={cn(

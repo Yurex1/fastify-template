@@ -8,7 +8,16 @@ import type { Plugin } from './types';
 const corsPlugin: Plugin = {
   plugin: cors,
   options: {
-    origin: config.cors.allowedOrigins,
+    origin:
+      config.node_env === 'production'
+        ? ['https://yourdomain.com']
+        : [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'https://road-timber-eating-matched.trycloudflare.com',
+            'https://foods-palace-therapy-ferrari.trycloudflare.com',
+          ],
+    // origin: config.cors.allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'X-Requested-With'],

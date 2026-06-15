@@ -5,6 +5,7 @@ import { FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions } from 
 export interface WsServer {
   onMessage: (handler: (uid: number, data: unknown) => void) => void;
   hasConnection: (id: number) => boolean;
+  hasConnectionForDevice: (userId: number, deviceId: string) => boolean;
   send: (id: number, message: object) => void;
 }
 

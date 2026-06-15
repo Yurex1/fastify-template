@@ -2,7 +2,7 @@
 node_modules/
 .pnpm-debug.log*
 
-
+keys*
 dist/
 build/
 .vite/

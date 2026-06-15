@@ -10,7 +10,7 @@ export interface UserRepo {
   remove: (id: number) => Promise<{ removed: boolean }>;
   exists: (definition: Partial<User>) => Promise<boolean>;
   existsById: (id: number) => Promise<boolean>;
-  findOneByUsernameOrEmail: (value: string, includePassword?: boolean) => Promise<User | null>;
+  findOneByUsernameOrEmailOrGoogleId: (value: string, includePassword?: boolean) => Promise<User | null>;
   updateEmail: (id: number, email: string) => Promise<User | null>;
   updatePassword: (id: number, password: string) => Promise<User | null>;
   updateLastSeen: (id: number) => Promise<User | null>;

@@ -12,6 +12,7 @@ export const GoogleBtn = () => {
   const login = useGoogleLogin({
     onSuccess: async (response) => {
       await loginWithGoogle(response.access_token);
+
       navigate('/');
     },
     onError: () => console.error('Google login failed'),

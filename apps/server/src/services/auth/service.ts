@@ -4,12 +4,10 @@ import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
-import { OAuth2Client } from 'google-auth-library';
-const googleClient = new OAuth2Client(config.oauth.google.clientId);
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password, deviceId) => {
-    const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
+    const user = await userRepo.findOneByUsernameOrEmailOrGoogleId(usernameOrEmail, true);
 
     if (!user) {
       throw exception.badRequest('USER_NOT_FOUND');
@@ -168,7 +166,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     const { sub, email, name } = await res.json();
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
-    let user = (await userRepo.findOne({ googleId: sub })) || (await userRepo.findOneByUsernameOrEmail(email));
+    let user = await userRepo.findOneByUsernameOrEmailOrGoogleId(email);
 
     if (!user) {
       const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];

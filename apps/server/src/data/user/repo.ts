@@ -2,7 +2,7 @@ import type { TypedPool } from '../../infra/pg';
 import type { User, CreateUser, UpdateUser } from '../../entities/user';
 import type { UserRepo } from './types';
 import { EntityRepo } from '../EntityRepo';
-import { updateUserEmail, selectByUsernameOrEmail, updateLastSeenDate, updateUserPassword } from './sql';
+import { updateUserEmail, selectByUsernameOrEmailOrGoogleId, updateLastSeenDate, updateUserPassword } from './sql';
 
 class UserRepository extends EntityRepo<User> {
   constructor(pool: TypedPool) {
@@ -20,8 +20,8 @@ class UserRepository extends EntityRepo<User> {
     return result;
   }
 
-  async findOneByUsernameOrEmail(value: string, includePassword = false): Promise<User | null> {
-    const { query, params } = selectByUsernameOrEmail(value, includePassword);
+  async findOneByUsernameOrEmailOrGoogleId(value: string, includePassword = false): Promise<User | null> {
+    const { query, params } = selectByUsernameOrEmailOrGoogleId(value, includePassword);
     return await this.pool.queryOne<User>(query, params);
   }
 
@@ -72,8 +72,8 @@ export const init = (pool: TypedPool): UserRepo => {
     remove: (id: number) => userRepo.remove(id),
     exists: (definition: Partial<User>) => userRepo.exists(definition),
     existsById: (id: number) => userRepo.existsById(id),
-    findOneByUsernameOrEmail: (value: string, includePassword = false) =>
-      userRepo.findOneByUsernameOrEmail(value, includePassword),
+    findOneByUsernameOrEmailOrGoogleId: (value: string, includePassword = false) =>
+      userRepo.findOneByUsernameOrEmailOrGoogleId(value, includePassword),
     updateEmail: (id: number, email: string) => userRepo.updateEmail(id, email),
     updatePassword: (id: number, password: string) => userRepo.updatePassword(id, password),
     updateLastSeen: (id: number) => userRepo.updateLastSeen(id),

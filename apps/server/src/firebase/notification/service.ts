@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { config } from '../../config';
+import serviceAccount from '../../keys/fastify-template-ae163-firebase-adminsdk-fbsvc-d808ab511a.json';
 
 export type NotificationService = FirebaseNotificationService;
 
@@ -8,14 +8,14 @@ class FirebaseNotificationService {
 
   constructor() {
     try {
-      const firebaseConfig = {
-        ...config.firebase,
-        privateKey: config.firebase.privateKey?.replace(/\\n/g, '\n'),
-      };
-
       admin.initializeApp({
-        credential: admin.credential.cert(firebaseConfig),
+        credential: admin.credential.cert({
+          projectId: serviceAccount.project_id,
+          clientEmail: serviceAccount.client_email,
+          privateKey: serviceAccount.private_key,
+        }),
       });
+
       this.messaging = admin.messaging();
       console.log('Firebase Admin SDK initialized successfully');
     } catch (error) {
@@ -47,6 +47,36 @@ class FirebaseNotificationService {
       console.error('Error sending notification:', error);
       throw new Error(`Failed to send notification: ${error}`);
     }
+  }
+  async sendToUser(
+    tokens: string[],
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<{ invalidTokens: string[] }> {
+    if (!this.messaging || tokens.length === 0) return { invalidTokens: [] };
+
+    const response = await this.messaging.sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+      data,
+    });
+    console.log('Successfully sent:', response);
+
+    const invalidTokens: string[] = [];
+
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        const code = resp.error?.code ?? '';
+        const isInvalid =
+          code === 'messaging/invalid-registration-token' || code === 'messaging/registration-token-not-registered';
+
+        if (isInvalid) invalidTokens.push(tokens[idx]);
+        else console.error(`FCM error for token ${tokens[idx]}:`, resp.error);
+      }
+    });
+
+    return { invalidTokens };
   }
 
   async sendNotificationToTopic(

@@ -5,7 +5,7 @@ export interface BaseEntity {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  lastseen: Date;
+  lastseen?: Date;
 }
 
 export type CreateEntity<T> = Omit<T, keyof BaseEntity>;

@@ -3,7 +3,7 @@ import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
 import { useMessageActions } from './useMessageActions';
 import useChatUIStore from '../stores/chatUI';
 import useMessageFormStore from '../stores/messageForm';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
 import { useChatSocket } from '../websocket/ChatSocketContext';
@@ -20,14 +20,23 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
 
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
   const [resultCounter, setResultCounter] = useState(0);
+  const [results, setResults] = useState<{ id: number }[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const throttledTyping = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const debouncedTyping = useDebounce((chatId: number) => {
-    typing(chatId);
-  }, 500);
+  const handleTyping = useCallback(
+    (chatId: number) => {
+      if (throttledTyping.current) return;
 
-  const [results, setResults] = useState<{ id: number }[]>([]);
+      typing(chatId);
+
+      throttledTyping.current = setTimeout(() => {
+        throttledTyping.current = null;
+      }, 2000);
+    },
+    [typing],
+  );
 
   const debouncedSearch = useDebounce(async (value: string) => {
     if (currentChatId) {
@@ -109,7 +118,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     if (formMode === FORM_MODE.SEARCH && value.trim().length > 0) {
       debouncedSearch(value);
     } else if (currentChatId) {
-      debouncedTyping(currentChatId);
+      handleTyping(currentChatId);
     }
   }
 

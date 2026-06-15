@@ -6,7 +6,7 @@ import { MessageBlock } from './MessageBlock';
 import { Loader } from 'lucide-react';
 import { EmptyBlock } from '../EmptyBlock';
 
-const PinnedMessagesList = () => {
+const PinnedMessagesList = ({ scrollToMessage }: { scrollToMessage: (messageId: number) => void }) => {
   const { pinnedMessages, isFetchingNextPage, isLoading, hasNextPage, fetchNextPage } = usePinnedMessages();
   const { t } = useTranslation();
 
@@ -23,7 +23,11 @@ const PinnedMessagesList = () => {
         initialTopMostItemIndex={pinnedMessages.length - 1}
         followOutput="smooth"
         itemContent={(_, pinnedMessage) => (
-          <MessageBlock key={pinnedMessage.message.id} message={{ ...pinnedMessage.message, isPinned: true }} />
+          <MessageBlock
+            key={pinnedMessage.message.id}
+            message={{ ...pinnedMessage.message, isPinned: true }}
+            scrollToMessage={scrollToMessage}
+          />
         )}
         components={{
           Header: () => (isFetchingNextPage ? <Loader /> : null),

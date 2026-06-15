@@ -18,7 +18,6 @@ const ProtectedRoute = ({ children }: ProtectedRoute) => {
   }
   return children;
 };
-
 export const router = createBrowserRouter([
   {
     path: '/',

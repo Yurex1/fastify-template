@@ -61,34 +61,24 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
   };
 
   const handleTyping = async (chatId: number, typingTimers: Map<number, NodeJS.Timeout>) => {
+    await broadcastForChatMembers(chatId, CHAT_ACTIONS.typing, { userName: user.username, chatId }, 'others');
+
     if (typingTimers.has(uid)) {
       clearTimeout(typingTimers.get(uid));
-    } else {
-      await broadcastForChatMembers(
-        chatId,
-        CHAT_ACTIONS.typing,
-        { userName: user.username, chatId, isTyping: false },
-        'others',
-      );
     }
+
     const timer = setTimeout(async () => {
       typingTimers.delete(uid);
-      await broadcastForChatMembers(
-        chatId,
-        CHAT_ACTIONS.stopTyping,
-        {
-          userName: user.username,
-          chatId,
-          isTyping: false,
-        },
-        'others',
-      );
-    }, 500);
+      await broadcastForChatMembers(chatId, CHAT_ACTIONS.stopTyping, { userName: user.username, chatId }, 'others');
+    }, 3000);
+
     typingTimers.set(uid, timer);
   };
 
-  const handleUpdateReaction = async (data: { payload: { id: number; userId: number; reaction: string } }) => {
-    const { id, userId, reaction } = data.payload;
+  const handleUpdateReaction = async (data: {
+    payload: { id: number; userId: number; reaction: string; chatId: number };
+  }) => {
+    const { id, userId, reaction, chatId } = data.payload;
     try {
       const updatedMessage = await services.chat.updateReactions(id, userId, reaction);
       if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
@@ -96,7 +86,7 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
       memberIds.forEach((member) =>
         fastifyWs.send(member.userId, {
           type: CHAT_ACTIONS.updatedReaction,
-          payload: { id: updatedMessage.id, reactions: updatedMessage.reactions },
+          payload: { id: updatedMessage.id, reactions: updatedMessage.reactions, chatId },
         }),
       );
     } catch (err: unknown) {

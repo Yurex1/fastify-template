@@ -56,7 +56,7 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
       updateMessageCache({
         queryClient,
         anchorMessageId,
-        chatId: currentChatId!,
+        chatId: data.payload.chatId,
         wsEvent: { type: 'reaction-update', payload: data.payload },
       });
       updatePinnedMessagesCache({

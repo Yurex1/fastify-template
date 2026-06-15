@@ -115,6 +115,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     },
     [setAnchorMessageId, setHighlightedMessageId, virtuosoRef],
   );
+
   const reversed = [...messages].reverse();
 
   return {

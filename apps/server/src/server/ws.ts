@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import websocket from '@fastify/websocket';
-import type { WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 import { WsServer } from './types';
 import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
@@ -11,30 +11,50 @@ import { createMessageHandlers } from './messageHandlers';
 import { CALL_ACTIONS } from '../services/livekit/consts';
 
 export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
-  await fastify.register(websocket);
+  await fastify.register(websocket, {
+    options: {
+      maxPayload: 512 * 1024,
+    },
+  });
 
-  const connections = new Map<number, WebSocket>();
+  const connections = new Map<number, Map<string, WebSocket>>();
   const typingTimers = new Map<number, NodeJS.Timeout>();
-  const heartbeatStates = new Map<number, { isAlive: boolean; timer: NodeJS.Timeout }>();
+  const heartbeatStates = new Map<
+    string,
+    {
+      isAlive: boolean;
+      timer: NodeJS.Timeout;
+    }
+  >();
   const eventHandlers: Array<(uid: number, data: unknown) => void> = [];
   const PING_INTERVAL_MS = 25000;
 
-  const cleanupConnection = (uid: number, socket: WebSocket) => {
-    if (connections.get(uid) !== socket) return;
+  const cleanupConnection = (uid: number, deviceId: string) => {
+    const connectionKey = `${uid}:${deviceId}`;
+    const userConnections = connections.get(uid);
 
-    const heartbeat = heartbeatStates.get(uid);
+    if (userConnections) {
+      userConnections.delete(deviceId);
+
+      if (userConnections.size === 0) {
+        connections.delete(uid);
+      }
+    }
+
+    const heartbeat = heartbeatStates.get(connectionKey);
+
     if (heartbeat) {
       clearInterval(heartbeat.timer);
-      heartbeatStates.delete(uid);
+      heartbeatStates.delete(connectionKey);
     }
-    connections.delete(uid);
+
     if (typingTimers.has(uid)) {
-      clearTimeout(typingTimers.get(uid));
+      clearTimeout(typingTimers.get(uid)!);
       typingTimers.delete(uid);
     }
   };
 
-  fastify.get<{ Querystring: { token: string } }>('/ws', { websocket: true }, async (socket, req) => {
+  fastify.get<{ Querystring: { deviceId: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
       const token = req.headers['sec-websocket-protocol'];
 
@@ -44,14 +64,41 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       const user = await services.auth.verify('access', token);
       const uid = Number(user.id);
+      const deviceId = String(req.query.deviceId);
+      if (!deviceId) {
+        throw exception.badRequest('DEVICE_ID_REQUIRED');
+      }
+      const connectionKey = `${uid}:${deviceId}`;
 
-      connections.set(uid, socket);
+      if (!connections.has(uid)) {
+        connections.set(uid, new Map());
+      }
+
+      const existingSocket = connections.get(uid)?.get(deviceId);
+
+      if (existingSocket && existingSocket.readyState === 1) {
+        const oldKey = `${uid}:${deviceId}`;
+
+        const oldHeartbeat = heartbeatStates.get(oldKey);
+
+        if (oldHeartbeat) {
+          clearInterval(oldHeartbeat.timer);
+          heartbeatStates.delete(oldKey);
+        }
+
+        existingSocket?.close();
+      }
+
+      connections.get(uid)!.set(deviceId, socket);
 
       const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
 
       const heartbeatTimer = setInterval(() => {
-        const state = heartbeatStates.get(uid);
-        if (!state || socket.readyState !== 1) return;
+        const state = heartbeatStates.get(connectionKey);
+
+        if (!state || socket.readyState !== 1) {
+          return;
+        }
 
         if (!state.isAlive) {
           socket.terminate();
@@ -59,6 +106,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
         }
 
         state.isAlive = false;
+
         try {
           socket.ping();
         } catch {
@@ -67,13 +115,16 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       }, PING_INTERVAL_MS);
 
       socket.on('pong', () => {
-        const state = heartbeatStates.get(uid);
+        const state = heartbeatStates.get(connectionKey);
         if (state) {
           state.isAlive = true;
         }
       });
 
-      heartbeatStates.set(uid, { isAlive: true, timer: heartbeatTimer });
+      heartbeatStates.set(connectionKey, {
+        isAlive: true,
+        timer: heartbeatTimer,
+      });
 
       await handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, { userId: uid, isOnline: true });
       await handlers.handleInitialStatuses();
@@ -114,15 +165,30 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       });
 
       socket.on('close', () => {
-        if (connections.get(uid) === socket) {
+        const currentSocket = connections.get(uid)?.get(deviceId);
+
+        if (currentSocket !== socket) {
+          return;
+        }
+
+        const isLastConnection = connections.get(uid)?.size === 1;
+
+        if (isLastConnection) {
           services.user.updateLastSeen(uid).catch(console.error);
+
           handlers.broadcastStatus(uid, CHAT_ACTIONS.sendStatus, {
             userId: uid,
             isOnline: false,
             lastseen: new Date(),
           });
         }
-        cleanupConnection(uid, socket);
+
+        cleanupConnection(uid, deviceId);
+      });
+
+      socket.on('error', (err) => {
+        console.error(`WS Error [${uid}:${deviceId}]:`, err);
+        cleanupConnection(uid, deviceId);
       });
     } catch (e: unknown) {
       if (e instanceof Error) console.error('WS Auth Error:', e.message);
@@ -139,19 +205,41 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
     },
 
     hasConnection(id: number): boolean {
-      const socket = connections.get(id);
-      if (!socket) return false;
-      if (socket.readyState !== 1) {
-        connections.delete(id);
+      const userConnections = connections.get(id);
+
+      if (!userConnections) {
         return false;
       }
-      return true;
+
+      for (const socket of userConnections.values()) {
+        if (socket.readyState === 1) {
+          return true;
+        }
+      }
+
+      connections.delete(id);
+      return false;
+    },
+
+    hasConnectionForDevice(userId: number, deviceId: string): boolean {
+      const socket = connections.get(userId)?.get(deviceId);
+
+      if (!socket) {
+        return false;
+      }
+
+      return socket.readyState === WebSocket.OPEN;
     },
 
     send(id: number, message: object) {
-      const socket = connections.get(id);
-      if (socket && socket.readyState === 1) {
-        socket.send(JSON.stringify(message));
+      const userConnections = connections.get(id);
+
+      if (!userConnections) return;
+
+      for (const socket of userConnections.values()) {
+        if (socket.readyState === 1) {
+          socket.send(JSON.stringify(message));
+        }
       }
     },
   } as WsServer);

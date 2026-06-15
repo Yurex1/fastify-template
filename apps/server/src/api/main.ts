@@ -6,6 +6,8 @@ import { init as photoApiInit } from './photo/api';
 import { init as postApiInit } from './post/api';
 import { init as chatsApiInit } from './chats/api';
 import { init as livekitApiInit } from './livekit/api';
+import { init as deviceTokenApiInit } from './deviceToken/api';
+
 import { APIs } from './types';
 
 export const init = (services: Services): APIs => {
@@ -16,6 +18,7 @@ export const init = (services: Services): APIs => {
   const post = postApiInit({ postService: services.post });
   const chats = chatsApiInit({ chatService: services.chat });
   const livekit = livekitApiInit({ liveKitService: services.livekit });
+  const deviceToken = deviceTokenApiInit({ deviceTokenService: services.deviceToken });
 
   return {
     api,
@@ -25,5 +28,6 @@ export const init = (services: Services): APIs => {
     post,
     chats,
     livekit,
+    deviceToken,
   };
 };

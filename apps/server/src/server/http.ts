@@ -36,6 +36,10 @@ async function registerHooks() {
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
   await registerHooks();
+  server.addHook('onSend', (_request, reply, payload, done) => {
+    reply.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    done(null, payload);
+  }); //todo
 
   await server.register(wsPlugin, { services });
 

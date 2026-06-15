@@ -10,6 +10,7 @@ import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import useChatUIStore from '../../stores/chatUI';
 import { useTranslation } from 'react-i18next';
 import { member } from '../../utils/isOwnMessage';
+import noUserIcon from '/images/user-no-icon.png';
 
 interface ChatBlockProps {
   chat: Chat;
@@ -18,6 +19,7 @@ interface ChatBlockProps {
 
 export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
   const user = useAuthStore((s) => s.currentUser);
+  const isTyping = useChatUIStore((s) => s.isTyping);
   const { t } = useTranslation();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
 
@@ -31,6 +33,9 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
   };
   if (!user) return;
   const chatMember = member(chat, user.id);
+  const isUserTyping = isTyping.chatId === chat.id && isTyping.isTyping;
+
+  const senderName = chat.lastMessage?.userId === user?.id ? t('chat.you') : chat.lastMessage?.username;
   if (!chatMember) return;
 
   return (
@@ -43,7 +48,7 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
             currentChatId === chat.id ? 'bg-gray-900 text-white' : 'text-gray-400',
           )}
         >
-          <img className="w-13 h-13 rounded-full" src="/images/user-no-icon.png" alt="user-icon" />
+          <img className="w-13 h-13 rounded-full" src={noUserIcon} alt="user-icon" />
           {stats.includes(chatMember.userId) && (
             <span className="text-green-800 absolute text-[2.5em] top-0 right-2">•</span>
           )}
@@ -53,10 +58,16 @@ export const ChatBlock = ({ chat, handleChangeChatId }: ChatBlockProps) => {
             <div className="flex items-center justify-between min-w-0">
               {chat.lastMessage && (
                 <div className="text-xs truncate min-w-0 flex-1 mr-2">
-                  <span className="font-bold text-white">
-                    {`${chat.lastMessage.userId === user?.id ? t('chat.you') : chat.lastMessage.username}: `}
-                  </span>
-                  <span className="truncate">{chat.lastMessage.text}</span>
+                  {isUserTyping ? (
+                    <span className="italic opacity-70">
+                      {chat.members.length <= 2 ? 'Typing...' : `${isTyping.userName} is typing...`}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-bold text-white">{senderName}: </span>
+                      <span className="truncate">{chat.lastMessage.text}</span>
+                    </>
+                  )}
                 </div>
               )}
               <div className="shrink-0">

@@ -1,9 +1,8 @@
 import useChatUIStore from '../stores/chatUI';
-import { getLastChatId } from '../utils/lastOpenChatId';
 
 const TypingBlock = () => {
   const isTyping = useChatUIStore((s) => s.isTyping);
-  const currentChatId = getLastChatId();
+  const currentChatId = useChatUIStore((s) => s.currentChatId);
 
   if (isTyping.chatId !== currentChatId) return null;
   if (!isTyping.isTyping) return null;
