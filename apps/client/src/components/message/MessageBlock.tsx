@@ -15,6 +15,7 @@ import useChatUIStore from '../../stores/chatUI';
 import type { Message } from '../../api/chats/types';
 import { useChatSocket } from '../../websocket/ChatSocketContext';
 import { userPressedEmojis } from '../../utils/pressedEmoji';
+import { toast } from 'react-toastify';
 
 interface MessageBlockProps {
   message: Message;
@@ -23,10 +24,10 @@ interface MessageBlockProps {
 
 export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) => {
   const { t } = useTranslation();
+
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
   const currentChatId = useChatUIStore((s) => s.currentChatId);
-
   const currentUser = useAuthStore((state) => state.currentUser);
   const highlightedMessageId = useChatUIStore((s) => s.highlightedMessageId);
   const isHighlighted = highlightedMessageId === message.id;
@@ -37,16 +38,20 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
     deleteMessage,
   });
 
-  if (!currentUser) return null;
+  if (!currentUser || !currentChatId) return null;
+
   const isOwn = isOwnMessage(message.userId, currentUser.id);
 
-  const togglePin = () => {
-    if (message.isPinned) chatsApi.unpinMessage(message.chatId, message.id);
-    else chatsApi.pinMessage(message.chatId, message.id);
+  const togglePin = async () => {
+    try {
+      if (message.isPinned) await chatsApi.unpinMessage(message.chatId, message.id);
+      else await chatsApi.pinMessage(message.chatId, message.id);
+    } catch {
+      toast.error(t('messageBlock.pinError'));
+    }
   };
 
-  if (!message) return null;
-  if (!currentChatId) return;
+  const reply = message.reply;
 
   return (
     <div
@@ -54,7 +59,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
       className={cn(
         'flex mb-1 whitespace-pre-wrap break-words px-4 transition-all duration-300',
         isOwn ? 'justify-end' : 'justify-start',
-        isHighlighted && 'bg-gray-800',
+        isHighlighted && 'bg-gray-900',
       )}
     >
       <ContextMenu>
@@ -65,31 +70,32 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
           asChild
         >
           <div
-            onDoubleClick={() => updateReaction(message.id, currentUser.id, '❤️', currentChatId)}
+            onDoubleClick={() => updateReaction(message.id, '❤️', currentChatId)}
+            onClick={() => {
+              if (!pinnedMode) return;
+              setPinnedMode(false);
+              scrollToMessage?.(message.id);
+            }}
             className={cn(
               'px-3 py-2 rounded-2xl max-w-[70%] relative',
               isOwn ? 'bg-violet-700 text-white rounded-tr-none' : 'bg-gray-800 text-white rounded-tl-none',
             )}
           >
-            {message.reply && (
+            {reply && (
               <div
                 onClick={(e) => {
-                  if (pinnedMode) {
-                    setPinnedMode(false);
-                  }
-
-                  scrollToMessage?.(Number(e.currentTarget.id));
-                  console.log(e.currentTarget.id);
+                  e.stopPropagation();
+                  if (pinnedMode) setPinnedMode(false);
+                  scrollToMessage?.(reply.id);
                 }}
-                id={`${message.reply.id}`}
                 className="bg-gray-900/50 border-l-2 border-violet-100 p-1 mb-1 text-xs text-gray-300 rounded-r-lg flex flex-col min-w-0 max-w-full overflow-hidden cursor-pointer"
               >
-                <span className="font-bold truncate">{message.reply.username || t('messageBlock.userNotFound')}</span>
-                <span className="truncate">{message.reply.text || t('messageBlock.messageDeleted')}</span>
+                <span className="font-bold truncate">{reply.username || t('messageBlock.userNotFound')}</span>
+                <span className="truncate">{reply.text || t('messageBlock.messageDeleted')}</span>
               </div>
             )}
 
-            <p className="text-sm break-words leading-[20px]">{message?.text}</p>
+            <p className="text-sm break-words leading-[20px]">{message.text}</p>
 
             <div className="flex justify-between gap-2">
               <ReactionList message={message} updateReaction={updateReaction} />
@@ -120,7 +126,7 @@ export const MessageBlock = ({ message, scrollToMessage }: MessageBlockProps) =>
             handleClick={(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
               const selectedEmoji = e.currentTarget.textContent;
               if (selectedEmoji) {
-                updateReaction(message.id, currentUser.id, selectedEmoji, currentChatId);
+                updateReaction(message.id, selectedEmoji, currentChatId);
               }
             }}
           />

@@ -86,11 +86,7 @@ export const selectOneById = (id: number): RowSqlResult => ({
 
 export const searchInChat = (chatId: number, text: string): RowSqlResult => ({
   query: `
-    SELECT
-      m."id",
-      m."text",
-      m."createdAt",
-      m."chatId"
+    SELECT m."id", m."text", m."createdAt", m."chatId"
     FROM "public"."message" m
     WHERE m."chatId" = $1
       AND m."text" ILIKE $2

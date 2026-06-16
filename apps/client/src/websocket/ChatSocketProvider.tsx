@@ -116,10 +116,8 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.SEND_MESSAGE, payload: { chatId, text, reply_id } })),
       updateMessage: (messageId, definition) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.UPDATE_MESSAGE, payload: { messageId, definition } })),
-      updateReaction: (id, userId, reaction, chatId) =>
-        socketRef.current?.send(
-          JSON.stringify({ type: WS_OUT.UPDATE_REACTION, payload: { id, userId, reaction, chatId } }),
-        ),
+      updateReaction: (id, reaction, chatId) =>
+        socketRef.current?.send(JSON.stringify({ type: WS_OUT.UPDATE_REACTION, payload: { id, reaction, chatId } })),
       deleteMessage: (messageId) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.DELETE_MESSAGE, payload: { messageId } })),
       typing: (chatId) => socketRef.current?.send(JSON.stringify({ type: WS_OUT.IS_TYPING, payload: { chatId } })),

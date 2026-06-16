@@ -21,8 +21,8 @@ interface useChatUIStoreProps {
   setPinnedMode: (val: boolean) => void;
   setCurrentChatInfo: (val: Chat | null) => void;
   reset: () => void;
-  typingTimer: ReturnType<typeof setTimeout> | null;
 }
+let typingTimer: ReturnType<typeof setTimeout> | null = null;
 
 const useChatUIStore = create<useChatUIStoreProps>()(
   persist(
@@ -35,7 +35,6 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       isTyping: { userName: null, chatId: null, isTyping: false },
       menuForMessage: null,
       pinnedMode: false,
-      typingTimer: null,
 
       setHighlightedMessageId: (val) => set({ highlightedMessageId: val }),
       setIsAtBottom: (val) => set({ isAtBottom: val }),
@@ -44,20 +43,16 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       setCurrentChatId: (id) => set({ currentChatId: id }),
 
       setIsTyping: (userName, chatId, isTyping) => {
-        set((state) => {
-          if (state.typingTimer) clearTimeout(state.typingTimer);
+        if (typingTimer) clearTimeout(typingTimer);
 
-          const timer = isTyping
-            ? setTimeout(() => {
-                set({ isTyping: { userName: null, chatId: null, isTyping: false }, typingTimer: null });
-              }, 3000)
-            : null;
+        typingTimer = isTyping
+          ? setTimeout(() => {
+              set({ isTyping: { userName: null, chatId: null, isTyping: false } });
+              typingTimer = null;
+            }, 3000)
+          : null;
 
-          return {
-            isTyping: { userName, chatId, isTyping },
-            typingTimer: timer,
-          };
-        });
+        set({ isTyping: { userName, chatId, isTyping } });
       },
 
       setMenuForMessage: (message) => set({ menuForMessage: message }),
@@ -76,7 +71,6 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       partialize: (state) => ({
         currentChatId: state.currentChatId,
         currentChatInfo: state.currentChatInfo,
-        anchorMessageId: state.anchorMessageId,
       }),
     },
   ),

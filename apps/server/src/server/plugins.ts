@@ -10,11 +10,11 @@ const corsPlugin: Plugin = {
   options: {
     origin:
       config.node_env === 'production'
-        ? ['https://yourdomain.com']
+        ? ['http://localhost:4173']
         : [
             'http://localhost:3000',
             'http://localhost:5173',
-            'https://road-timber-eating-matched.trycloudflare.com',
+            'http://localhost:4173',
             'https://foods-palace-therapy-ferrari.trycloudflare.com',
           ],
     // origin: config.cors.allowedOrigins,

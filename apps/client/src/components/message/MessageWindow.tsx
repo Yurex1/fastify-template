@@ -1,4 +1,4 @@
-import { lazy, useEffect, useRef, Suspense, useState } from 'react';
+import { lazy, useEffect, useRef, Suspense } from 'react';
 import { Loader } from '../Loader';
 import { useTranslation } from 'react-i18next';
 import MessageForm from './MessageForm';
@@ -11,14 +11,10 @@ import useChatUIStore from '../../stores/chatUI';
 import { ScrollToBottom } from '../ScrollToBottom';
 import useMessageFormStore from '../../stores/messageForm';
 import TypingBlock from '../TypingBlock';
-import { Virtuoso, type VirtuosoHandle, type ListItem } from 'react-virtuoso';
+import { Virtuoso, type VirtuosoHandle } from 'react-virtuoso';
 import { useMessageList } from '../../hooks/useMessageList';
-import type { Message } from '../../api/chats/types';
 import { UserInfo } from './UserInfo';
 import { useNotifications } from '../../hooks/useNotifications';
-
-const ANCHOR_READY_FALLBACK_MS = 300;
-const CHAT_SCROLL_WINDOW_MS = 500;
 
 const PinnedMessagesList = lazy(() => import('./PinnedMessagesList'));
 
@@ -29,16 +25,10 @@ const MessageWindow = () => {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
   const currentChatInfo = useChatUIStore((s) => s.currentChatInfo);
-  const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
 
   const isAtBottom = useChatUIStore((s) => s.isAtBottom);
   const pinnedMode = useChatUIStore((s) => s.pinnedMode);
   const setPinnedMode = useChatUIStore((s) => s.setPinnedMode);
-  const virtuosoKey = anchorMessageId !== null ? `anchor-${anchorMessageId}` : 'default';
-  const [readyKey, setReadyKey] = useState<string | null>(null);
-  const isListReady = anchorMessageId === null || readyKey === virtuosoKey;
-  const anchorReadyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const chatScrollActiveRef = useRef(false);
 
   const {
     messages,
@@ -48,6 +38,8 @@ const MessageWindow = () => {
     endReached,
     atBottomStateChange,
     scrollToMessage,
+    returnToLive,
+    isListReady,
     isFetchingNextPage,
     isFetchingPreviousPage,
     isLoading,
@@ -60,33 +52,6 @@ const MessageWindow = () => {
       scrollToMessage,
     });
 
-  const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
-
-  useEffect(() => {
-    if (isListReady && anchorMessageId !== null) {
-      setHighlightedMessageId(anchorMessageId);
-      setTimeout(() => setHighlightedMessageId(null), 1500);
-    }
-  }, [isListReady, anchorMessageId, setHighlightedMessageId]);
-
-  useEffect(() => {
-    if (anchorMessageId !== null) return;
-    chatScrollActiveRef.current = true;
-    const timer = setTimeout(() => {
-      chatScrollActiveRef.current = false;
-    }, CHAT_SCROLL_WINDOW_MS);
-    return () => clearTimeout(timer);
-  }, [currentChatId, anchorMessageId]);
-
-  useEffect(() => {
-    return () => {
-      if (anchorReadyRef.current) {
-        clearTimeout(anchorReadyRef.current);
-        anchorReadyRef.current = null;
-      }
-    };
-  }, [virtuosoKey]);
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -97,51 +62,6 @@ const MessageWindow = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setFormMode]);
-
-  const scrollToBottom = () => {
-    if (anchorMessageId !== null) {
-      setAnchorMessageId(null);
-    } else {
-      virtuosoRef.current?.scrollToIndex({ index: 'LAST', behavior: 'smooth' });
-    }
-  };
-
-  const stickToBottomOnChatSwitch = (items: ListItem<Message>[]) => {
-    if (!chatScrollActiveRef.current || items.length <= 1) return;
-    virtuosoRef.current?.scrollToIndex({ index: 'LAST', align: 'end', behavior: 'auto' });
-  };
-
-  const revealAfterAnchorReady = (items: ListItem<Message>[]) => {
-    if (isListReady || items.length === 0) return;
-
-    if (items.length === 1) {
-      if (anchorReadyRef.current) return;
-      anchorReadyRef.current = setTimeout(() => {
-        anchorReadyRef.current = null;
-        setReadyKey(virtuosoKey);
-      }, ANCHOR_READY_FALLBACK_MS);
-      return;
-    }
-
-    if (anchorReadyRef.current) {
-      clearTimeout(anchorReadyRef.current);
-      anchorReadyRef.current = null;
-    }
-
-    if (anchorMessageId !== null) {
-      const anchorIdx = messages.findIndex((m) => m.id === anchorMessageId);
-      if (anchorIdx !== -1) {
-        virtuosoRef.current?.scrollToIndex({ index: anchorIdx, align: 'center', behavior: 'auto' });
-      }
-    }
-
-    requestAnimationFrame(() => setReadyKey(virtuosoKey));
-  };
-
-  const handleItemsRendered = (items: ListItem<Message>[]) => {
-    stickToBottomOnChatSwitch(items);
-    revealAfterAnchorReady(items);
-  };
 
   const renderContent = () => {
     if (!currentChatId) {
@@ -160,16 +80,16 @@ const MessageWindow = () => {
       );
     }
 
-    if (!isLoading && messages.length <= 0) {
+    if (!isLoading && messages.length === 0 && anchorMessageId === null && isListReady) {
       return <EmptyBlock text={t('messageWindow.noMessages')} />;
     }
 
-    const showLoader = isLoading || (anchorMessageId !== null && !isListReady);
+    const showLoader = !isListReady || (messages.length === 0 && (isLoading || anchorMessageId !== null));
+
     return (
       <div className="relative flex-1 min-h-0 pb-3">
-        {!isLoading && messages.length > 0 && (
+        {messages.length > 0 && (
           <Virtuoso
-            key={virtuosoKey}
             style={{ visibility: isListReady ? 'visible' : 'hidden' }}
             ref={virtuosoRef}
             data={messages}
@@ -181,7 +101,6 @@ const MessageWindow = () => {
             followOutput={anchorMessageId === null ? 'smooth' : false}
             atBottomStateChange={atBottomStateChange}
             increaseViewportBy={{ top: 300, bottom: 300 }}
-            itemsRendered={handleItemsRendered}
             itemContent={(_, message) => (
               <MessageBlock key={message.id} message={message} scrollToMessage={scrollToMessage} />
             )}
@@ -203,7 +122,9 @@ const MessageWindow = () => {
           </div>
         )}
 
-        {isListReady && (!isAtBottom || anchorMessageId !== null) && <ScrollToBottom onClick={scrollToBottom} />}
+        {isListReady && messages.length > 0 && (!isAtBottom || anchorMessageId !== null) && (
+          <ScrollToBottom onClick={returnToLive} />
+        )}
       </div>
     );
   };
@@ -221,7 +142,6 @@ const MessageWindow = () => {
       <button
         className="z-[9999]"
         onClick={() => {
-          console.log('cl');
           requestPermission();
         }}
       >

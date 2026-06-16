@@ -1,11 +1,16 @@
-import { useRef, useEffect, useState, useLayoutEffect, useCallback } from 'react';
+import { useRef, useEffect, useState, useLayoutEffect, useCallback, useMemo } from 'react';
 import type { VirtuosoHandle } from 'react-virtuoso';
+import { useQueryClient } from '@tanstack/react-query';
 import { useChatMessages } from './useChatMessages';
 import useChatUIStore from '../stores/chatUI';
+import { QueryKeys } from '../lib/queries';
 
 const START_INDEX = 1_000_000;
+const HIGHLIGHT_MS = 1500;
+const IN_VIEW_HIGHLIGHT_DELAY_MS = 300;
 
 export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | null>) {
+  const queryClient = useQueryClient();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
@@ -16,12 +21,20 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     messages,
     fetchNextPage,
     fetchPreviousPage,
+    hasNextPage,
     hasPreviousPage,
+    isFetching,
     isFetchingNextPage,
     isFetchingPreviousPage,
     isLoading,
   } = useChatMessages(anchorMessageId);
-  const messagesRef = useRef(messages);
+
+  const data = useMemo(() => [...messages].reverse(), [messages]);
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
   const chatKey = `${currentChatId}-${anchorMessageId ?? ''}`;
   const chatKeyRef = useRef(chatKey);
 
@@ -34,14 +47,39 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   });
   const firstItemIndex = firstItemState.key === chatKey ? firstItemState.value : START_INDEX;
 
+  const [isListReady, setIsListReady] = useState<boolean>(anchorMessageId === null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const highlightedAnchorRef = useRef<number | null>(null);
+
   if (chatKeyRef.current !== chatKey) {
     chatKeyRef.current = chatKey;
     firstItemIndexRef.current = START_INDEX;
     prevOldestIdRef.current = null;
   }
+
   useEffect(() => {
     setAnchorMessageId(null);
   }, [currentChatId, setAnchorMessageId]);
+
+  const highlight = useCallback(
+    (messageId: number, delay = 0) => {
+      const run = () => {
+        setHighlightedMessageId(messageId);
+        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+        highlightTimerRef.current = setTimeout(() => setHighlightedMessageId(null), HIGHLIGHT_MS);
+      };
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+      if (delay > 0) highlightTimerRef.current = setTimeout(run, delay);
+      else run();
+    },
+    [setHighlightedMessageId],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (messages.length === 0) return;
@@ -62,9 +100,43 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
 
     prevOldestIdRef.current = currentOldestId ?? null;
   }, [messages, chatKey]);
+
+  useEffect(() => {
+    if (anchorMessageId === null) {
+      highlightedAnchorRef.current = null;
+
+      if (!isLoading) setIsListReady(true);
+      return;
+    }
+
+    const idx = data.findIndex((m) => m.id === anchorMessageId);
+
+    if (idx === -1) {
+      if (!isFetching) {
+        setAnchorMessageId(null);
+      } else {
+        setIsListReady(false);
+      }
+      return;
+    }
+
+    virtuosoRef.current?.scrollToIndex({ index: idx, align: 'center', behavior: 'auto' });
+
+    const raf = requestAnimationFrame(() => setIsListReady(true));
+
+    if (highlightedAnchorRef.current !== anchorMessageId) {
+      highlightedAnchorRef.current = anchorMessageId;
+      highlight(anchorMessageId);
+    }
+
+    return () => cancelAnimationFrame(raf);
+  }, [data, anchorMessageId, isFetching, isLoading, highlight, setAnchorMessageId, virtuosoRef]);
+
   const startReached = useCallback(() => {
-    fetchNextPage();
-  }, [fetchNextPage]);
+    if (hasNextPage && !isFetchingNextPage && !isLoading) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
 
   const endReached = () => {
     if (hasPreviousPage && !isFetchingPreviousPage && !isLoading) {
@@ -75,57 +147,55 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const atBottomStateChange = (atBottom: boolean) => setIsAtBottom(atBottom);
 
   const initialTopMostItemIndex = () => {
-    if (anchorMessageId === null || messages.length === 0) {
-      return { index: Math.max(0, messages.length - 1), align: 'end' as const };
+    if (anchorMessageId === null || data.length === 0) {
+      return { index: Math.max(0, data.length - 1), align: 'end' as const };
     }
-    const idx = messages.findIndex((m) => m.id === anchorMessageId);
-    const index = idx === -1 ? messages.length - 1 : messages.length - 1 - idx;
-    return { index, align: 'center' as const };
+    const idx = data.findIndex((m) => m.id === anchorMessageId);
+    return { index: idx === -1 ? data.length - 1 : idx, align: 'center' as const };
   };
-
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
 
   const scrollToMessage = useCallback(
     (messageId: number) => {
-      const current = messagesRef.current;
-      const idx = current.findIndex((m) => m.id === messageId);
+      const idx = dataRef.current.findIndex((m) => m.id === messageId);
 
-      const highlight = () => {
-        setHighlightedMessageId(messageId);
-        setTimeout(() => setHighlightedMessageId(null), 1500);
-      };
-
-      if (idx !== -1) {
-        virtuosoRef.current?.scrollToIndex({
-          index: current.length - 1 - idx,
-          align: 'center',
-          behavior: 'smooth',
-        });
-        setTimeout(highlight, 300);
+      if (idx !== -1 && virtuosoRef.current) {
+        virtuosoRef.current.scrollToIndex({ index: idx, align: 'center', behavior: 'smooth' });
+        highlight(messageId, IN_VIEW_HIGHLIGHT_DELAY_MS);
         return;
       }
 
-      setAnchorMessageId(null);
-
-      requestAnimationFrame(() => {
+      setIsListReady(false);
+      if (anchorMessageId === messageId) {
+        setAnchorMessageId(null);
+        requestAnimationFrame(() => setAnchorMessageId(messageId));
+      } else {
         setAnchorMessageId(messageId);
-      });
+      }
     },
-    [setAnchorMessageId, setHighlightedMessageId, virtuosoRef],
+    [anchorMessageId, highlight, setAnchorMessageId, virtuosoRef],
   );
 
-  const reversed = [...messages].reverse();
+  const returnToLive = useCallback(() => {
+    if (anchorMessageId === null) {
+      virtuosoRef.current?.scrollToIndex({ index: 'LAST', behavior: 'smooth' });
+      return;
+    }
+
+    queryClient.removeQueries({ queryKey: [QueryKeys.messages, currentChatId, null] });
+    setIsListReady(false);
+    setAnchorMessageId(null);
+  }, [anchorMessageId, currentChatId, queryClient, setAnchorMessageId, virtuosoRef]);
 
   return {
-    messages: reversed,
+    messages: data,
     firstItemIndex,
     initialTopMostItemIndex,
     startReached,
     endReached,
     atBottomStateChange,
     scrollToMessage,
+    returnToLive,
+    isListReady,
     isFetchingNextPage,
     isFetchingPreviousPage,
     isLoading,

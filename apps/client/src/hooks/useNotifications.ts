@@ -9,18 +9,21 @@ import user from '/images/user-no-icon.png';
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
+interface OpenChatMessage {
+  type: 'OPEN_CHAT';
+  chatId: number | string;
+  messageId: number | string;
+}
+
+type ServiceWorkerMessage = OpenChatMessage;
+
 export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: number) => void }) => {
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
 
   const requestPermission = async () => {
-    console.log('Requesting notification permission...');
-
     try {
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        console.warn('Notification permission not granted');
-        return;
-      }
+      if (permission !== 'granted') return;
 
       const registrations = await navigator.serviceWorker.getRegistrations();
       let reg = registrations.find((r) => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
@@ -41,16 +44,19 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
           json: { token },
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Notification setup failed:', err);
     }
   };
 
   useEffect(() => {
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
+    const handleServiceWorkerMessage = (event: MessageEvent<ServiceWorkerMessage>) => {
       if (event.data?.type === 'OPEN_CHAT' && event.data.chatId) {
-        setCurrentChatId(Number(event.data.chatId));
-        scrollToMessage(event.data.messageId);
+        const chatId = Number(event.data.chatId);
+        const messageId = Number(event.data.messageId);
+        if (!Number.isFinite(chatId) || !Number.isFinite(messageId)) return;
+        setCurrentChatId(chatId);
+        scrollToMessage(messageId);
       }
     };
 
@@ -61,26 +67,41 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
     const messageIdFromUrl = urlParams.get('messageId');
 
     if (chatIdFromUrl) {
-      setCurrentChatId(Number(chatIdFromUrl));
-      scrollToMessage(Number(messageIdFromUrl));
+      const chatId = Number(chatIdFromUrl);
+      const messageId = Number(messageIdFromUrl);
+      if (Number.isFinite(chatId) && Number.isFinite(messageId)) {
+        setCurrentChatId(chatId);
+        scrollToMessage(messageId);
+      }
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const unsubscribe = onMessage(messaging, (payload) => {
-      console.log('Foreground message:', payload);
-
       const isNotCurrentChat = useChatUIStore.getState().currentChatId !== Number(payload?.data?.chatId);
 
       if (isNotCurrentChat) {
-        toast.info(
-          React.createElement(ChatNotificationToast, {
-            // avatar: payload.data?.avatar,
-            onClick: () => setCurrentChatId(Number(payload.data?.chatId)),
-            avatar: user,
-            title: payload.notification?.title,
-            body: payload.notification?.body,
-          }),
-        );
+        const toastContent = React.createElement(ChatNotificationToast, {
+          onClick: () => {
+            setCurrentChatId(Number(payload.data?.chatId));
+            toast.dismiss('chat-notification');
+          },
+          avatar: user,
+          title: payload.notification?.title,
+          body: payload.notification?.body,
+        });
+
+        if (toast.isActive('chat-notification')) {
+          toast.update('chat-notification', {
+            render: toastContent,
+            icon: false,
+            autoClose: 5000,
+          });
+        } else {
+          toast.info(toastContent, {
+            toastId: 'chat-notification',
+            icon: false,
+          });
+        }
       }
     });
 
@@ -88,7 +109,7 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       unsubscribe();
     };
-  }, []);
+  }, [scrollToMessage, setCurrentChatId]);
 
   return { requestPermission };
 };

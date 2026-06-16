@@ -8,6 +8,7 @@
     "dev:client": "pnpm --filter @fastify-template/client dev",
     "dev:server": "pnpm --filter @fastify-template/server dev",
     "build": "pnpm -r build",
+    "serve": "concurrently \"pnpm --filter @fastify-template/client start\" \"pnpm --filter @fastify-template/server start\"",
     "lint": "eslint .",
     "lint:client": "pnpm --filter @fastify-template/client lint",
     "lint:server": "pnpm --filter @fastify-template/server lint",

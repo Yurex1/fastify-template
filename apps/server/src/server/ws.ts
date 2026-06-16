@@ -9,6 +9,7 @@ import { CHAT_ACTIONS } from '../services/chat/consts';
 
 import { createMessageHandlers } from './messageHandlers';
 import { CALL_ACTIONS } from '../services/livekit/consts';
+import { getValidator } from './validation';
 
 export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
   await fastify.register(websocket, {
@@ -49,7 +50,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
     }
 
     if (typingTimers.has(uid)) {
-      clearTimeout(typingTimers.get(uid)!);
+      clearTimeout(typingTimers.get(uid));
       typingTimers.delete(uid);
     }
   };
@@ -89,7 +90,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
         existingSocket?.close();
       }
 
-      connections.get(uid)!.set(deviceId, socket);
+      connections.get(uid)?.set(deviceId, socket);
 
       const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
 
@@ -133,6 +134,20 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
         try {
           const data = JSON.parse(rawData.toString());
           const uid = Number(user.id);
+
+          if (typeof data?.type !== 'string') {
+            return;
+          }
+
+          const validate = getValidator(data.type);
+
+          if (validate && !validate(data.payload)) {
+            fastify.ws.send(uid, {
+              type: 'ERROR',
+              payload: { action: data.type, errors: validate.errors },
+            });
+            return;
+          }
 
           eventHandlers.forEach((handler) => handler(uid, data));
 

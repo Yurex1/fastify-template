@@ -1,4 +1,3 @@
-import { config } from '../../config';
 import { exception } from '../../utils/exception/util';
 import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
@@ -101,10 +100,6 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       throw exception.unauthorized('SESSION_EXPIRED_OR_INVALID');
     }
 
-    if (!user) {
-      throw exception.notFound('No account found with this username or email');
-    }
-
     if (new Date() > sessionData.expiresAt) {
       await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
       throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
@@ -163,7 +158,7 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     });
     if (!res.ok) throw exception.unauthorized('INVALID_GOOGLE_TOKEN');
 
-    const { sub, email, name } = await res.json();
+    const { sub, email, name } = (await res.json()) as { sub: string; email: string | undefined; name: string | undefined };
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
     let user = await userRepo.findOneByUsernameOrEmailOrGoogleId(email);

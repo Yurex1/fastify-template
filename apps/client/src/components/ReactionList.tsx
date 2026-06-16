@@ -5,7 +5,7 @@ import useChatUIStore from '../stores/chatUI';
 
 interface ReactionListProps {
   message: Message;
-  updateReaction: (id: number, userId: number, reaction: string, chatId: number) => void;
+  updateReaction: (id: number, reaction: string, chatId: number) => void;
 }
 
 export const ReactionList = ({ message, updateReaction }: ReactionListProps) => {
@@ -28,7 +28,7 @@ export const ReactionList = ({ message, updateReaction }: ReactionListProps) => 
           <div
             onClick={(e) => {
               e.stopPropagation();
-              updateReaction(message.id, currentUser.id, emoji, currentChatId);
+              updateReaction(message.id, emoji, currentChatId);
             }}
             key={emoji}
             className={cn(
