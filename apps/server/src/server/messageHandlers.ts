@@ -7,6 +7,7 @@ import { WsServer } from './types';
 import { UserResult } from '../entities/user';
 
 import type {
+  WithPayload,
   SendMessagePayload,
   UpdateMessagePayload,
   UpdateReactionPayload,
@@ -49,14 +50,14 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     }
   };
 
-  const handleSendMessage = async (data: { payload: SendMessagePayload }) => {
+  const handleSendMessage = async (data: WithPayload<SendMessagePayload>) => {
     const { chatId, text, reply_id } = data.payload;
 
     const message = await services.chat.sendMessage(uid, chatId, text.trim(), reply_id ?? undefined);
     await broadcastForChatMembers(message.chatId, CHAT_ACTIONS.newMessage, message);
   };
 
-  const handleUpdateMessage = async (data: { payload: UpdateMessagePayload }) => {
+  const handleUpdateMessage = async (data: WithPayload<UpdateMessagePayload>) => {
     const { messageId, definition } = data.payload;
 
     const existing = await services.chat.findMessage({ id: messageId });
@@ -85,29 +86,25 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     typingTimers.set(uid, timer);
   };
 
-  const handleUpdateReaction = async (data: { payload: UpdateReactionPayload }) => {
+  const handleUpdateReaction = async (data: WithPayload<UpdateReactionPayload>) => {
     const { id, reaction, chatId } = data.payload;
-    try {
-      const updatedMessage = await services.chat.updateReactions(id, uid, reaction);
-      if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
-      const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
-      memberIds.forEach((member) =>
-        fastifyWs.send(member.userId, {
-          type: CHAT_ACTIONS.updatedReaction,
-          payload: { id: updatedMessage.id, reactions: updatedMessage.reactions, chatId },
-        }),
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error) fastifyWs.send(uid, { type: 'ERROR', payload: { message: err.message } });
-    }
+    const updatedMessage = await services.chat.updateReactions(id, uid, reaction);
+    if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
+    const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
+    memberIds.forEach((member) =>
+      fastifyWs.send(member.userId, {
+        type: CHAT_ACTIONS.updatedReaction,
+        payload: { id: updatedMessage.id, reactions: updatedMessage.reactions, chatId },
+      }),
+    );
   };
 
-  const handleCreateRoom = async (data: { payload: CreateRoomPayload }) => {
+  const handleCreateRoom = async (data: WithPayload<CreateRoomPayload>) => {
     const { chatId, roomName, chatName } = data.payload;
     await broadcastForChatMembers(chatId, CALL_ACTIONS.incoming, { chatId, roomName, chatName }, 'others');
   };
 
-  const handleDeleteMessage = async (data: { payload: DeleteMessagePayload }) => {
+  const handleDeleteMessage = async (data: WithPayload<DeleteMessagePayload>) => {
     const { messageId } = data.payload;
     const msg = await services.chat.findMessage({ id: messageId });
     if (!msg) throw exception.notFound('NOT_FOUND');

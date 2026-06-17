@@ -37,6 +37,7 @@ export const CreateChat = () => {
       />
       <button
         onClick={handleCreate}
+        aria-label="Create chat"
         disabled={isPending || !memberId}
         className="text-gray-400 hover:text-violet-500 disabled:opacity-50 transition-colors"
       >

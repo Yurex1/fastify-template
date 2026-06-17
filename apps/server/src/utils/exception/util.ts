@@ -35,3 +35,12 @@ export const exception: Exception = {
     return new ApiError(500, message);
   },
 };
+
+export const serializeError = (err: unknown): { code: number; message: string } => {
+  if (exception.isCustomException(err)) {
+    const apiError = err as ApiError;
+    return { code: apiError.statusCode, message: apiError.message };
+  }
+  console.error('Unhandled error:', err);
+  return { code: 500, message: 'Internal server error' };
+};

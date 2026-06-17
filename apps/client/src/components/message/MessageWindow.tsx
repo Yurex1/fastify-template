@@ -44,7 +44,7 @@ const MessageWindow = () => {
     isFetchingPreviousPage,
     isLoading,
   } = useMessageList(virtuosoRef);
-  const { requestPermission } = useNotifications({ scrollToMessage });
+  const { toggleNotifications, notificationsEnabled } = useNotifications({ scrollToMessage });
 
   const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
   const { formButton, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
@@ -140,12 +140,10 @@ const MessageWindow = () => {
 
       <TypingBlock />
       <button
-        className="z-[9999]"
-        onClick={() => {
-          requestPermission();
-        }}
+        aria-label={notificationsEnabled ? 'Disable notifications' : 'Enable notifications'}
+        onClick={toggleNotifications}
       >
-        Enable Notifications
+        {notificationsEnabled ? t('notifications.disable') : t('notifications.enable')}
       </button>
 
       {!pinnedMode && currentChatId && (

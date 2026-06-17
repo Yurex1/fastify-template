@@ -24,10 +24,18 @@ export default function HomePage() {
           <p className="text-white text-lg">{`Incoming ${activeCall?.type} call...`}</p>
           <p>by {incomingCall.chatName}</p>
           <div className="flex gap-3">
-            <button className="bg-green-500 px-6 py-2 rounded-lg text-white" onClick={acceptCall}>
+            <button
+              aria-label="accept call"
+              className="bg-green-500 px-6 py-2 rounded-lg text-white"
+              onClick={acceptCall}
+            >
               Accept
             </button>
-            <button className="bg-red-500 px-6 py-2 rounded-lg text-white" onClick={declineCall}>
+            <button
+              aria-label="Decline call"
+              className="bg-red-500 px-6 py-2 rounded-lg text-white"
+              onClick={declineCall}
+            >
               Decline
             </button>
           </div>
@@ -40,6 +48,7 @@ export default function HomePage() {
       <ResizablePanel defaultSize="25%" maxSize="25%">
         <div className="flex h-screen items-center justify-center">
           <button
+            aria-label="logout"
             onClick={() => {
               logout();
             }}
@@ -52,9 +61,9 @@ export default function HomePage() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize="75%">
-        <div className="flex h-full items-center justify-center">
+        <main className="flex h-full items-center justify-center">
           <MessageWindow />
-        </div>
+        </main>
       </ResizablePanel>
     </ResizablePanelGroup>
   );

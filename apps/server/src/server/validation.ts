@@ -5,6 +5,10 @@ import { CALL_ACTIONS } from '../services/livekit/consts';
 export const MAX_TEXT_LENGTH = 4096;
 export const MAX_NAME_LENGTH = 128;
 
+export interface WithPayload<T> {
+  payload: T;
+}
+
 export interface SendMessagePayload {
   chatId: number;
   text: string;

@@ -1,13 +1,47 @@
-import React, { useEffect } from 'react';
-import { getToken, onMessage } from 'firebase/messaging';
-import { messaging } from '../lib/firebase';
+import React, { useEffect, useState } from 'react';
+import { getToken, deleteToken, onMessage, type Messaging } from 'firebase/messaging';
+import { getFirebaseConfig, getMessagingInstance, type ServerFirebaseConfig } from '../lib/firebase';
 import api from '../api/api';
 import { toast } from 'react-toastify';
 import useChatUIStore from '../stores/chatUI';
 import { ChatNotificationToast } from '../components/ChatNotificationToast';
 import user from '/images/user-no-icon.png';
 
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+const SW_PATH = '/firebase-messaging-sw.js';
+const NOTIF_STORAGE_KEY = 'notificationsEnabled';
+
+const buildSwUrl = (cfg: ServerFirebaseConfig): string => {
+  const { vapidKey: _vapidKey, ...firebaseOnly } = cfg;
+  const params = new URLSearchParams({ firebaseConfig: JSON.stringify(firebaseOnly) });
+  return `${SW_PATH}?${params.toString()}`;
+};
+
+const registerMessagingSw = async (cfg: ServerFirebaseConfig): Promise<ServiceWorkerRegistration> => {
+  const swUrl = buildSwUrl(cfg);
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  const existing = registrations.find((r) => {
+    const url = r.active?.scriptURL || r.installing?.scriptURL || r.waiting?.scriptURL || '';
+    return url.includes(SW_PATH);
+  });
+
+  if (existing) {
+    const activeUrl = existing.active?.scriptURL || '';
+    if (activeUrl === swUrl) return existing;
+    await existing.unregister();
+  }
+
+  const reg = await navigator.serviceWorker.register(swUrl);
+  await navigator.serviceWorker.ready;
+  return reg;
+};
+
+const getExistingSwRegistration = async (): Promise<ServiceWorkerRegistration | undefined> => {
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  return registrations.find((r) => {
+    const url = r.active?.scriptURL || r.installing?.scriptURL || r.waiting?.scriptURL || '';
+    return url.includes(SW_PATH);
+  });
+};
 
 interface OpenChatMessage {
   type: 'OPEN_CHAT';
@@ -19,37 +53,79 @@ type ServiceWorkerMessage = OpenChatMessage;
 
 export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: number) => void }) => {
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    () => Notification.permission === 'granted' && localStorage.getItem(NOTIF_STORAGE_KEY) === 'true',
+  );
+  const [messaging, setMessaging] = useState<Messaging | null>(null);
+
+  useEffect(() => {
+    getMessagingInstance()
+      .then(setMessaging)
+      .catch((err) => console.error('Failed to init Firebase messaging:', err));
+  }, []);
 
   const requestPermission = async () => {
+    if (!messaging) return;
+
     try {
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') return;
-
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      let reg = registrations.find((r) => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
-
-      if (!reg) {
-        reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      if (permission !== 'granted') {
+        setNotificationsEnabled(false);
+        return;
       }
 
-      await navigator.serviceWorker.ready;
+      const cfg = await getFirebaseConfig();
+      const reg = await registerMessagingSw(cfg);
 
       const token = await getToken(messaging, {
-        vapidKey: VAPID_KEY,
+        vapidKey: cfg.vapidKey,
         serviceWorkerRegistration: reg,
       });
 
       if (token) {
-        await api.post('deviceToken/register', {
-          json: { token },
-        });
+        await api.post('deviceToken/register', { json: { token } });
+        localStorage.setItem(NOTIF_STORAGE_KEY, 'true');
+        setNotificationsEnabled(true);
       }
     } catch (err: unknown) {
       console.error('Notification setup failed:', err);
+      setNotificationsEnabled(false);
+    }
+  };
+
+  const disableNotifications = async () => {
+    if (!messaging) return;
+
+    try {
+      const cfg = await getFirebaseConfig();
+      const reg = await getExistingSwRegistration();
+      const token = await getToken(messaging, {
+        vapidKey: cfg.vapidKey,
+        ...(reg ? { serviceWorkerRegistration: reg } : {}),
+      });
+      if (token) {
+        await api.post('deviceToken/unregister', { json: { token } });
+        await deleteToken(messaging);
+      }
+    } catch (err) {
+      console.error('Failed to disable notifications:', err);
+    } finally {
+      localStorage.removeItem(NOTIF_STORAGE_KEY);
+      setNotificationsEnabled(false);
+    }
+  };
+
+  const toggleNotifications = () => {
+    if (notificationsEnabled) {
+      disableNotifications();
+    } else {
+      requestPermission();
     }
   };
 
   useEffect(() => {
+    if (!messaging) return;
+
     const handleServiceWorkerMessage = (event: MessageEvent<ServiceWorkerMessage>) => {
       if (event.data?.type === 'OPEN_CHAT' && event.data.chatId) {
         const chatId = Number(event.data.chatId);
@@ -109,7 +185,7 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
       navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       unsubscribe();
     };
-  }, [scrollToMessage, setCurrentChatId]);
+  }, [messaging, scrollToMessage, setCurrentChatId]);
 
-  return { requestPermission };
+  return { requestPermission, disableNotifications, toggleNotifications, notificationsEnabled };
 };

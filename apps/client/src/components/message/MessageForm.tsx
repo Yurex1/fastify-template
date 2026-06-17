@@ -24,6 +24,7 @@ const MessageForm = ({
 }: MessageForm) => {
   const { text, formMode } = useMessageFormStore();
   const { t } = useTranslation();
+  const btnLabel = formButton();
 
   const currentIndex = ((resultCounter % results.length) + results.length) % results.length;
   return (
@@ -49,6 +50,7 @@ const MessageForm = ({
             <div className="flex gap-1">
               <button
                 type="button"
+                aria-label="down"
                 onClick={() => navigateResult(-1)}
                 className="p-1 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
               >
@@ -56,6 +58,7 @@ const MessageForm = ({
               </button>
               <button
                 type="button"
+                aria-label="up"
                 onClick={() => navigateResult(1)}
                 className="p-1 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-white transition-colors"
               >
@@ -76,8 +79,11 @@ const MessageForm = ({
         className="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-3 text-white focus:outline-none resize-none"
         placeholder={t('messageForm.placeholder')}
       />
-      <button className="bg-blue-600 px-3 py-2 rounded-xl text-white font-medium hover:bg-blue-500 transition-colors">
-        {formButton()}
+      <button
+        aria-label="send"
+        className="bg-blue-600 px-3 py-2 rounded-xl text-white font-medium hover:bg-blue-500 transition-colors"
+      >
+        {btnLabel}
       </button>
     </form>
   );

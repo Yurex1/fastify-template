@@ -15,17 +15,17 @@ export const SwitchLangBtn = () => {
 
   return (
     <Select value={i18n.language} onValueChange={handleChange}>
-      <SelectTrigger className="w-[120px] bg-gray-900 border-gray-700 text-gray-300">
+      <SelectTrigger aria-label="Change lang" className="w-[120px] bg-gray-900 border-gray-700 text-gray-300">
         <div className="flex items-center gap-2">
           <Globe size={16} />
           <SelectValue placeholder="Language" />
         </div>
       </SelectTrigger>
       <SelectContent className="bg-gray-900 border-gray-700">
-        <SelectItem value={LANG.EN} className="text-gray-300">
+        <SelectItem aria-label="English" value={LANG.EN} className="text-gray-300">
           English
         </SelectItem>
-        <SelectItem value={LANG.UK} className="text-gray-300">
+        <SelectItem aria-label="Українська" value={LANG.UK} className="text-gray-300">
           Українська
         </SelectItem>
       </SelectContent>

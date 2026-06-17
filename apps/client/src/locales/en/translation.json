@@ -48,6 +48,10 @@
       "tooWeak": "Password is too weak"
     }
   },
+  "notifications": {
+    "enable": "Enable notifications",
+    "disable": "Disable notifications"
+  },
   "errors": {
     "fetchChats": "Failed to fetch chats",
     "searchMessage": "Failed to search message",

@@ -6,3 +6,7 @@ export interface DeviceToken {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface DeviceTokenResponse {
+  ok: boolean;
+}

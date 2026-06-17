@@ -1,6 +1,6 @@
 import { fastify } from 'fastify';
 import { plugins } from './plugins';
-import { hooks } from './hooks';
+import { onRequestHooks, onSendHooks } from './hooks';
 import { config } from '../config';
 import type { Deps, SessionProvider } from './types';
 import { exception } from '../utils/exception/util';
@@ -28,18 +28,13 @@ async function registerPlugins() {
 async function registerHooks() {
   server.decorateRequest('deviceId', DEFAULT_DEVICE_ID);
 
-  for (const hook of hooks) {
-    server.addHook('onRequest', hook);
-  }
+  onRequestHooks.forEach((hook) => server.addHook('onRequest', hook));
+  onSendHooks.forEach((hook) => server.addHook('onSend', hook));
 }
 
 export const init = async ({ services, apis }: Deps) => {
   await registerPlugins();
   await registerHooks();
-  server.addHook('onSend', (_request, reply, payload, done) => {
-    reply.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-    done(null, payload);
-  }); //todo
 
   await server.register(wsPlugin, { services });
 

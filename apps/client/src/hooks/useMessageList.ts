@@ -4,10 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useChatMessages } from './useChatMessages';
 import useChatUIStore from '../stores/chatUI';
 import { QueryKeys } from '../lib/queries';
-
-const START_INDEX = 1_000_000;
-const HIGHLIGHT_MS = 1500;
-const IN_VIEW_HIGHLIGHT_DELAY_MS = 300;
+import { VIRTUOSO_CONFIG } from '../utils/consts/virtuoso';
 
 export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | null>) {
   const queryClient = useQueryClient();
@@ -16,6 +13,12 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
   const setIsAtBottom = useChatUIStore((s) => s.setIsAtBottom);
   const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
+  const refs = useRef({
+    firstItemIndex: VIRTUOSO_CONFIG.START_INDEX,
+    prevOldestId: null as number | null,
+    highlightedAnchorId: null as number | null,
+    highlightTimer: null as ReturnType<typeof setTimeout> | null,
+  });
 
   const {
     messages,
@@ -38,47 +41,47 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const chatKey = `${currentChatId}-${anchorMessageId ?? ''}`;
   const chatKeyRef = useRef(chatKey);
 
-  const firstItemIndexRef = useRef<number>(START_INDEX);
-  const prevOldestIdRef = useRef<number | null>(null);
-
   const [firstItemState, setFirstItemState] = useState<{ key: string; value: number }>({
     key: chatKey,
-    value: START_INDEX,
+    value: VIRTUOSO_CONFIG.START_INDEX,
   });
-  const firstItemIndex = firstItemState.key === chatKey ? firstItemState.value : START_INDEX;
+  const firstItemIndex = firstItemState.key === chatKey ? firstItemState.value : VIRTUOSO_CONFIG.START_INDEX;
 
   const [isListReady, setIsListReady] = useState<boolean>(anchorMessageId === null);
-  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const highlightedAnchorRef = useRef<number | null>(null);
 
   if (chatKeyRef.current !== chatKey) {
     chatKeyRef.current = chatKey;
-    firstItemIndexRef.current = START_INDEX;
-    prevOldestIdRef.current = null;
+    refs.current.firstItemIndex = VIRTUOSO_CONFIG.START_INDEX;
+    refs.current.prevOldestId = null;
   }
 
   useEffect(() => {
     setAnchorMessageId(null);
   }, [currentChatId, setAnchorMessageId]);
 
+  const clearHighlightTimer = () => {
+    if (refs.current.highlightTimer) {
+      clearTimeout(refs.current.highlightTimer);
+    }
+  };
+
   const highlight = useCallback(
     (messageId: number, delay = 0) => {
+      clearHighlightTimer();
+
       const run = () => {
         setHighlightedMessageId(messageId);
-        if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-        highlightTimerRef.current = setTimeout(() => setHighlightedMessageId(null), HIGHLIGHT_MS);
+        refs.current.highlightTimer = setTimeout(() => setHighlightedMessageId(null), VIRTUOSO_CONFIG.HIGHLIGHT_MS);
       };
-      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-      if (delay > 0) highlightTimerRef.current = setTimeout(run, delay);
+
+      if (delay > 0) refs.current.highlightTimer = setTimeout(run, delay);
       else run();
     },
     [setHighlightedMessageId],
   );
 
   useEffect(() => {
-    return () => {
-      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
-    };
+    return () => clearHighlightTimer();
   }, []);
 
   useLayoutEffect(() => {
@@ -86,24 +89,24 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
 
     const currentOldestId = messages[messages.length - 1]?.id;
 
-    if (prevOldestIdRef.current !== null && currentOldestId !== prevOldestIdRef.current) {
-      const idx = messages.findIndex((m) => m.id === prevOldestIdRef.current);
+    if (refs.current.prevOldestId !== null && currentOldestId !== refs.current.prevOldestId) {
+      const idx = messages.findIndex((m) => m.id === refs.current.prevOldestId);
       const addedBefore = idx === -1 ? 0 : messages.length - idx - 1;
 
       if (addedBefore > 0) {
-        firstItemIndexRef.current -= addedBefore;
-        setFirstItemState({ key: chatKey, value: firstItemIndexRef.current });
+        refs.current.firstItemIndex -= addedBefore;
+        setFirstItemState({ key: chatKey, value: refs.current.firstItemIndex });
       }
-    } else if (prevOldestIdRef.current === null) {
-      setFirstItemState({ key: chatKey, value: START_INDEX });
+    } else if (refs.current.prevOldestId === null) {
+      setFirstItemState({ key: chatKey, value: VIRTUOSO_CONFIG.START_INDEX });
     }
 
-    prevOldestIdRef.current = currentOldestId ?? null;
+    refs.current.prevOldestId = currentOldestId ?? null;
   }, [messages, chatKey]);
 
   useEffect(() => {
     if (anchorMessageId === null) {
-      highlightedAnchorRef.current = null;
+      refs.current.highlightedAnchorId = null;
 
       if (!isLoading) setIsListReady(true);
       return;
@@ -124,8 +127,8 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
 
     const raf = requestAnimationFrame(() => setIsListReady(true));
 
-    if (highlightedAnchorRef.current !== anchorMessageId) {
-      highlightedAnchorRef.current = anchorMessageId;
+    if (refs.current.highlightedAnchorId !== anchorMessageId) {
+      refs.current.highlightedAnchorId = anchorMessageId;
       highlight(anchorMessageId);
     }
 
@@ -138,13 +141,18 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
     }
   }, [hasNextPage, isFetchingNextPage, isLoading, fetchNextPage]);
 
-  const endReached = () => {
+  const endReached = useCallback(() => {
     if (hasPreviousPage && !isFetchingPreviousPage && !isLoading) {
       fetchPreviousPage();
     }
-  };
+  }, [hasPreviousPage, isFetchingPreviousPage, isLoading, fetchPreviousPage]);
 
-  const atBottomStateChange = (atBottom: boolean) => setIsAtBottom(atBottom);
+  const atBottomStateChange = useCallback(
+    (atBottom: boolean) => {
+      setIsAtBottom(atBottom);
+    },
+    [setIsAtBottom],
+  );
 
   const initialTopMostItemIndex = () => {
     if (anchorMessageId === null || data.length === 0) {
@@ -160,7 +168,7 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
 
       if (idx !== -1 && virtuosoRef.current) {
         virtuosoRef.current.scrollToIndex({ index: idx, align: 'center', behavior: 'smooth' });
-        highlight(messageId, IN_VIEW_HIGHLIGHT_DELAY_MS);
+        highlight(messageId, VIRTUOSO_CONFIG.IN_VIEW_HIGHLIGHT_DELAY_MS);
         return;
       }
 

@@ -10,6 +10,7 @@ import { CHAT_ACTIONS } from '../services/chat/consts';
 import { createMessageHandlers } from './messageHandlers';
 import { CALL_ACTIONS } from '../services/livekit/consts';
 import { getValidator } from './validation';
+import { createDispatch } from './dispatch';
 
 export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { services: Services }) => {
   await fastify.register(websocket, {
@@ -55,6 +56,8 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
     }
   };
 
+  const dispatch = createDispatch(fastify);
+
   fastify.get<{ Querystring: { deviceId: string } }>('/ws', { websocket: true }, async (socket, req) => {
     try {
       const token = req.headers['sec-websocket-protocol'];
@@ -66,7 +69,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       const user = await services.auth.verify('access', token);
       const uid = Number(user.id);
       const deviceId = String(req.query.deviceId);
-      if (!deviceId) {
+      if (!req.query.deviceId) {
         throw exception.badRequest('DEVICE_ID_REQUIRED');
       }
       const connectionKey = `${uid}:${deviceId}`;
@@ -144,36 +147,30 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
           if (validate && !validate(data.payload)) {
             fastify.ws.send(uid, {
               type: 'ERROR',
-              payload: { action: data.type, errors: validate.errors },
+              payload: {
+                action: data.type,
+                success: false,
+                error: {
+                  code: 400,
+                  message:
+                    validate.errors?.map((e) => `${e.instancePath || 'payload'}: ${e.message}`).join('; ') ??
+                    'Validation error',
+                },
+                data: null,
+              },
             });
             return;
           }
 
           eventHandlers.forEach((handler) => handler(uid, data));
-
-          if (data.type === CHAT_ACTIONS.sendMessage) {
-            await handlers.handleSendMessage(data);
-          }
-
-          if (data.type === CHAT_ACTIONS.updateMessage) {
-            await handlers.handleUpdateMessage(data);
-          }
-
-          if (data.type === CHAT_ACTIONS.typing) {
-            await handlers.handleTyping(data.payload.chatId, typingTimers);
-          }
-
-          if (data.type === CHAT_ACTIONS.updateReaction) {
-            await handlers.handleUpdateReaction(data);
-          }
-
-          if (data.type === CHAT_ACTIONS.deleteMesage) {
-            await handlers.handleDeleteMessage(data);
-          }
-
-          if (data.type === CALL_ACTIONS.outgoing) {
-            await handlers.handleCreateRoom(data);
-          }
+          await dispatch(uid, async () => {
+            if (data.type === CHAT_ACTIONS.sendMessage) await handlers.handleSendMessage(data);
+            if (data.type === CHAT_ACTIONS.updateMessage) await handlers.handleUpdateMessage(data);
+            if (data.type === CHAT_ACTIONS.typing) await handlers.handleTyping(data.payload.chatId, typingTimers);
+            if (data.type === CHAT_ACTIONS.updateReaction) await handlers.handleUpdateReaction(data);
+            if (data.type === CHAT_ACTIONS.deleteMesage) await handlers.handleDeleteMessage(data);
+            if (data.type === CALL_ACTIONS.outgoing) await handlers.handleCreateRoom(data);
+          });
         } catch (e) {
           console.error(e);
         }

@@ -20,9 +20,10 @@ class UserRepository extends EntityRepo<User> {
     return result;
   }
 
-  async findOneByUsernameOrEmailOrGoogleId(value: string, includePassword = false): Promise<User | null> {
-    const { query, params } = selectByUsernameOrEmailOrGoogleId(value, includePassword);
-    return await this.pool.queryOne<User>(query, params);
+  async findOneByLoginIdentifier(value: string, includePassword = false): Promise<User | null> {
+    const selectFields: (keyof User)[] = includePassword ? [...this.fields, 'password'] : this.fields;
+    const whereFields: (keyof User)[] = ['email', 'username', 'googleId'];
+    return this.findOneByAnyOf(value, whereFields, ['email'], selectFields);
   }
 
   async updateEmail(id: number, email: string): Promise<User | null> {
@@ -72,8 +73,8 @@ export const init = (pool: TypedPool): UserRepo => {
     remove: (id: number) => userRepo.remove(id),
     exists: (definition: Partial<User>) => userRepo.exists(definition),
     existsById: (id: number) => userRepo.existsById(id),
-    findOneByUsernameOrEmailOrGoogleId: (value: string, includePassword = false) =>
-      userRepo.findOneByUsernameOrEmailOrGoogleId(value, includePassword),
+    findOneByLoginIdentifier: (value: string, includePassword = false) =>
+      userRepo.findOneByLoginIdentifier(value, includePassword),
     updateEmail: (id: number, email: string) => userRepo.updateEmail(id, email),
     updatePassword: (id: number, password: string) => userRepo.updatePassword(id, password),
     updateLastSeen: (id: number) => userRepo.updateLastSeen(id),

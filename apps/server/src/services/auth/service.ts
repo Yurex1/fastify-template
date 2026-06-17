@@ -6,7 +6,7 @@ import type { AuthService, Deps } from './types';
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password, deviceId) => {
-    const user = await userRepo.findOneByUsernameOrEmailOrGoogleId(usernameOrEmail, true);
+    const user = await userRepo.findOneByLoginIdentifier(usernameOrEmail, true);
 
     if (!user) {
       throw exception.badRequest('USER_NOT_FOUND');
@@ -158,10 +158,14 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     });
     if (!res.ok) throw exception.unauthorized('INVALID_GOOGLE_TOKEN');
 
-    const { sub, email, name } = (await res.json()) as { sub: string; email: string | undefined; name: string | undefined };
+    const { sub, email, name } = (await res.json()) as {
+      sub: string;
+      email: string | undefined;
+      name: string | undefined;
+    };
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
-    let user = await userRepo.findOneByUsernameOrEmailOrGoogleId(email);
+    let user = await userRepo.findOneByLoginIdentifier(email);
 
     if (!user) {
       const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];

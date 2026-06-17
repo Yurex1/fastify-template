@@ -8,4 +8,10 @@ const deviceId = async (request: FastifyRequest, _reply: FastifyReply) => {
   request.deviceId = value?.trim() ? value : DEFAULT_DEVICE_ID;
 };
 
-export const hooks = [deviceId];
+const crossOriginOpenerPolicy = async (_request: FastifyRequest, reply: FastifyReply, payload: unknown) => {
+  reply.header('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  return payload;
+};
+
+export const onRequestHooks = [deviceId];
+export const onSendHooks = [crossOriginOpenerPolicy];

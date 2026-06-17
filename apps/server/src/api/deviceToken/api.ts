@@ -17,13 +17,22 @@ export const init = ({ deviceTokenService }: Deps): DeviceTokenApi => ({
   },
 
   unregister: {
-    method: 'delete',
+    method: 'post',
     access: 'access',
     schema: schemas.unregister,
     handler: async (user, request) => {
       await deviceTokenService.unregister(user.id, request.deviceId);
 
       return { ok: true };
+    },
+  },
+
+  'firebase-configs': {
+    method: 'get',
+    access: 'access',
+    schema: schemas.firebaseConfigs,
+    handler: async () => {
+      return await deviceTokenService.getFirebaseConfigs();
     },
   },
 });

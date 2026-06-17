@@ -86,14 +86,17 @@ export const init = (deps: Deps): ChatService => {
 
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
-      await chatNotificationService.notifyMessageCreated({
-        senderId: userId,
-        senderName: user.username,
-        chatId,
-        messageId: message.id,
-        text,
-        members,
-      });
+      chatNotificationService
+        .notifyMessageCreated({
+          senderId: userId,
+          senderName: user.username,
+          chatId,
+          messageId: message.id,
+          text,
+          members,
+        })
+        .catch((err) => console.error('notifyMessageCreated failed:', err));
+
       return message;
     },
 

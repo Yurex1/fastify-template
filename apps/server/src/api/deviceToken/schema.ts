@@ -18,3 +18,9 @@ export const unregister = {
   properties: {},
   required: ['headers'],
 } as const;
+
+export const firebaseConfigs = {
+  type: 'object',
+  properties: {},
+  required: ['headers'],
+} as const;

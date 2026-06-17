@@ -8,8 +8,7 @@ import type { Plugin } from './types';
 const corsPlugin: Plugin = {
   plugin: cors,
   options: {
-    // origin: config.cors.allowedOrigins,
-    origin: ['https://generates-strain-variety-table.trycloudflare.com'],
+    origin: config.cors.allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'X-Requested-With'],

@@ -1,5 +1,7 @@
 import admin from 'firebase-admin';
 import { config } from '../../config';
+import { NotificationResponse } from './types';
+import { PERMANENTLY_INVALID_CODES, TRANSIENT_CODES } from './const';
 
 export type NotificationService = FirebaseNotificationService;
 
@@ -28,7 +30,7 @@ class FirebaseNotificationService {
     title: string,
     body: string,
     data?: Record<string, string>,
-  ): Promise<{ invalidTokens: string[] }> {
+  ): Promise<NotificationResponse> {
     if (!this.messaging || tokens.length === 0) return { invalidTokens: [] };
 
     const response = await this.messaging.sendEachForMulticast({
@@ -40,13 +42,16 @@ class FirebaseNotificationService {
     const invalidTokens: string[] = [];
 
     response.responses.forEach((resp, idx) => {
-      if (!resp.success) {
-        const code = resp.error?.code ?? '';
-        const isInvalid =
-          code === 'messaging/invalid-registration-token' || code === 'messaging/registration-token-not-registered';
+      if (resp.success) return;
 
-        if (isInvalid) invalidTokens.push(tokens[idx]);
-        else console.error(`FCM error for token ${tokens[idx]}:`, resp.error);
+      const code = resp.error?.code ?? '';
+
+      if (PERMANENTLY_INVALID_CODES.has(code)) {
+        invalidTokens.push(tokens[idx]);
+      } else if (TRANSIENT_CODES.has(code)) {
+        console.warn(`Transient FCM error for token ${tokens[idx]}:`, resp.error);
+      } else {
+        console.error(`Unexpected FCM error for token ${tokens[idx]}:`, resp.error);
       }
     });
 
@@ -58,7 +63,7 @@ class FirebaseNotificationService {
     title: string,
     body: string,
     data?: Record<string, string>,
-  ): Promise<{ invalidTokens: string[] }> {
+  ): Promise<NotificationResponse> {
     return this.sendNotification(tokens, title, body, data);
   }
 

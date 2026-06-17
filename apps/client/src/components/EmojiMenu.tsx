@@ -11,6 +11,7 @@ export function EmojiMenu({ pressedEmojis, handleClick }: ToggleGroupDemoProps) 
     <div className="max-w-[300px] p-1 flex gap-1 overflow-x-scroll bg-[#212121] border border-gray-700 rounded-lg shadow-xl">
       {emojis.map((item) => (
         <button
+          aria-label="Reactions"
           key={item.label}
           className={cn(
             'transition-colors rounded-full p-1 text-xl',

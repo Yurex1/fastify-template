@@ -38,12 +38,9 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     [typing],
   );
 
-  useEffect(
-    () => () => {
-      if (throttledTyping.current) clearTimeout(throttledTyping.current);
-    },
-    [],
-  );
+  useEffect(() => {
+    return () => clearTimeout(throttledTyping.current || undefined);
+  }, []);
 
   const { handleSearch } = useMessageActions({
     deleteMessage,

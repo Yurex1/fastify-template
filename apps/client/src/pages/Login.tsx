@@ -87,6 +87,7 @@ export default function LoginPage() {
           />
           <button
             type="button"
+            aria-label={showPassword ? 'hide password' : 'show password'}
             onClick={() => setShowPassword((prev) => !prev)}
             className="absolute right-3 top-6 -translate-y-1/2 text-neutral-400 hover:text-neutral-300"
           >
@@ -101,7 +102,7 @@ export default function LoginPage() {
 
         <GoogleBtn />
 
-        <Button type="submit" loading={isPending}>
+        <Button aria-label="sign in" type="submit" loading={isPending}>
           {t('auth.registration.signIn')}
         </Button>
       </form>

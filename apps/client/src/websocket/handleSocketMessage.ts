@@ -8,6 +8,7 @@ import { CACHE_OP } from './consts/chatEvents';
 import { updatePinnedMessagesCache } from '../services/cache/updatePinnedMessagesCache';
 import { useUserStatus } from '../stores/userStatus';
 import useCallsStore from '../stores/calls';
+import { toast } from 'react-toastify';
 
 export function handleSocketMessage(event: MessageEvent, queryClient: QueryClient) {
   const { currentChatId, anchorMessageId, setCurrentChatId, setCurrentChatInfo } = useChatUIStore.getState();
@@ -21,6 +22,11 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
   }
 
   switch (data.type) {
+    case WS_IN.ERROR:
+      toast.error(data.payload.error.message);
+      //todo translations
+      break;
+
     case WS_IN.NEW_MESSAGE:
       updateMessageCache({
         queryClient,

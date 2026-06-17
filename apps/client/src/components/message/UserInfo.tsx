@@ -40,11 +40,11 @@ export const UserInfo = () => {
         </div>
       </div>
       <div className="flex items-center overflow-hidden gap-5">
-        <button onClick={() => initiateCall('audio')}>
+        <button aria-label="start audio call" onClick={() => initiateCall('audio')}>
           <PhoneCall />
         </button>
 
-        <button onClick={() => initiateCall('video')}>
+        <button aria-label="start video call" onClick={() => initiateCall('video')}>
           <VideoIcon />
         </button>
 
