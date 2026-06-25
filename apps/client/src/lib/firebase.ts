@@ -1,44 +1,34 @@
-import { FirebaseError, initializeApp, type FirebaseApp } from 'firebase/app';
+import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getMessaging, type Messaging } from 'firebase/messaging';
 import firebaseConfigs, { type ServerFirebaseConfig } from '../api/firebaseConfigs/firebase';
 
 export type { ServerFirebaseConfig };
 
-let app: FirebaseApp;
-let messagingInstance: Messaging;
-let initPromise: Promise<Messaging> | null = null;
 let configPromise: Promise<ServerFirebaseConfig> | null = null;
+let messagingPromise: Promise<Messaging> | null = null;
 
-function fetchConfig(): Promise<ServerFirebaseConfig> {
+export function getFirebaseConfig(): Promise<ServerFirebaseConfig> {
   if (!configPromise) {
-    configPromise = firebaseConfigs.getFirebaseConfig() as Promise<ServerFirebaseConfig>;
+    configPromise = (firebaseConfigs.getFirebaseConfig() as Promise<ServerFirebaseConfig>).catch((err) => {
+      configPromise = null;
+      throw err;
+    });
   }
   return configPromise;
 }
 
-async function initFirebase(): Promise<Messaging> {
-  const firebaseConfig = await fetchConfig();
-
-  try {
-    app = initializeApp(firebaseConfig);
-  } catch (e: unknown) {
-    if (e instanceof FirebaseError && e.code !== 'app/duplicate-app') {
-      console.error(e);
-    }
-    app = initializeApp(firebaseConfig, 'DEFAULT');
-  }
-
-  messagingInstance = getMessaging(app);
-  return messagingInstance;
+function getOrCreateApp(config: ServerFirebaseConfig): FirebaseApp {
+  return getApps().length ? getApp() : initializeApp(config);
 }
 
 export function getMessagingInstance(): Promise<Messaging> {
-  if (!initPromise) {
-    initPromise = initFirebase();
+  if (!messagingPromise) {
+    messagingPromise = getFirebaseConfig()
+      .then((config) => getMessaging(getOrCreateApp(config)))
+      .catch((err) => {
+        messagingPromise = null;
+        throw err;
+      });
   }
-  return initPromise;
-}
-
-export function getFirebaseConfig(): Promise<ServerFirebaseConfig> {
-  return fetchConfig();
+  return messagingPromise;
 }

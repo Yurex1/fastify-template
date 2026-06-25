@@ -106,7 +106,7 @@ describe('Chat & Message Tests', () => {
       assert(message && message.id, 'Message should exist from previous tests');
 
       const newText = 'Updated text';
-      const updated = await app.services.chat.updateMessage(message.id, { text: newText });
+      const updated = await app.services.chat.updateMessage(message.id, user1.id, { text: newText });
 
       assert.strictEqual(updated.text, newText);
     });

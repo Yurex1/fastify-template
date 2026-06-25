@@ -47,7 +47,7 @@ const MessageWindow = () => {
   const { toggleNotifications, notificationsEnabled } = useNotifications({ scrollToMessage });
 
   const { formMode, replyTo, setFormMode, setReplyTo } = useMessageFormStore();
-  const { formButton, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
+  const { formButtonIcon, resultCounter, results, navigateResult, textareaRef, handleOnChange, handleKeyDown } =
     useMessageForm({
       scrollToMessage,
     });
@@ -154,7 +154,7 @@ const MessageWindow = () => {
           textareaRef={textareaRef}
           handleOnChange={handleOnChange}
           handleKeyDown={handleKeyDown}
-          formButton={formButton}
+          formButtonIcon={formButtonIcon}
         />
       )}
     </div>

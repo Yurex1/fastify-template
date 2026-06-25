@@ -141,7 +141,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     setText('');
   };
 
-  const formButton = () => {
+  const formButtonIcon = () => {
     switch (formMode) {
       case 'create':
         return <SendHorizonal />;
@@ -165,7 +165,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     textareaRef,
     clearForm,
     handleSend,
-    formButton,
+    formButtonIcon,
     handleKeyDown,
     handleOnChange,
     navigateResult,

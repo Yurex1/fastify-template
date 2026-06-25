@@ -16,4 +16,5 @@ export type DeviceTokenRepo = {
   findAllByUserId: (userId: number) => Promise<DeviceToken[]>;
   removeByUserAndDevice: (userId: number, deviceId: string) => Promise<void>;
   removeByToken: (token: string) => Promise<void>;
+  removeTokenForOtherOwners: (token: string, userId: number, deviceId: string) => Promise<void>;
 };

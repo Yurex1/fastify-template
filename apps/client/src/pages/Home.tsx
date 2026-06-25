@@ -6,11 +6,13 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../compone
 import { useCall } from '../hooks/useCall';
 import { useAuthStore } from '../stores/auth';
 import useChatUIStore from '../stores/chatUI';
+import { useNotifications } from '../hooks/useNotifications';
 
 export default function HomePage() {
   const currentChatId = useChatUIStore((s) => s.currentChatId);
   const { incomingCall, activeCall, isInCall, acceptCall, declineCall } = useCall(currentChatId);
   const logout = useAuthStore((s) => s.logout);
+  const { disableNotifications } = useNotifications({});
   const { t } = useTranslation();
 
   if (isInCall && activeCall?.roomName) {
@@ -51,6 +53,7 @@ export default function HomePage() {
             aria-label="logout"
             onClick={() => {
               logout();
+              disableNotifications();
             }}
             className="absolute top-0 z-[999]"
           >

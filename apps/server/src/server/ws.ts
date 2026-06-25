@@ -50,7 +50,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
       heartbeatStates.delete(connectionKey);
     }
 
-    if (typingTimers.has(uid)) {
+    if (!connections.has(uid) && typingTimers.has(uid)) {
       clearTimeout(typingTimers.get(uid));
       typingTimers.delete(uid);
     }
@@ -68,10 +68,11 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       const user = await services.auth.verify('access', token);
       const uid = Number(user.id);
-      const deviceId = String(req.query.deviceId);
+
       if (!req.query.deviceId) {
         throw exception.badRequest('DEVICE_ID_REQUIRED');
       }
+      const deviceId = String(req.query.deviceId);
       const connectionKey = `${uid}:${deviceId}`;
 
       if (!connections.has(uid)) {
@@ -95,7 +96,7 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
 
       connections.get(uid)?.set(deviceId, socket);
 
-      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user });
+      const handlers = createMessageHandlers({ services, fastifyWs: fastify.ws, uid, user, typingTimers });
 
       const heartbeatTimer = setInterval(() => {
         const state = heartbeatStates.get(connectionKey);
@@ -163,14 +164,18 @@ export const wsPlugin = fp(async (fastify: FastifyInstance, { services }: { serv
           }
 
           eventHandlers.forEach((handler) => handler(uid, data));
-          await dispatch(uid, async () => {
-            if (data.type === CHAT_ACTIONS.sendMessage) await handlers.handleSendMessage(data);
-            if (data.type === CHAT_ACTIONS.updateMessage) await handlers.handleUpdateMessage(data);
-            if (data.type === CHAT_ACTIONS.typing) await handlers.handleTyping(data.payload.chatId, typingTimers);
-            if (data.type === CHAT_ACTIONS.updateReaction) await handlers.handleUpdateReaction(data);
-            if (data.type === CHAT_ACTIONS.deleteMesage) await handlers.handleDeleteMessage(data);
-            if (data.type === CALL_ACTIONS.outgoing) await handlers.handleCreateRoom(data);
-          });
+
+          const actionMap = {
+            [CHAT_ACTIONS.sendMessage]: handlers.handleSendMessage,
+            [CHAT_ACTIONS.updateMessage]: handlers.handleUpdateMessage,
+            [CHAT_ACTIONS.typing]: handlers.handleTyping,
+            [CHAT_ACTIONS.updateReaction]: handlers.handleUpdateReaction,
+            [CHAT_ACTIONS.deleteMesage]: handlers.handleDeleteMessage,
+            [CALL_ACTIONS.outgoing]: handlers.handleCreateRoom,
+          };
+
+          const action = actionMap[data.type];
+          if (action) await dispatch(uid, () => action(data));
         } catch (e) {
           console.error(e);
         }

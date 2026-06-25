@@ -1,4 +1,4 @@
-import type { QueryClient } from '@tanstack/react-query';
+import type { InfiniteData, QueryClient } from '@tanstack/react-query';
 
 import { WS_IN } from './consts/messageEvents';
 import useChatUIStore from '../stores/chatUI';
@@ -9,6 +9,9 @@ import { updatePinnedMessagesCache } from '../services/cache/updatePinnedMessage
 import { useUserStatus } from '../stores/userStatus';
 import useCallsStore from '../stores/calls';
 import { toast } from 'react-toastify';
+import i18n from '../i18next';
+import { QueryKeys } from '../lib/queries';
+import type { ChatList, ChatPageParam, Message } from '../api/chats/types';
 
 export function handleSocketMessage(event: MessageEvent, queryClient: QueryClient) {
   const { currentChatId, anchorMessageId, setCurrentChatId, setCurrentChatInfo } = useChatUIStore.getState();
@@ -22,10 +25,12 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
   }
 
   switch (data.type) {
-    case WS_IN.ERROR:
-      toast.error(data.payload.error.message);
-      //todo translations
+    case WS_IN.ERROR: {
+      const code = String(data.payload.error.code).toLowerCase();
+      console.log(code);
+      toast.error(i18n.t(`ws.errors.${code}`, { defaultValue: data.payload.error.message }));
       break;
+    }
 
     case WS_IN.NEW_MESSAGE:
       updateMessageCache({
@@ -72,17 +77,42 @@ export function handleSocketMessage(event: MessageEvent, queryClient: QueryClien
       });
       break;
 
-    case WS_IN.MESSAGE_DELETED:
-      updateMessageCache({
+    case WS_IN.MESSAGE_DELETED: {
+      const { messageId, chatId } = data.payload;
+
+      const updatedMessages = updateMessageCache({
         queryClient,
         anchorMessageId,
-        chatId: data.payload.chatId,
-        wsEvent: { type: 'delete', payload: data.payload },
+        chatId,
+        wsEvent: { type: 'delete', payload: { messageId, chatId } },
       });
-      // TODO change updatedAt to last message createdAt time
-      // TODO updateChatsCache({ queryClient, type: CACHE_OP.CHAT_UPDATE, chatId: data.payload.chatId, data: data.payload });
-      updatePinnedMessagesCache({ queryClient, currentChatId, action: { type: 'unpin', data: data.payload } });
+
+      updatePinnedMessagesCache({ queryClient, currentChatId, action: { type: 'unpin', data: { messageId, chatId } } });
+
+      const chatsCache = queryClient.getQueryData<InfiniteData<ChatList, ChatPageParam>>([QueryKeys.chats]);
+      const currentLastMessage = chatsCache?.pages.flatMap((p) => p.chats).find((c) => c.id === chatId)?.lastMessage;
+
+      if (currentLastMessage?.id === messageId) {
+        const allMessages = (updatedMessages?.pages ?? []).flatMap((p) => p.messages);
+        const newLastMessage = allMessages.reduce<Message | null>((latest, msg) => {
+          if (!latest) return msg;
+          return new Date(msg.createdAt) > new Date(latest.createdAt) ? msg : latest;
+        }, null);
+
+        updateChatsCache({
+          queryClient,
+          payload: {
+            type: CACHE_OP.CHAT_UPDATE,
+            chatId,
+            data: {
+              lastMessage: newLastMessage,
+              updatedAt: newLastMessage?.createdAt,
+            },
+          },
+        });
+      }
       break;
+    }
 
     case WS_IN.INITIAL_STATUSES:
       useUserStatus.getState().setStatuses(data.payload);

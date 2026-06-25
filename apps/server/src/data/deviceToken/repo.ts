@@ -4,7 +4,13 @@ import type { DeviceTokenRepo } from './types';
 
 import { EntityRepo } from '../EntityRepo';
 
-import { upsertDeviceToken, selectByUserId, deleteByUserAndDevice, deleteByToken } from './sql';
+import {
+  upsertDeviceToken,
+  selectByUserId,
+  deleteByUserAndDevice,
+  deleteByToken,
+  deleteTokenForOtherOwners,
+} from './sql';
 
 class DeviceTokenRepository extends EntityRepo<DeviceToken> {
   constructor(pool: TypedPool) {
@@ -34,6 +40,11 @@ class DeviceTokenRepository extends EntityRepo<DeviceToken> {
     const { query, params } = deleteByToken(token);
     await this.pool.query(query, params);
   }
+
+  async removeTokenForOtherOwners(token: string, userId: number, deviceId: string): Promise<void> {
+    const { query, params } = deleteTokenForOtherOwners(token, userId, deviceId);
+    await this.pool.query(query, params);
+  }
 }
 
 export const init = (pool: TypedPool): DeviceTokenRepo => {
@@ -44,5 +55,7 @@ export const init = (pool: TypedPool): DeviceTokenRepo => {
     findAllByUserId: (userId: number) => repo.findAllByUserId(userId),
     removeByUserAndDevice: (userId: number, deviceId: string) => repo.removeByUserAndDevice(userId, deviceId),
     removeByToken: (token: string) => repo.removeByToken(token),
+    removeTokenForOtherOwners: (token: string, userId: number, deviceId: string) =>
+      repo.removeTokenForOtherOwners(token, userId, deviceId),
   };
 };
