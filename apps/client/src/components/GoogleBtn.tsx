@@ -12,6 +12,7 @@ export const GoogleBtn = () => {
   const login = useGoogleLogin({
     onSuccess: async (response) => {
       await loginWithGoogle(response.access_token);
+
       navigate('/');
     },
     onError: () => console.error('Google login failed'),
@@ -21,6 +22,7 @@ export const GoogleBtn = () => {
   return (
     <button
       type="button"
+      aria-label="Login with Google"
       onClick={() => login()}
       className="w-full rounded-xl bg-white text-black font-medium py-2.5 transition hover:bg-neutral-200
         active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"

@@ -17,7 +17,7 @@ export const ReplyBlock = ({ message, userName, onClose }: Props) => {
         <span className="text-sm text-white truncate block">{message.text}</span>
       </div>
 
-      <button onClick={onClose} className="text-gray-400 hover:text-white shrink-0">
+      <button onClick={onClose} aria-label="close reply mode" className="text-gray-400 hover:text-white shrink-0">
         <X size={16} />
       </button>
     </div>

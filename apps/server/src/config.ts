@@ -25,8 +25,13 @@ export const config = {
   },
   firebase: {
     projectId: env.requireEnv('FIREBASE_PROJECT_ID'),
-    privateKey: env.requireEnv('FIREBASE_PRIVATE_KEY'),
+    privateKey: env
+      .requireEnv('FIREBASE_PRIVATE_KEY')
+      .replace(/\\n/g, '\n')
+      .replace(/^"+|"+$/g, '')
+      .replace(/^'+|'+$/g, ''),
     clientEmail: env.requireEnv('FIREBASE_CLIENT_EMAIL'),
+    vapidKey: env.requireEnv('FIREBASE_VAPID_KEY'),
   },
   aws: {
     region: env.requireEnv('AWS_REGION'),

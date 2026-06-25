@@ -1,5 +1,7 @@
 import admin from 'firebase-admin';
 import { config } from '../../config';
+import { NotificationResponse } from './types';
+import { PERMANENTLY_INVALID_CODES, TRANSIENT_CODES } from './const';
 
 export type NotificationService = FirebaseNotificationService;
 
@@ -8,45 +10,61 @@ class FirebaseNotificationService {
 
   constructor() {
     try {
-      const firebaseConfig = {
-        ...config.firebase,
-        privateKey: config.firebase.privateKey?.replace(/\\n/g, '\n'),
-      };
-
       admin.initializeApp({
-        credential: admin.credential.cert(firebaseConfig),
+        credential: admin.credential.cert({
+          projectId: config.firebase.projectId,
+          clientEmail: config.firebase.clientEmail,
+          privateKey: config.firebase.privateKey,
+        }),
       });
+
       this.messaging = admin.messaging();
-      console.log('Firebase Admin SDK initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Firebase:', error);
       this.messaging = null;
     }
   }
 
-  async sendNotification(token: string, title: string, body: string, data?: Record<string, string>): Promise<void> {
-    if (!this.messaging) {
-      console.warn('Firebase not initialized. Notification not sent.');
-      return;
-    }
+  async sendNotification(
+    tokens: string[],
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<NotificationResponse> {
+    if (!this.messaging || tokens.length === 0) return { invalidTokens: [] };
 
-    try {
-      const message: admin.messaging.Message = {
-        notification: {
-          title,
-          body,
-        },
-        data,
-        token,
-      };
+    const response = await this.messaging.sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+      data,
+    });
 
-      const response = await this.messaging.send(message);
+    const invalidTokens: string[] = [];
 
-      console.log('Successfully sent notification:', response);
-    } catch (error) {
-      console.error('Error sending notification:', error);
-      throw new Error(`Failed to send notification: ${error}`);
-    }
+    response.responses.forEach((resp, idx) => {
+      if (resp.success) return;
+
+      const code = resp.error?.code ?? '';
+
+      if (PERMANENTLY_INVALID_CODES.has(code)) {
+        invalidTokens.push(tokens[idx]);
+      } else if (TRANSIENT_CODES.has(code)) {
+        console.warn(`Transient FCM error for token ${tokens[idx]}:`, resp.error);
+      } else {
+        console.error(`Unexpected FCM error for token ${tokens[idx]}:`, resp.error);
+      }
+    });
+
+    return { invalidTokens };
+  }
+
+  async sendToUser(
+    tokens: string[],
+    title: string,
+    body: string,
+    data?: Record<string, string>,
+  ): Promise<NotificationResponse> {
+    return this.sendNotification(tokens, title, body, data);
   }
 
   async sendNotificationToTopic(
@@ -55,56 +73,39 @@ class FirebaseNotificationService {
     body: string,
     data?: Record<string, string>,
   ): Promise<void> {
-    if (!this.messaging) {
-      console.warn('Firebase not initialized. Topic notification not sent.');
-      return;
-    }
+    if (!this.messaging) return;
 
     try {
-      const message: admin.messaging.Message = {
+      await this.messaging.send({
         topic,
-        notification: {
-          title,
-          body,
-        },
+        notification: { title, body },
         data,
-      };
-
-      const response = await this.messaging.send(message);
-
-      console.log('Successfully sent topic notification:', response);
+      });
     } catch (error) {
-      throw new Error(`Failed to send topic notification: ${error}`);
+      console.error(`Error sending notification to topic ${topic}:`, error);
+      throw new Error('Failed to send notification to topic');
     }
   }
 
   async subscribeToTopic(tokens: string[], topic: string): Promise<void> {
-    if (!this.messaging) {
-      console.warn('Firebase not initialized. Topic subscription not performed.');
-      return;
-    }
+    if (!this.messaging) return;
 
     try {
-      const response = await this.messaging.subscribeToTopic(tokens, topic);
-      console.log('Successfully subscribed to topic:', response);
+      await this.messaging.subscribeToTopic(tokens, topic);
     } catch (error) {
       console.error('Error subscribing to topic:', error);
-      throw new Error(`Failed to subscribe to topic: ${error}`);
+      throw new Error('Failed to subscribe to topic');
     }
   }
 
   async unsubscribeFromTopic(tokens: string[], topic: string): Promise<void> {
-    if (!this.messaging) {
-      console.warn('Firebase not initialized. Topic unsubscription not performed.');
-      return;
-    }
+    if (!this.messaging) return;
 
     try {
-      const response = await this.messaging.unsubscribeFromTopic(tokens, topic);
-      console.log('Successfully unsubscribed from topic:', response);
+      await this.messaging.unsubscribeFromTopic(tokens, topic);
     } catch (error) {
       console.error('Error unsubscribing from topic:', error);
-      throw new Error(`Failed to unsubscribe from topic: ${error}`);
+      throw new Error('Failed to unsubscribe from topic');
     }
   }
 }

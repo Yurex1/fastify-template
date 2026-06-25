@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 export interface ChatSocketContextProps {
   sendMessage: (chatId: number, text: string, reply_id?: number) => void;
   updateMessage: (messageId: number, definition: { type: 'text'; content: string }) => void;
-  updateReaction: (id: number, userId: number, reaction: string) => void;
+  updateReaction: (id: number, reaction: string, chatId: number) => void;
   deleteMessage: (messageId: number) => void;
   createRoom: (chatId: number, roomName: string, chatName: string, type: 'audio' | 'video') => void;
   typing: (chatId: number) => void;

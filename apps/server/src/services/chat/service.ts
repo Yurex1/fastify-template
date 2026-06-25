@@ -5,7 +5,7 @@ import { CHAT_ACTIONS } from './consts';
 import type { ChatService, Deps } from './types';
 
 export const init = (deps: Deps): ChatService => {
-  const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo } = deps;
+  const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo, chatNotificationService } = deps;
 
   const service: ChatService = {
     create: async (userId, memberId) => {
@@ -78,8 +78,24 @@ export const init = (deps: Deps): ChatService => {
       const isMember = await chatMemberRepo.isMember(userId, chatId);
       if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
 
+      const user = await userRepo.findById(userId);
+      if (!user) throw exception.notFound('USER_NOT_FOUND');
+
       const message = await messageRepo.create({ userId, chatId, text, reply_id: reply_id || null });
       await chatRepo.update(chatId, { updatedAt: new Date() });
+
+      const members = await chatMemberRepo.getAllMembersByChatId(chatId);
+
+      chatNotificationService
+        .notifyMessageCreated({
+          senderId: userId,
+          senderName: user.username,
+          chatId,
+          messageId: message.id,
+          text,
+          members,
+        })
+        .catch((err) => console.error('notifyMessageCreated failed:', err));
 
       return message;
     },

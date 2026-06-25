@@ -10,9 +10,7 @@ export const init = ({ service, notification }: Deps): Api => ({
       const message = service.check();
 
       try {
-        await notification.sendNotification('Set token here', 'App Status', 'APP is running');
-
-        await notification.sendNotificationToTopic('all', 'App Status', 'APP is running - to all topic');
+        await notification.sendToUser([], 'App Status', 'APP is running');
       } catch (error) {
         console.error('Failed to send health check notification:', error);
       }

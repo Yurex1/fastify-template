@@ -10,6 +10,7 @@ interface MenuButtonProps {
 const MenuButton = ({ onClick, icon, label, variant = 'default' }: MenuButtonProps) => (
   <button
     onClick={onClick}
+    aria-label={label}
     className={cn(
       'w-full flex items-center justify-between gap-4 px-3 py-2.5 rounded-xl group',
       variant === 'danger'

@@ -1,15 +1,12 @@
-import { config } from '../../config';
 import { exception } from '../../utils/exception/util';
 import { validatePassword } from '../../utils/password/util';
 import { passwords } from '../../utils/passwords/util';
 import { sessions } from '../../utils/sessions/utils';
 import type { AuthService, Deps } from './types';
-import { OAuth2Client } from 'google-auth-library';
-const googleClient = new OAuth2Client(config.oauth.google.clientId);
 
 export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
   signIn: async (usernameOrEmail, password, deviceId) => {
-    const user = await userRepo.findOneByUsernameOrEmail(usernameOrEmail, true);
+    const user = await userRepo.findOneByLoginIdentifier(usernameOrEmail, true);
 
     if (!user) {
       throw exception.badRequest('USER_NOT_FOUND');
@@ -103,10 +100,6 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
       throw exception.unauthorized('SESSION_EXPIRED_OR_INVALID');
     }
 
-    if (!user) {
-      throw exception.notFound('No account found with this username or email');
-    }
-
     if (new Date() > sessionData.expiresAt) {
       await sessionRepo.removeByUserIdAndDeviceId(userId, deviceId);
       throw exception.unauthorized('REFRESH_TOKEN_EXPIRED');
@@ -165,10 +158,14 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     });
     if (!res.ok) throw exception.unauthorized('INVALID_GOOGLE_TOKEN');
 
-    const { sub, email, name } = await res.json();
+    const { sub, email, name } = (await res.json()) as {
+      sub: string;
+      email: string | undefined;
+      name: string | undefined;
+    };
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
-    let user = (await userRepo.findOne({ googleId: sub })) || (await userRepo.findOneByUsernameOrEmail(email));
+    let user = await userRepo.findOneByLoginIdentifier(email);
 
     if (!user) {
       const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];

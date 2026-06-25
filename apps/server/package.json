@@ -34,6 +34,7 @@
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/language-en": "^3.0.2",
+    "ajv": "^8.20.0",
     "dotenv": "^17.2.1",
     "fastify": "^5.0.0",
     "fastify-cli": "^7.4.0",

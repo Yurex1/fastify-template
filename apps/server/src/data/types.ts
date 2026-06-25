@@ -5,6 +5,7 @@ import { ChatMemberRepo } from './chatMember/types';
 import { MessageRepo } from './message/types';
 import { SessionRepo } from './session/types';
 import { PinnedMessagesRepo } from './pinnedMessages/types';
+import { DeviceTokenRepo } from './deviceToken/types';
 
 export interface Repos {
   user: UserRepo;
@@ -14,4 +15,5 @@ export interface Repos {
   message: MessageRepo;
   sessions: SessionRepo;
   pinnedMessages: PinnedMessagesRepo;
+  deviceToken: DeviceTokenRepo;
 }

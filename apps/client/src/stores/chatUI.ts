@@ -22,6 +22,7 @@ interface useChatUIStoreProps {
   setCurrentChatInfo: (val: Chat | null) => void;
   reset: () => void;
 }
+let typingTimer: ReturnType<typeof setTimeout> | null = null;
 
 const useChatUIStore = create<useChatUIStoreProps>()(
   persist(
@@ -40,18 +41,23 @@ const useChatUIStore = create<useChatUIStoreProps>()(
       setAnchorMessageId: (id) => set({ anchorMessageId: id }),
       setPinnedMode: (val) => set({ pinnedMode: val }),
       setCurrentChatId: (id) => set({ currentChatId: id }),
+
       setIsTyping: (userName, chatId, isTyping) => {
-        set({
-          isTyping: {
-            userName,
-            chatId,
-            isTyping,
-          },
-        });
+        if (typingTimer) clearTimeout(typingTimer);
+
+        typingTimer = isTyping
+          ? setTimeout(() => {
+              set({ isTyping: { userName: null, chatId: null, isTyping: false } });
+              typingTimer = null;
+            }, 3000)
+          : null;
+
+        set({ isTyping: { userName, chatId, isTyping } });
       },
 
       setMenuForMessage: (message) => set({ menuForMessage: message }),
       setCurrentChatInfo: (val) => set({ currentChatInfo: val }),
+
       reset: () =>
         set({
           currentChatId: null,
@@ -59,12 +65,12 @@ const useChatUIStore = create<useChatUIStoreProps>()(
           anchorMessageId: null,
         }),
     }),
+
     {
       name: 'chat-ui-storage',
       partialize: (state) => ({
         currentChatId: state.currentChatId,
         currentChatInfo: state.currentChatInfo,
-        anchorMessageId: state.anchorMessageId,
       }),
     },
   ),

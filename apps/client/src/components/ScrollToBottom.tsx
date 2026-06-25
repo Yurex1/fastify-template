@@ -3,6 +3,7 @@ import { ArrowDown } from 'lucide-react';
 export const ScrollToBottom = ({ onClick }: { onClick: () => void }) => {
   return (
     <button
+      aria-label="scroll to bottom"
       onClick={() => {
         onClick();
       }}

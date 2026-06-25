@@ -3,7 +3,7 @@ import { SendHorizonal, Check, Search, Reply } from 'lucide-react';
 import { useMessageActions } from './useMessageActions';
 import useChatUIStore from '../stores/chatUI';
 import useMessageFormStore from '../stores/messageForm';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useDebounce from './useDebounce';
 import { searchMessagesByChatId } from '../services/chats';
 import { useChatSocket } from '../websocket/ChatSocketContext';
@@ -13,21 +13,38 @@ interface useMessageFormProps {
 }
 
 export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
-  const { sendMessage, typing, updateMessage, deleteMessage } = useChatSocket();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
-  const anchorMessageId = useChatUIStore((s) => s.anchorMessageId);
-  const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
+  const menuForMessage = useChatUIStore((s) => s.menuForMessage);
+  const setMenuForMessage = useChatUIStore((s) => s.setMenuForMessage);
 
   const { formMode, text, setFormMode, setText, setReplyTo } = useMessageFormStore();
+  const { sendMessage, typing, updateMessage, deleteMessage } = useChatSocket();
   const [resultCounter, setResultCounter] = useState(0);
+  const [results, setResults] = useState<{ id: number }[]>([]);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const throttledTyping = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const debouncedTyping = useDebounce((chatId: number) => {
-    typing(chatId);
-  }, 500);
+  const handleTyping = useCallback(
+    (chatId: number) => {
+      if (throttledTyping.current) return;
 
-  const [results, setResults] = useState<{ id: number }[]>([]);
+      typing(chatId);
+
+      throttledTyping.current = setTimeout(() => {
+        throttledTyping.current = null;
+      }, 2000);
+    },
+    [typing],
+  );
+
+  useEffect(() => {
+    return () => clearTimeout(throttledTyping.current || undefined);
+  }, []);
+
+  const { handleSearch } = useMessageActions({
+    deleteMessage,
+  });
 
   const debouncedSearch = useDebounce(async (value: string) => {
     if (currentChatId) {
@@ -39,19 +56,13 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
   }, 300);
 
   const navigateResult = (direction: 1 | -1) => {
+    if (results.length === 0) return;
+
     const newCounter = resultCounter + direction;
     const index = ((newCounter % results.length) + results.length) % results.length;
     setResultCounter(newCounter);
 
-    const targetId = results[index].id;
-
-    if (anchorMessageId !== null && anchorMessageId !== targetId) {
-      setAnchorMessageId(null);
-
-      setTimeout(() => scrollToMessage(targetId), 50);
-    } else {
-      scrollToMessage(targetId);
-    }
+    scrollToMessage(results[index].id);
   };
 
   const handleSend = async (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -73,20 +84,20 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
         break;
 
       case FORM_MODE.EDIT:
-        if (!messageToEdit) break;
-        if (messageToEdit?.text.trim() === text.trim()) {
+        if (!menuForMessage) break;
+        if (menuForMessage?.text.trim() === text.trim()) {
           clearForm();
           break;
         }
-        updateMessage(messageToEdit.id, { type: 'text', content: text });
+        updateMessage(menuForMessage.id, { type: 'text', content: text });
         setFormMode('create');
         clearForm();
         break;
 
       case FORM_MODE.REPLY:
-        if (!messageToEdit || !currentChatId) break;
+        if (!menuForMessage || !currentChatId) break;
 
-        sendMessage(currentChatId, text, messageToEdit.id);
+        sendMessage(currentChatId, text, menuForMessage.id);
 
         clearForm();
         break;
@@ -109,7 +120,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
     if (formMode === FORM_MODE.SEARCH && value.trim().length > 0) {
       debouncedSearch(value);
     } else if (currentChatId) {
-      debouncedTyping(currentChatId);
+      handleTyping(currentChatId);
     }
   }
 
@@ -122,19 +133,12 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
       handleSend(e);
     }
   }
-  const { handleSearch } = useMessageActions({
-    deleteMessage,
-  });
-
-  const messageToEdit = useChatUIStore((s) => s.menuForMessage);
-  const setMessageToEdit = useChatUIStore((s) => s.setMenuForMessage);
 
   const clearForm = () => {
-    setMessageToEdit(null);
+    setMenuForMessage(null);
     setFormMode('create');
     setReplyTo(null);
     setText('');
-    return;
   };
 
   const formButton = () => {
@@ -152,7 +156,7 @@ export function useMessageForm({ scrollToMessage }: useMessageFormProps) {
         return <Reply />;
 
       default:
-        break;
+        return <SendHorizonal />;
     }
   };
   return {

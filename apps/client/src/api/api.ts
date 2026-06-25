@@ -2,12 +2,11 @@ import ky from 'ky';
 import { useAuthStore } from '../stores/auth';
 import type { User } from './user/types';
 
-// import { getDeviceId } from '../utils/deviceId';
+import { getDeviceId } from '../utils/deviceId';
 import { createApiError } from './apiError';
 import useUserStore from '../stores/user';
 
-// const deviceId = getDeviceId();
-// TODO deviceId
+const deviceId = getDeviceId();
 let refreshPromise: Promise<{ accessToken: string; user: User; expiresAt: string }> | null = null;
 
 const api = ky.create({
@@ -20,7 +19,7 @@ const api = ky.create({
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`);
         }
-        request.headers.set('x-device-id', 'unknown');
+        request.headers.set('x-device-id', deviceId);
         request.headers.set('accept-language', useUserStore.getState().language);
       },
     ],

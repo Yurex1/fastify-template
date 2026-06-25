@@ -1,7 +1,5 @@
-// utils/consts/wsEvents.ts — ALL websocket type strings, split by direction
-
-// Server → Client
 export const WS_IN = {
+  ERROR: 'ERROR',
   NEW_MESSAGE: 'NEW_MESSAGE',
   MESSAGE_UPDATED: 'MESSAGE_UPDATED',
   MESSAGE_REACTIONS_UPDATED: 'MESSAGE_REACTIONS_UPDATED',

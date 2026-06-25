@@ -5,7 +5,7 @@ export interface BaseEntity {
   id: number;
   createdAt: Date;
   updatedAt: Date;
-  lastseen: Date;
+  lastseen?: Date;
 }
 
 export type CreateEntity<T> = Omit<T, keyof BaseEntity>;
@@ -107,6 +107,25 @@ export class SqlBuilder {
 
     return { query, params: values };
   }
+  static buildSelectByAnyOfQuery<T extends BaseEntity>(
+    tableName: string,
+    fields: (keyof T)[],
+    whereFields: (keyof T)[],
+    value: string,
+    caseInsensitiveFields: (keyof T)[] = [],
+  ): RowSqlResult {
+    const whereClause = whereFields
+      .map((f) => (caseInsensitiveFields.includes(f) ? `LOWER("${String(f)}") = LOWER($1)` : `"${String(f)}" = $1`))
+      .join(' OR ');
+
+    const query = `
+    SELECT ${fields.map((f) => `"${String(f)}"`).join(', ')}
+    FROM "public"."${tableName}"
+    WHERE ${whereClause};
+  `;
+
+    return { query, params: [value] };
+  }
 }
 
 export abstract class EntityRepo<T extends BaseEntity> {
@@ -161,5 +180,21 @@ export abstract class EntityRepo<T extends BaseEntity> {
 
   async existsById(id: number): Promise<boolean> {
     return this.exists({ id } as Partial<T>);
+  }
+
+  async findOneByAnyOf(
+    value: string,
+    whereFields: (keyof T)[],
+    caseInsensitiveFields: (keyof T)[] = [],
+    selectFields: (keyof T)[] = this.fields,
+  ): Promise<T | null> {
+    const { query, params } = SqlBuilder.buildSelectByAnyOfQuery(
+      this.tableName,
+      selectFields,
+      whereFields,
+      value,
+      caseInsensitiveFields,
+    );
+    return await this.pool.queryOne<T>(query, params);
   }
 }

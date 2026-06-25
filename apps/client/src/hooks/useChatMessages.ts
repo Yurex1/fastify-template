@@ -40,9 +40,20 @@ export function useChatMessages(anchorMessageId: number | null = null) {
 
     enabled: !!currentChatId,
     staleTime: Infinity,
+    gcTime: 60 * 1000,
   });
 
-  const messages = useMemo(() => query.data?.pages.flatMap((p) => p.messages) ?? [], [query.data]);
+  const messages = useMemo(() => {
+    const flat = query.data?.pages.flatMap((p) => p.messages) ?? [];
+    const seen = new Set<number>();
+    const unique: typeof flat = [];
+    for (const message of flat) {
+      if (seen.has(message.id)) continue;
+      seen.add(message.id);
+      unique.push(message);
+    }
+    return unique;
+  }, [query.data]);
 
   return {
     ...query,

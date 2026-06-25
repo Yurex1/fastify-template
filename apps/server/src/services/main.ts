@@ -7,22 +7,34 @@ import { init as authServiceInit } from './auth/service';
 import { init as postServiceInit } from './post/service';
 import { init as notificationServiceInit } from '../firebase/notification/service';
 import { init as s3ServiceInit } from './s3/service';
+import { init as deviceTokenServiceInit } from './deviceToken/service';
+import { init as chatNotificationServiceInit } from './chatNotifications/service';
 
 export const init = (repos: Repos) => {
   const service = serviceInit();
   const user = userServiceInit({ userRepo: repos.user });
   const auth = authServiceInit({ userRepo: repos.user, sessionRepo: repos.sessions });
   const post = postServiceInit({ postRepo: repos.post });
+
+  const livekit = livekitServiceInit();
+
+  const notification = notificationServiceInit();
+  const deviceToken = deviceTokenServiceInit({ deviceTokenRepo: repos.deviceToken });
+
+  const chatNotificationService = chatNotificationServiceInit({
+    deviceTokenRepo: repos.deviceToken,
+    notificationService: notification,
+  });
+  const s3 = s3ServiceInit();
   const chat = chatServiceInit({
     chatRepo: repos.chat,
     chatMemberRepo: repos.chatMember,
     userRepo: repos.user,
     messageRepo: repos.message,
     pinnedMessagesRepo: repos.pinnedMessages,
+
+    chatNotificationService,
   });
-  const livekit = livekitServiceInit();
-  const notification = notificationServiceInit();
-  const s3 = s3ServiceInit();
 
   return {
     service,
@@ -33,5 +45,6 @@ export const init = (repos: Repos) => {
     post,
     notification,
     s3,
+    deviceToken,
   };
 };

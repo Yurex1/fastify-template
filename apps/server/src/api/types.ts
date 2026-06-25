@@ -7,6 +7,7 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 import { Api } from './healthCheck/types';
 import { UserResult } from '../entities/user';
 import { LiveKitApi } from './livekit/types';
+import { DeviceTokenApi } from './deviceToken/types';
 
 export type AccessType = 'none' | 'access' | 'refresh';
 
@@ -24,7 +25,7 @@ export type ProtectedEndpoint<Params, Result> = Endpoint<Params, Result, 'access
 export type UnprotectedEndpoint<Params, Result> = Endpoint<Params, Result, 'none', null>;
 
 export interface API {
-  [key: string]: Endpoint<any, any, AccessType, any>;
+  [key: string]: Endpoint<any, unknown, AccessType, any>;
 }
 
 export interface APIs extends Record<string, API> {
@@ -35,4 +36,5 @@ export interface APIs extends Record<string, API> {
   post: PostApi;
   chats: ChatApi;
   livekit: LiveKitApi;
+  deviceToken: DeviceTokenApi;
 }

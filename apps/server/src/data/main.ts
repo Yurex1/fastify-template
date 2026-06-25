@@ -5,6 +5,7 @@ import { init as userRepoInit } from './user/repo';
 import { init as sessionRepoInit } from './session/repo';
 import { init as messageRepoInit } from './message/repo';
 import { init as pinnedMessagesRepoInit } from './pinnedMessages/repo';
+import { init as deviceTokenRepoInit } from './deviceToken/repo';
 
 import { Repos } from './types';
 import type { TypedPool } from '../infra/pg';
@@ -17,6 +18,7 @@ export const init = (pool: TypedPool): Repos => {
   const message = messageRepoInit(pool);
   const sessions = sessionRepoInit(pool);
   const pinnedMessages = pinnedMessagesRepoInit(pool);
+  const deviceToken = deviceTokenRepoInit(pool);
 
   return {
     user,
@@ -26,5 +28,6 @@ export const init = (pool: TypedPool): Repos => {
     message,
     sessions,
     pinnedMessages,
+    deviceToken,
   };
 };

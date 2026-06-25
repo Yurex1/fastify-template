@@ -8,8 +8,10 @@ import { QueryKeys } from '../lib/queries';
 import type { InfiniteData } from '@tanstack/react-query';
 import chatsApi from '../api/chats/chats';
 import type { MessageList, MessagePageParam } from '../api/chats/types';
+import { getDeviceId } from '../utils/deviceId';
 
 const WS_URL = import.meta.env.VITE_WS_URL;
+const deviceId = getDeviceId();
 
 export function ChatSocketProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -57,7 +59,7 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
       }
       const token = useAuthStore.getState().accessToken;
       if (!token) return;
-      const socket = new WebSocket(`${WS_URL}/ws`, token);
+      const socket = new WebSocket(`${WS_URL}/ws?deviceId=${deviceId}`, token);
       socketRef.current = socket;
 
       socket.onopen = () => {
@@ -114,8 +116,8 @@ export function ChatSocketProvider({ children }: { children: React.ReactNode }) 
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.SEND_MESSAGE, payload: { chatId, text, reply_id } })),
       updateMessage: (messageId, definition) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.UPDATE_MESSAGE, payload: { messageId, definition } })),
-      updateReaction: (id, userId, reaction) =>
-        socketRef.current?.send(JSON.stringify({ type: WS_OUT.UPDATE_REACTION, payload: { id, userId, reaction } })),
+      updateReaction: (id, reaction, chatId) =>
+        socketRef.current?.send(JSON.stringify({ type: WS_OUT.UPDATE_REACTION, payload: { id, reaction, chatId } })),
       deleteMessage: (messageId) =>
         socketRef.current?.send(JSON.stringify({ type: WS_OUT.DELETE_MESSAGE, payload: { messageId } })),
       typing: (chatId) => socketRef.current?.send(JSON.stringify({ type: WS_OUT.IS_TYPING, payload: { chatId } })),

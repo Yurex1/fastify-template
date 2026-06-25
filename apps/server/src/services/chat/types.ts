@@ -7,6 +7,7 @@ import { CursorResult, FindByChatIdProps, MessageRepo } from '../../data/message
 import { ChatMember } from '../../entities/chatMember';
 import { PinnedMessagesCursor, PinnedMessagesRepo } from '../../data/pinnedMessages/types';
 import { PinnedMessage, PinnedMessageList } from '../../entities/pinnedMessages';
+import { ChatNotificationService } from '../chatNotifications/types';
 
 export interface ChatService {
   create: (userId: number, memberId: number) => Promise<ChatPreview>;
@@ -37,4 +38,5 @@ export interface Deps {
   userRepo: UserRepo;
   messageRepo: MessageRepo;
   pinnedMessagesRepo: PinnedMessagesRepo;
+  chatNotificationService: ChatNotificationService;
 }
