@@ -2,11 +2,11 @@ import type { TypedPool } from '../../infra/pg';
 import type { User, CreateUser, UpdateUser } from '../../entities/user';
 import type { UserRepo } from './types';
 import { EntityRepo } from '../EntityRepo';
-import { updateUserEmail, selectByUsernameOrEmailOrGoogleId, updateLastSeenDate, updateUserPassword } from './sql';
+import { updateUserEmail, updateLastSeenDate, updateUserPassword } from './sql';
 
 class UserRepository extends EntityRepo<User> {
   constructor(pool: TypedPool) {
-    super(pool, 'users', ['id', 'email', 'username', 'password', 'googleId', 'createdAt', 'updatedAt', 'lastseen']);
+    super(pool, 'users', ['id', 'email', 'username', 'googleId', 'createdAt', 'updatedAt', 'lastseen']);
   }
 
   async findOne(definition: Partial<User>, includePassword = false): Promise<User | null> {

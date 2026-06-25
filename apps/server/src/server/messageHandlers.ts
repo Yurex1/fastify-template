@@ -1,32 +1,24 @@
-import { Services } from '../services/types';
 import { exception } from '../utils/exception/util';
 import { CHAT_ACTIONS } from '../services/chat/consts';
 import { CALL_ACTIONS } from '../services/livekit/consts';
-
-import { WsServer } from './types';
-import { UserResult } from '../entities/user';
 
 import type {
   WithPayload,
   SendMessagePayload,
   UpdateMessagePayload,
+  TypingPayload,
   UpdateReactionPayload,
   DeleteMessagePayload,
   CreateRoomPayload,
 } from './validation';
-interface MessageHandlersDeps {
-  services: Services;
-  fastifyWs: WsServer;
-  uid: number;
-  user: UserResult;
-}
+import { MessageHandlersDeps } from './types';
 
 const BROADCAST_MODES = {
   OTHERS: 'others',
   ALL: 'all',
 };
 
-export const createMessageHandlers = ({ services, fastifyWs, uid, user }: MessageHandlersDeps) => {
+export const createMessageHandlers = ({ services, fastifyWs, uid, user, typingTimers }: MessageHandlersDeps) => {
   const broadcastStatus = async (uid: number, type: string, payload: Record<string, unknown>) => {
     try {
       const peers = await services.chat.getAllMembers(uid);
@@ -53,7 +45,10 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
   const handleSendMessage = async (data: WithPayload<SendMessagePayload>) => {
     const { chatId, text, reply_id } = data.payload;
 
-    const message = await services.chat.sendMessage(uid, chatId, text.trim(), reply_id ?? undefined);
+    const trimmedText = text.trim();
+    if (!trimmedText) throw exception.badRequest('EMPTY_MESSAGE');
+
+    const message = await services.chat.sendMessage(uid, chatId, trimmedText, reply_id ?? undefined);
     await broadcastForChatMembers(message.chatId, CHAT_ACTIONS.newMessage, message);
   };
 
@@ -67,11 +62,14 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
     if (definition.type !== 'text') throw exception.badRequest('INVALID_DEFINITION_TYPE');
 
     const key = definition.type;
-    const updated = await services.chat.updateMessage(messageId, { [key]: definition.content });
+    const updated = await services.chat.updateMessage(messageId, uid, { [key]: definition.content });
     await broadcastForChatMembers(updated.chatId, CHAT_ACTIONS.updatedMessage, updated);
   };
 
-  const handleTyping = async (chatId: number, typingTimers: Map<number, NodeJS.Timeout>) => {
+  const handleTyping = async (data: WithPayload<TypingPayload>) => {
+    const { chatId } = data.payload;
+    await services.chat.isMember(uid, chatId);
+
     await broadcastForChatMembers(chatId, CHAT_ACTIONS.typing, { userName: user.username, chatId }, 'others');
 
     if (typingTimers.has(uid)) {
@@ -87,20 +85,21 @@ export const createMessageHandlers = ({ services, fastifyWs, uid, user }: Messag
   };
 
   const handleUpdateReaction = async (data: WithPayload<UpdateReactionPayload>) => {
-    const { id, reaction, chatId } = data.payload;
+    const { id, reaction } = data.payload;
     const updatedMessage = await services.chat.updateReactions(id, uid, reaction);
     if (!updatedMessage) throw exception.notFound('NOT_FOUND_A_MESSAGE');
     const memberIds = await services.chat.getAllMembersByChatId(updatedMessage.chatId);
     memberIds.forEach((member) =>
       fastifyWs.send(member.userId, {
         type: CHAT_ACTIONS.updatedReaction,
-        payload: { id: updatedMessage.id, reactions: updatedMessage.reactions, chatId },
+        payload: { id: updatedMessage.id, reactions: updatedMessage.reactions, chatId: updatedMessage.chatId },
       }),
     );
   };
 
   const handleCreateRoom = async (data: WithPayload<CreateRoomPayload>) => {
     const { chatId, roomName, chatName } = data.payload;
+    await services.chat.isMember(uid, chatId);
     await broadcastForChatMembers(chatId, CALL_ACTIONS.incoming, { chatId, roomName, chatName }, 'others');
   };
 

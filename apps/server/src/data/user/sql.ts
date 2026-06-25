@@ -34,17 +34,3 @@ export const updateUserPassword = (id: number, password: string) => {
 
   return { query, params };
 };
-
-export const selectByUsernameOrEmailOrGoogleId = (value: string, includePassword = false) => {
-  const selectFields = includePassword ? [...fields, 'password'] : fields;
-
-  const query = `
-    SELECT ${selectFields.map((f) => `"${f}"`).join(', ')}
-    FROM "public"."users"
-    WHERE LOWER("email") = LOWER($1) 
-       OR "username" = $1 
-       OR "googleId" = $1;
-  `;
-
-  return { query, params: [value] };
-};

@@ -165,15 +165,19 @@ export const init = ({ userRepo, sessionRepo }: Deps): AuthService => ({
     };
     if (!email) throw exception.badRequest('NO_EMAIL_IN_GOOGLE_TOKEN');
 
-    let user = await userRepo.findOneByLoginIdentifier(email);
+    let user = await userRepo.findOne({ googleId: sub });
 
     if (!user) {
-      const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
-      const exist = await userRepo.exists({ username });
-      if (exist) throw exception.badRequest('USERNAME_UNAVAILABLE');
-      user = await userRepo.create({ email, username, googleId: sub, password: null });
-    } else if (!user.googleId) {
-      await userRepo.update(user.id, { googleId: sub });
+      user = await userRepo.findOne({ email });
+
+      if (!user) {
+        const username = name ? name.replace(/\s+/g, '') : email.split('@')[0];
+        const exist = await userRepo.exists({ username });
+        if (exist) throw exception.badRequest('USERNAME_UNAVAILABLE');
+        user = await userRepo.create({ email, username, googleId: sub, password: null });
+      } else {
+        await userRepo.update(user.id, { googleId: sub });
+      }
     }
 
     const session = sessions.generate(user);

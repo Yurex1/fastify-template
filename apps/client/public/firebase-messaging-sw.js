@@ -1,19 +1,27 @@
 importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/12.14.0/firebase-messaging-compat.js');
 
-const urlParams = new URLSearchParams(self.location.search);
-const firebaseConfigRaw = urlParams.get('firebaseConfig');
-let firebaseConfig = null;
-try {
-  firebaseConfig = firebaseConfigRaw ? JSON.parse(firebaseConfigRaw) : null;
-} catch (e) {
-  console.error('[SW] Failed to parse firebaseConfig from URL params:', e);
-}
+const fetchFirebaseConfig = async () => {
+  try {
+    const configsResponse = await fetch('http://localhost:9000/deviceToken/firebase-configs');
+    if (!configsResponse.ok) {
+      throw new Error('Failed to fetch Firebase configuration');
+    }
+    console.log('Firebase configs received');
+    const data = await configsResponse.json();
+    return data.firebaseConfigs || data;
+  } catch (error) {
+    console.error('Error loading the Firebase config:', error);
+    throw error;
+  }
+};
 
-if (firebaseConfig) {
+let messaging;
+
+const initFirebase = async () => {
+  const firebaseConfig = await fetchFirebaseConfig();
   firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
-
+  messaging = firebase.messaging();
   messaging.onBackgroundMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || 'New message';
     const body = payload.notification?.body || payload.data?.body || payload.data?.text || '';
@@ -26,7 +34,9 @@ if (firebaseConfig) {
       vibrate: [100, 50, 100],
     });
   });
-}
+};
+
+initFirebase();
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

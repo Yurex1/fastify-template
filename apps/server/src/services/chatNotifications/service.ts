@@ -1,7 +1,6 @@
-import { server } from '../../server/http';
 import { ChatNotificationService, Deps } from './types';
 
-export const init = ({ deviceTokenRepo, notificationService }: Deps): ChatNotificationService => ({
+export const init = ({ deviceTokenRepo, notificationService, ws }: Deps): ChatNotificationService => ({
   notifyMessageCreated: async ({ senderId, senderName, chatId, messageId, text, members }) => {
     await Promise.allSettled(
       members
@@ -10,7 +9,7 @@ export const init = ({ deviceTokenRepo, notificationService }: Deps): ChatNotifi
           const devices = await deviceTokenRepo.findAllByUserId(member.userId);
 
           const offlineTokens = devices
-            .filter((d) => !server.ws.hasConnectionForDevice(member.userId, d.deviceId))
+            .filter((d) => !ws.hasConnectionForDevice(member.userId, d.deviceId))
             .map((d) => d.token);
 
           if (!offlineTokens.length) return;

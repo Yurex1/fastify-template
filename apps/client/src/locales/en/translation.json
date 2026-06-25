@@ -145,5 +145,11 @@
   "messageActions": {
     "copied": "Text copied",
     "errorCopy": "Failed to copy text"
+  },
+  "ws": {
+    "errors": {
+      "400": "Invalid message format",
+      "403": "Not your message"
+    }
   }
 }

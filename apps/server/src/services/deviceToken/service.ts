@@ -4,6 +4,7 @@ import type { DeviceTokenService, Deps } from './types';
 
 export const init = ({ deviceTokenRepo }: Deps): DeviceTokenService => ({
   register: async (userId, deviceId, token) => {
+    await deviceTokenRepo.removeTokenForOtherOwners(token, userId, deviceId);
     return deviceTokenRepo.upsert({ userId, deviceId, token });
   },
   unregister: async (userId, deviceId) => {

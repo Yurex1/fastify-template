@@ -6,6 +6,13 @@ import useChatUIStore from '../stores/chatUI';
 import { QueryKeys } from '../lib/queries';
 import { VIRTUOSO_CONFIG } from '../utils/consts/virtuoso';
 
+interface MessageListRefs {
+  firstItemIndex: number;
+  prevOldestId: number | null;
+  highlightedAnchorId: number | null;
+  highlightTimer: ReturnType<typeof setTimeout> | null;
+}
+
 export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | null>) {
   const queryClient = useQueryClient();
   const currentChatId = useChatUIStore((s) => s.currentChatId);
@@ -13,11 +20,12 @@ export function useMessageList(virtuosoRef: React.RefObject<VirtuosoHandle | nul
   const setAnchorMessageId = useChatUIStore((s) => s.setAnchorMessageId);
   const setIsAtBottom = useChatUIStore((s) => s.setIsAtBottom);
   const setHighlightedMessageId = useChatUIStore((s) => s.setHighlightedMessageId);
-  const refs = useRef({
+
+  const refs = useRef<MessageListRefs>({
     firstItemIndex: VIRTUOSO_CONFIG.START_INDEX,
-    prevOldestId: null as number | null,
-    highlightedAnchorId: null as number | null,
-    highlightTimer: null as ReturnType<typeof setTimeout> | null,
+    prevOldestId: null,
+    highlightedAnchorId: null,
+    highlightTimer: null,
   });
 
   const {

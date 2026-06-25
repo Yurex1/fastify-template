@@ -6,15 +6,17 @@ import { toast } from 'react-toastify';
 import useChatUIStore from '../stores/chatUI';
 import { ChatNotificationToast } from '../components/ChatNotificationToast';
 import user from '/images/user-no-icon.png';
+import { buildSwUrl, SW_PATH } from '../utils/buildSwUrl';
 
-const SW_PATH = '/firebase-messaging-sw.js';
 const NOTIF_STORAGE_KEY = 'notificationsEnabled';
 
-const buildSwUrl = (cfg: ServerFirebaseConfig): string => {
-  const { vapidKey: _vapidKey, ...firebaseOnly } = cfg;
-  const params = new URLSearchParams({ firebaseConfig: JSON.stringify(firebaseOnly) });
-  return `${SW_PATH}?${params.toString()}`;
-};
+interface OpenChatMessage {
+  type: 'OPEN_CHAT';
+  chatId: number | string;
+  messageId: number | string;
+}
+
+type ServiceWorkerMessage = OpenChatMessage;
 
 const registerMessagingSw = async (cfg: ServerFirebaseConfig): Promise<ServiceWorkerRegistration> => {
   const swUrl = buildSwUrl(cfg);
@@ -43,15 +45,7 @@ const getExistingSwRegistration = async (): Promise<ServiceWorkerRegistration | 
   });
 };
 
-interface OpenChatMessage {
-  type: 'OPEN_CHAT';
-  chatId: number | string;
-  messageId: number | string;
-}
-
-type ServiceWorkerMessage = OpenChatMessage;
-
-export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: number) => void }) => {
+export const useNotifications = ({ scrollToMessage }: { scrollToMessage?: (id: number) => void }) => {
   const setCurrentChatId = useChatUIStore((s) => s.setCurrentChatId);
   const [notificationsEnabled, setNotificationsEnabled] = useState(
     () => Notification.permission === 'granted' && localStorage.getItem(NOTIF_STORAGE_KEY) === 'true',
@@ -132,7 +126,7 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
         const messageId = Number(event.data.messageId);
         if (!Number.isFinite(chatId) || !Number.isFinite(messageId)) return;
         setCurrentChatId(chatId);
-        scrollToMessage(messageId);
+        scrollToMessage?.(messageId);
       }
     };
 
@@ -147,7 +141,7 @@ export const useNotifications = ({ scrollToMessage }: { scrollToMessage: (id: nu
       const messageId = Number(messageIdFromUrl);
       if (Number.isFinite(chatId) && Number.isFinite(messageId)) {
         setCurrentChatId(chatId);
-        scrollToMessage(messageId);
+        scrollToMessage?.(messageId);
       }
       window.history.replaceState({}, document.title, window.location.pathname);
     }

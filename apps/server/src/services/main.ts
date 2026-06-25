@@ -9,8 +9,9 @@ import { init as notificationServiceInit } from '../firebase/notification/servic
 import { init as s3ServiceInit } from './s3/service';
 import { init as deviceTokenServiceInit } from './deviceToken/service';
 import { init as chatNotificationServiceInit } from './chatNotifications/service';
+import type { WsAdapter } from '../utils/ws/types';
 
-export const init = (repos: Repos) => {
+export const init = (repos: Repos, ws: WsAdapter) => {
   const service = serviceInit();
   const user = userServiceInit({ userRepo: repos.user });
   const auth = authServiceInit({ userRepo: repos.user, sessionRepo: repos.sessions });
@@ -24,6 +25,7 @@ export const init = (repos: Repos) => {
   const chatNotificationService = chatNotificationServiceInit({
     deviceTokenRepo: repos.deviceToken,
     notificationService: notification,
+    ws,
   });
   const s3 = s3ServiceInit();
   const chat = chatServiceInit({
@@ -32,8 +34,8 @@ export const init = (repos: Repos) => {
     userRepo: repos.user,
     messageRepo: repos.message,
     pinnedMessagesRepo: repos.pinnedMessages,
-
     chatNotificationService,
+    ws,
   });
 
   return {

@@ -1,17 +1,24 @@
 import { APIs } from '../api/types';
 import { Services } from '../services/types';
 import { FastifyPluginAsync, FastifyPluginCallback, FastifyPluginOptions } from 'fastify/types/plugin';
-
-export interface WsServer {
-  onMessage: (handler: (uid: number, data: unknown) => void) => void;
-  hasConnection: (id: number) => boolean;
-  hasConnectionForDevice: (userId: number, deviceId: string) => boolean;
-  send: (id: number, message: object) => void;
-}
+import { UserResult } from '../entities/user';
+import { WsAdapter } from '../utils/ws/types';
 
 export interface Deps {
   services: Services;
   apis: APIs;
+}
+
+export interface WsServer extends WsAdapter {
+  onMessage: (handler: (uid: number, data: unknown) => void) => void;
+}
+
+export interface MessageHandlersDeps {
+  services: Services;
+  fastifyWs: WsServer;
+  uid: number;
+  user: UserResult;
+  typingTimers: Map<number, NodeJS.Timeout>;
 }
 
 export type Plugin = {

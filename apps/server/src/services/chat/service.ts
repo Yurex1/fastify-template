@@ -1,11 +1,10 @@
 import { ChatMemberStatus } from '../../data/chatMember/types';
-import { server } from '../../server/http';
 import { exception } from '../../utils/exception/util';
 import { CHAT_ACTIONS } from './consts';
 import type { ChatService, Deps } from './types';
 
 export const init = (deps: Deps): ChatService => {
-  const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo, chatNotificationService } = deps;
+  const { chatRepo, chatMemberRepo, userRepo, messageRepo, pinnedMessagesRepo, chatNotificationService, ws } = deps;
 
   const service: ChatService = {
     create: async (userId, memberId) => {
@@ -28,8 +27,8 @@ export const init = (deps: Deps): ChatService => {
       const members = await chatMemberRepo.getAllMembersByChatId(chat.id);
 
       for (const member of members) {
-        if (server.ws.hasConnection(member.userId)) {
-          server.ws.send(member.userId, {
+        if (ws.hasConnection(member.userId)) {
+          ws.send(member.userId, {
             type: CHAT_ACTIONS.created,
             payload: {
               id: chat.id,
@@ -71,12 +70,16 @@ export const init = (deps: Deps): ChatService => {
     },
 
     removeMessage: async (id) => {
+      const existing = await service.findMessage({ id });
+      if (!existing) throw exception.notFound('MESSAGE_NOT_FOUND');
+
+      await service.isMember(existing.userId, existing.chatId);
+
       return messageRepo.remove(id);
     },
 
     sendMessage: async (userId, chatId, text, reply_id) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      await service.isMember(userId, chatId);
 
       const user = await userRepo.findById(userId);
       if (!user) throw exception.notFound('USER_NOT_FOUND');
@@ -101,44 +104,40 @@ export const init = (deps: Deps): ChatService => {
     },
 
     getMessagesByChatId: async (userId, chatId, { before, after, limit }) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
-
+      await service.isMember(userId, chatId);
       return await messageRepo.findByChatId(chatId, { before, after, limit });
     },
 
     searchMessagesByChatId: async (userId, chatId, text) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
-
+      await service.isMember(userId, chatId);
       return await messageRepo.findAllByChatId(chatId, text);
     },
 
-    updateMessage: async (id, definition) => {
+    updateMessage: async (id, userId, definition) => {
       const existing = await messageRepo.findOne({ id });
       if (!existing) throw exception.notFound('MESSAGE_NOT_FOUND');
+      if (existing.userId !== userId) throw exception.forbidden('NOT_YOUR_MESSAGE');
 
       return messageRepo.updateMessage(id, definition);
     },
 
     updateReactions: async (id, userId, reaction) => {
       const existing = await messageRepo.findOne({ id });
-
       if (!existing) throw exception.notFound('MESSAGE_NOT_FOUND');
+
+      await service.isMember(userId, existing.chatId);
 
       return messageRepo.updateReactions(id, userId, reaction);
     },
 
     getMessageContext: async (userId, chatId, messageId, limit) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      await service.isMember(userId, chatId);
 
       return await messageRepo.getMessageContext(chatId, messageId, limit);
     },
 
     pinMessage: async (userId, chatId, messageId) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      await service.isMember(userId, chatId);
 
       const message = await messageRepo.findOne({ id: messageId });
       if (!message) throw exception.notFound('MESSAGE_NOT_FOUND');
@@ -158,8 +157,8 @@ export const init = (deps: Deps): ChatService => {
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
       for (const member of members) {
-        if (server.ws.hasConnection(member.userId)) {
-          server.ws.send(member.userId, {
+        if (ws.hasConnection(member.userId)) {
+          ws.send(member.userId, {
             type: CHAT_ACTIONS.pinnedMessage,
             payload: {
               chatId,
@@ -176,15 +175,14 @@ export const init = (deps: Deps): ChatService => {
     },
 
     unpinMessage: async (userId, chatId, messageId) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      await service.isMember(userId, chatId);
 
       const removed = await pinnedMessagesRepo.removeByMessageId(chatId, messageId);
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
       for (const member of members) {
-        if (server.ws.hasConnection(member.userId)) {
-          server.ws.send(member.userId, {
+        if (ws.hasConnection(member.userId)) {
+          ws.send(member.userId, {
             type: CHAT_ACTIONS.unpinnedMessage,
             payload: { messageId, chatId },
           });
@@ -195,13 +193,12 @@ export const init = (deps: Deps): ChatService => {
     },
 
     removeChat: async (userId, chatId) => {
-      const isMember = await chatMemberRepo.isMember(userId, chatId);
-      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
+      await service.isMember(userId, chatId);
       const members = await chatMemberRepo.getAllMembersByChatId(chatId);
 
       for (const member of members) {
-        if (server.ws.hasConnection(member.userId)) {
-          server.ws.send(member.userId, {
+        if (ws.hasConnection(member.userId)) {
+          ws.send(member.userId, {
             type: CHAT_ACTIONS.deleted,
             payload: chatId,
           });
@@ -209,6 +206,10 @@ export const init = (deps: Deps): ChatService => {
       }
 
       return chatRepo.remove(chatId);
+    },
+    isMember: async (userId, chatId) => {
+      const isMember = await chatMemberRepo.isMember(userId, chatId);
+      if (!isMember) throw exception.forbidden('NOT_A_MEMBER');
     },
   };
 

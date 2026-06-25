@@ -6,6 +6,8 @@ import type { SignIn, SignUp } from '../api/auth/types';
 import useCallsStore from './calls';
 import useChatUIStore from './chatUI';
 import auth from '../api/auth/auth';
+import { getAuth, signOut } from 'firebase/auth';
+import { toast } from 'react-toastify';
 
 interface AuthState {
   currentUser: User | null;
@@ -42,6 +44,8 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           await authService.signOut();
+        } catch (err) {
+          toast.error('Logout error');
         } finally {
           useAuthStore.getState().clearAccessToken();
           set({ currentUser: null, isAuthenticated: false });
@@ -50,6 +54,14 @@ export const useAuthStore = create<AuthState>()(
 
           sessionStorage.clear();
           localStorage.clear();
+
+          const auth = getAuth();
+
+          try {
+            await signOut(auth);
+          } catch (error) {
+            console.error('Logout error:', error);
+          }
 
           window.location.href = '/login';
         }

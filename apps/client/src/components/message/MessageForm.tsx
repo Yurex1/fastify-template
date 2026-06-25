@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface MessageForm {
-  formButton: () => React.ReactNode;
+  formButtonIcon: () => React.ReactNode;
   resultCounter: number;
   results: { id: number }[];
   navigateResult: (direction: 1 | -1) => void;
@@ -14,7 +14,7 @@ interface MessageForm {
 }
 
 const MessageForm = ({
-  formButton,
+  formButtonIcon,
   resultCounter,
   results,
   navigateResult,
@@ -24,7 +24,7 @@ const MessageForm = ({
 }: MessageForm) => {
   const { text, formMode } = useMessageFormStore();
   const { t } = useTranslation();
-  const btnLabel = formButton();
+  const btnLabel = formButtonIcon();
 
   const currentIndex = ((resultCounter % results.length) + results.length) % results.length;
   return (

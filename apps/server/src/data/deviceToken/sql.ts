@@ -38,3 +38,11 @@ export const deleteByToken = (token: string): RowSqlResult => ({
   `,
   params: [token],
 });
+
+export const deleteTokenForOtherOwners = (token: string, userId: number, deviceId: string): RowSqlResult => ({
+  query: `
+    DELETE FROM "public"."device_tokens"
+    WHERE "token" = $1 AND NOT ("user_id" = $2 AND "device_id" = $3)
+  `,
+  params: [token, userId, deviceId],
+});

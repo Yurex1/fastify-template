@@ -48,7 +48,7 @@ const schemas: Record<string, object> = {
     properties: {
       chatId: { type: 'integer' },
       text: { type: 'string', minLength: 1, maxLength: MAX_TEXT_LENGTH },
-      reply_id: { type: 'integer', nullable: true },
+      reply_id: { type: ['integer', 'null'] },
     },
     required: ['chatId', 'text'],
     additionalProperties: false,
